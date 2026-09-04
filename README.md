@@ -9,7 +9,7 @@ AlephBFT finality under a stake-weighted, PoUI-gated committee.
 | | |
 |---|---|
 | **Read** | [`yellowpaper.md`](yellowpaper.md) |
-| **Version** | v0.5 (draft) — see [`ERRATA.md`](ERRATA.md) for post-publication corrections |
+| **Version** | 0.5 (draft) — see [`ERRATA.md`](ERRATA.md) for post-publication corrections |
 | **Give feedback** | [Open an issue](../../issues/new/choose) |
 | **Report a vulnerability** | **Not** an issue — see [`SECURITY.md`](SECURITY.md) |
 

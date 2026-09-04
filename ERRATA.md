@@ -6,7 +6,7 @@ this file is what tells a reader of the old text that it moved.
 
 Format: section · what was wrong · what it says now · who reported it.
 
-## v0.5 (draft) — unreleased
+## 0.5 (draft) — unreleased
 
 _No errata recorded yet._
 
