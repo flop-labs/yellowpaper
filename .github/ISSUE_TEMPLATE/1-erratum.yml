@@ -1,0 +1,28 @@
+name: Erratum
+description: A typo, broken formula, wrong cross-reference, or internal inconsistency.
+title: "erratum: "
+labels: ["erratum"]
+body:
+  - type: input
+    id: location
+    attributes:
+      label: Version and section
+      description: The version from the cover block, and the section or requirement ID.
+      placeholder: "v0.5 §3.4 / Appendix A · param_name"
+    validations:
+      required: true
+  - type: textarea
+    id: current
+    attributes:
+      label: What it says
+      description: Quote the text as published.
+      render: markdown
+    validations:
+      required: true
+  - type: textarea
+    id: correction
+    attributes:
+      label: What it should say
+      description: The correction, and — for a formula or a parameter — how you derived it.
+    validations:
+      required: true

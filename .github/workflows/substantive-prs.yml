@@ -1,0 +1,90 @@
+# The spec is generated from FLOP's engineering repository, where the parameter- and citation-drift
+# gates live. Editorial PRs (typos, links, formatting) can be merged here and carried upstream;
+# anything that changes meaning cannot be, so it is closed with a pointer to the issue templates
+# rather than left to rot in the queue.
+name: Triage pull requests
+
+on:
+  pull_request_target:
+    types: [opened, reopened]
+
+permissions:
+  pull-requests: write
+
+jobs:
+  triage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const number = context.payload.pull_request.number;
+
+            const files = await github.paginate(github.rest.pulls.listFiles, {
+              owner, repo, pull_number: number, per_page: 100,
+            });
+
+            // Generated documents. An editorial fix to these is welcome; it is applied upstream and
+            // re-published, so even a merged PR here would be overwritten by the next publish.
+            const generated = new Set([
+              'yellowpaper.md',
+              'yellowpaper.html',
+              'yellowpaper-coverage.md',
+              'decisions/v0.4.md',
+            ]);
+
+            const touchesGenerated = files.some(f => generated.has(f.filename));
+            if (!touchesGenerated) return;   // README/CONTRIBUTING/workflow PRs are ordinary.
+
+            // Heuristic, deliberately loose: a small diff is plausibly editorial and gets a human
+            // read; a large one is treated as substantive.
+            const changed = files
+              .filter(f => generated.has(f.filename))
+              .reduce((n, f) => n + f.additions + f.deletions, 0);
+            const editorial = changed <= 10;
+
+            const body = editorial
+              ? [
+                  'Thanks — this touches the generated spec text.',
+                  '',
+                  '`yellowpaper.md` is built from FLOP\'s engineering repository, so a merge here is',
+                  'overwritten by the next publish. If this is an editorial fix (typo, link,',
+                  'formatting) we will carry it upstream and credit you in `ERRATA.md`; no further',
+                  'action is needed from you.',
+                  '',
+                  'If it changes a requirement, a parameter, or an argument, please open a',
+                  '[Challenge or Ambiguity issue](../../issues/new/choose) instead — that is where it',
+                  'can be acted on, since a spec change needs a decision record and a gate run that',
+                  'this repository cannot produce.',
+                ].join('\n')
+              : [
+                  'Thanks for taking the time to write this out.',
+                  '',
+                  'Closing, and not because the change is wrong: `yellowpaper.md` here is a generated',
+                  'mirror. The spec is authored in FLOP\'s engineering repository, where a change of',
+                  'this size needs a decision record and the parameter- and citation-drift gates —',
+                  'none of which this repository can run. A merge here would be reverted by the next',
+                  'publish.',
+                  '',
+                  'Please re-open the substance as a [Challenge or Ambiguity',
+                  'issue](../../issues/new/choose), quoting the version and section. It gets a real',
+                  'response there, and accepted findings are credited in `ERRATA.md` and in the',
+                  'decision record.',
+                  '',
+                  'See [CONTRIBUTING.md](../blob/main/CONTRIBUTING.md) for why the split exists.',
+                ].join('\n');
+
+            await github.rest.issues.createComment({
+              owner, repo, issue_number: number, body,
+            });
+            await github.rest.issues.addLabels({
+              owner, repo, issue_number: number,
+              labels: [editorial ? 'editorial' : 'substantive'],
+            });
+
+            if (!editorial) {
+              await github.rest.pulls.update({
+                owner, repo, pull_number: number, state: 'closed',
+              });
+            }

@@ -1,0 +1,43 @@
+name: Ambiguity
+description: A requirement that admits two conforming implementations.
+title: "ambiguity: "
+labels: ["ambiguity"]
+body:
+  - type: markdown
+    attributes:
+      value: >-
+        The most valuable report we receive. A spec that two competent implementers read differently
+        is a consensus failure waiting for its second client.
+  - type: input
+    id: location
+    attributes:
+      label: Version and section
+      placeholder: "v0.5 §12.5"
+    validations:
+      required: true
+  - type: textarea
+    id: text
+    attributes:
+      label: The requirement
+      description: Quote the sentence or block that is underdetermined.
+      render: markdown
+    validations:
+      required: true
+  - type: textarea
+    id: readings
+    attributes:
+      label: The two readings
+      description: >-
+        Describe both implementations that satisfy the text as written. Be concrete — state what each
+        one does at the point where they diverge.
+    validations:
+      required: true
+  - type: textarea
+    id: consequence
+    attributes:
+      label: What divergence costs
+      description: >-
+        What happens when two nodes pick different readings — a state fork, a settlement mismatch, a
+        rejected proof, an economic difference. If it is harmless, say so; that is useful too.
+    validations:
+      required: false

@@ -1,0 +1,12 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Report a security vulnerability (private)
+    url: https://github.com/flop-labs/yellowpaper/security/advisories/new
+    about: >-
+      Consensus, verification, metering, or economic attacks — anything exploitable. Never file
+      these as a public issue. See SECURITY.md.
+  - name: Read the open specification items first
+    url: https://github.com/flop-labs/yellowpaper/blob/main/yellowpaper.md#appendix-e--open-specification-items
+    about: >-
+      Appendix E lists every value and mechanism we already know is unresolved, with placeholders
+      and blockers. Your gap may already be numbered there.

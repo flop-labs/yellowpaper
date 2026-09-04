@@ -1,0 +1,23 @@
+name: Question
+description: Something is unclear and you want to understand it.
+title: "question: "
+labels: ["question"]
+body:
+  - type: markdown
+    attributes:
+      value: >-
+        Questions are welcome. A question that had to be asked is often an ambiguity that has not
+        been recognized yet — we may convert it.
+  - type: input
+    id: location
+    attributes:
+      label: Version and section
+      placeholder: "v0.5 §4.2"
+    validations:
+      required: false
+  - type: textarea
+    id: question
+    attributes:
+      label: Your question
+    validations:
+      required: true

@@ -1,0 +1,49 @@
+name: Challenge
+description: Dispute a claim, bound, proof sketch, or incentive argument.
+title: "challenge: "
+labels: ["challenge"]
+body:
+  - type: markdown
+    attributes:
+      value: >-
+        For findings of the form "this may not work" — a loose bound, an unrealistic assumption, an
+        incentive that does not hold. If your finding is instead **exploitable**, do not file it
+        here: report it privately per [SECURITY.md](../blob/main/SECURITY.md).
+  - type: input
+    id: location
+    attributes:
+      label: Version and section
+      placeholder: "v0.5 §7.2 / D-0418"
+    validations:
+      required: true
+  - type: textarea
+    id: claim
+    attributes:
+      label: The claim you dispute
+      description: Quote it, or name the decision ID.
+      render: markdown
+    validations:
+      required: true
+  - type: textarea
+    id: argument
+    attributes:
+      label: Why it does not hold
+      description: >-
+        The assumption you think fails, and the argument or model that shows it. A worked adversary —
+        who deviates, what it costs them, what they gain — is the most persuasive form.
+    validations:
+      required: true
+  - type: textarea
+    id: alternative
+    attributes:
+      label: What you would do instead
+      description: Optional, and not required for the report to be useful.
+    validations:
+      required: false
+  - type: textarea
+    id: references
+    attributes:
+      label: References
+      description: Papers, prior art, or measurements supporting the argument.
+    validations:
+      required: false
