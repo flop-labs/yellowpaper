@@ -1,0 +1,24 @@
+{
+  "export_profile": "summary-only",
+  "files": [
+    {
+      "path": "CLAIMS.md",
+      "sha256": "c6d980638e38d81d8df40ea04fa0dbce27b01670236156003bea6a4971b1d5ef"
+    },
+    {
+      "path": "LICENSES.md",
+      "sha256": "4fa0da7bbc2a7d88610f778711428a7c4519993678a49f3959f5460bbc958bb6"
+    },
+    {
+      "path": "PUBLICATION.json",
+      "sha256": "a7b6593a7cedfa77e74edcd88fb230c64808bc595d118631dbeddf4d6400e577"
+    },
+    {
+      "path": "README.md",
+      "sha256": "95d2e2d359c390498db8e6e30ae6ede1aaa9368e5d6193f41744d885fb495071"
+    }
+  ],
+  "publication_status": "PENDING",
+  "schema": 1,
+  "yellowpaper_version": "0.5.0-draft"
+}

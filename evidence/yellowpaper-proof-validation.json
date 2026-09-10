@@ -1,0 +1,58 @@
+{
+  "schema_version": 2,
+  "date": "2026-09-08",
+  "scope": "Named Lean claims and bounded Quint models in the private release bundle; no runtime refinement or deployment-security result.",
+  "bundle_manifest_sha256": "3fe103eedffa800f0eb87a8831af0eabad650bc97e224de8a792387e4d661e21",
+  "lean_source_revision": "da13d7c16a11aaf0aa4376ff34476010a0bb792d",
+  "quint_source_revision": "f9c70cad1d991cbe2e6a0651a35145d8c603874b",
+  "implementation_mapping_revision": "f9c70cad1d991cbe2e6a0651a35145d8c603874b",
+  "environment": {
+    "platform": "x86_64-unknown-linux-gnu",
+    "node_version": "22.23.0",
+    "pnpm_version": "10.33.0",
+    "quint_version": "0.32.0",
+    "quint_backend": "typescript",
+    "lean_version": "4.31.0",
+    "lean_commit": "68218e876d2a38b1985b8590fff244a83c321783",
+    "isolation": "New temporary bundle with initially empty Corepack, pnpm store, ELAN_HOME, LAKE_HOME, XDG_CACHE_HOME and MATHLIB_CACHE_DIR. Checks referenced only manifest-hashed bundle files and locked public dependencies; no surrounding repository source path or pre-existing dependency cache was required."
+  },
+  "checks": [
+    {
+      "command": "corepack pnpm@10.33.0 install --frozen-lockfile --ignore-scripts",
+      "result": "Installed the 79 package/version pairs pinned by pnpm-lock.yaml from an empty store.",
+      "exit_code": 0
+    },
+    {
+      "command": "uv run --python 3.12 --no-project reproduce.py (manifest phase)",
+      "result": "Verified SHA-256 for all 36 frozen inputs under the recorded Node 22.23.0 runtime.",
+      "exit_code": 0
+    },
+    {
+      "command": "uv run --python 3.12 --no-project reproduce.py (Quint phase; exact plan in MODEL-CHECKS.json)",
+      "result": "Five typechecks, 15 seeded bounded invariant runs and six deterministic witnesses passed; the mutation gate detected the deliberately broken presence-only variant.",
+      "exit_code": 0
+    },
+    {
+      "command": "lake exe cache get",
+      "result": "Fetched only the revisions in the source Lake lock and the public Mathlib cache.",
+      "exit_code": 0
+    },
+    {
+      "command": "lake build",
+      "result": "The exact private release Lean bundle built successfully.",
+      "exit_code": 0
+    },
+    {
+      "command": "lake env lean AxiomAudit.lean",
+      "result": "Named axiom checks and the 100/33/67 unit-seat boundary examples were accepted.",
+      "exit_code": 0
+    }
+  ],
+  "validation_sequence": "The final empty-cache run fetched the locked dependencies and completed the exact generated private release bundle through `just yellowpaper-proof-cleanroom` with exit code 0.",
+  "limitations": [
+    "The named Lean capstone audit is scoped to CLAIMS.md; build job counts and total theorem counts are not claim-level evidence.",
+    "The Quint successes are seeded bounded simulations, not exhaustive model checking; the broken-gate mutant and diagnostic trace are private regression fixtures.",
+    "Runtime-to-model refinement, seed influence, sampler capture policy, TEE/TOPLOC measurement validity and the complete asynchronous AlephBFT protocol are not proved.",
+    "A FLOP-owned source-license grant remains a release-owner publication obligation; no public push or deployed-protocol verification claim is authorized."
+  ]
+}

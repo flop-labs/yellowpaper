@@ -43,7 +43,7 @@ is genuinely unclear which one you have, report privately and we will move it in
   report is our failure, not a rejection.
 - **An assessment within 14 days**, saying whether we agree it is exploitable and what we intend to
   do about it.
-- **Credit** in the advisory and in [`ERRATA.md`](ERRATA.md), unless you prefer to stay anonymous.
+- **Credit** in the advisory and in [`CHANGELOG.md`](CHANGELOG.md), unless you prefer to stay anonymous.
 - **Coordinated disclosure.** We will agree a timeline with you rather than impose one.
 
 ## Scope and honesty about it

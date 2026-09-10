@@ -50,4 +50,4 @@ Do not open an issue for a vulnerability. See [`SECURITY.md`](SECURITY.md).
 ## Attribution and license
 
 Contributions to the text are accepted under [CC BY 4.0](LICENSE). Accepted reports are credited in
-[`ERRATA.md`](ERRATA.md) by GitHub handle unless you ask otherwise.
+[`CHANGELOG.md`](CHANGELOG.md) by GitHub handle unless you ask otherwise.

@@ -1,0 +1,59 @@
+{
+  "attacker_stake_fraction": {
+    "decimal": 0.17937219730941703,
+    "exact": "40/223"
+  },
+  "claim_disposition": "Counterexample: aggregate attacker stake does not determine a binomial seat tail for unequal-weight distinct-identity sampling.",
+  "distribution": {
+    "39": {
+      "decimal": 0.9952371040498744,
+      "exact": "300691545171779198337307428456030759275126300411544140057304446617943946818921/302130561600033164390296430986565481433863972875239039545398326838141711003704"
+    },
+    "40": {
+      "decimal": 0.004762895950125584,
+      "exact": "1439016428253966052989002530534722158737672463694899488093880220197764184783/302130561600033164390296430986565481433863972875239039545398326838141711003704"
+    }
+  },
+  "draws": 100,
+  "eligibility_floor": 100000,
+  "failure_probability": {
+    "decimal": 1.0,
+    "exact": "1/1"
+  },
+  "failure_threshold_seats": 34,
+  "groups": [
+    {
+      "attacker": true,
+      "count": 40,
+      "name": "attacker",
+      "weight": 100000
+    },
+    {
+      "attacker": false,
+      "count": 61,
+      "name": "honest",
+      "weight": 300000
+    }
+  ],
+  "implementation_mapping": {
+    "caveats": [
+      "modulo mapping is not exactly uniform unless the bound divides 2^128",
+      "aggregate u128 stake sum must not overflow",
+      "interval accumulation saturates at u128::MAX and removal subtraction saturates",
+      "seed availability and adversarial influence are separate assumptions"
+    ],
+    "interval_mapping": "next_u128 modulo remaining aggregate stake",
+    "prng": "SplitMix64 expands the 32-byte seed into paired 128-bit values",
+    "status": "not represented by the exact enumerator"
+  },
+  "model": "ideal sequential probability-proportional-to-remaining-weight draws without replacement",
+  "open_policy": [
+    "attacker identity-control, delegation-control, and eligibility-cost model",
+    "ratified minimum eligible-pool and zero-work bootstrap behavior",
+    "BABE-VRF withholding/grinding budget and repeated-epoch exposure horizon",
+    "a bound connecting the concrete PRNG/modulo/overflow behavior to the ideal draw model"
+  ],
+  "scope": "Exact for the stated two homogeneous groups. It does not prove PRNG uniformity, the concrete seed-to-draw mapping, BABE-VRF seed unbiasability, independence across epochs, or another population.",
+  "strict_engine_premise": "3 * attacker_seats < realized_committee_size",
+  "voting_unit": "one distinct eligible identity per committee seat"
+}

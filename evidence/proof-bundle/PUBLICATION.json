@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "status": "PENDING",
+  "export_profile": "summary-only",
+  "blockers": [
+    {
+      "id": "flop-source-license",
+      "status": "PENDING",
+      "completion": "Release owner attaches an explicit software license covering the FLOP Lean and Quint sources."
+    },
+    {
+      "id": "implementation-refinement",
+      "status": "PENDING",
+      "completion": "Each promoted protocol claim passes its named runtime-to-model or mechanism-specific refinement gate."
+    }
+  ]
+}

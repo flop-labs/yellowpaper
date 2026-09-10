@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://flop.network/spec/wire-format-v1.schema.json",
+  "title": "FLOP Appendix F wire-format vectors",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "profile",
+    "status",
+    "generation",
+    "codec",
+    "decode_policy_v1",
+    "direct_rail_v1",
+    "compute_channel_v1",
+    "data_ref_v1",
+    "negative_cases",
+    "coverage"
+  ],
+  "properties": {
+    "$schema": { "const": "wire-format-v1.schema.json" },
+    "profile": { "const": "flop-wire-v1" },
+    "status": { "const": "public-canonical" },
+    "generation": { "$ref": "#/$defs/object" },
+    "codec": { "$ref": "#/$defs/object" },
+    "decode_policy_v1": { "$ref": "#/$defs/vector" },
+    "direct_rail_v1": { "$ref": "#/$defs/vector" },
+    "compute_channel_v1": { "$ref": "#/$defs/vector" },
+    "data_ref_v1": { "$ref": "#/$defs/vector" },
+    "negative_cases": {
+      "type": "array",
+      "minItems": 12,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "bytes_hex", "expected", "site"],
+        "properties": {
+          "id": { "type": "string" },
+          "bytes_hex": { "type": "string", "pattern": "^[0-9a-f]*$" },
+          "mutation": { "type": "string" },
+          "expected": { "type": "string" },
+          "site": { "type": "string" }
+        }
+      }
+    },
+    "coverage": {
+      "type": "array",
+      "minItems": 6,
+      "items": {
+        "type": "object",
+        "required": ["appendix", "family", "consumer"],
+        "properties": {
+          "appendix": { "type": "string" },
+          "family": { "type": "string" },
+          "consumer": { "type": "string" }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "object": { "type": "object" },
+    "vector": {
+      "type": "object",
+      "minProperties": 2
+    }
+  }
+}

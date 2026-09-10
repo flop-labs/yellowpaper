@@ -1,0 +1,584 @@
+{
+  "challenger_examples": [
+    {
+      "name": "positive",
+      "utility": "4/5"
+    },
+    {
+      "name": "no_reward_high_cost",
+      "utility": "-26/5"
+    }
+  ],
+  "collection_waterfall": [
+    {
+      "note": "Collected slash/burn; no victim payout is implied.",
+      "penalties_collected": [
+        1
+      ],
+      "penalty_demands": [
+        1
+      ],
+      "uncollectible_penalty": 0
+    },
+    {
+      "note": "Collected slash/burn; no victim payout is implied.",
+      "penalties_collected": [
+        1,
+        0
+      ],
+      "penalty_demands": [
+        1,
+        1
+      ],
+      "uncollectible_penalty": 1
+    },
+    {
+      "note": "Collected slash/burn; no victim payout is implied.",
+      "penalties_collected": [
+        1,
+        0,
+        0,
+        0
+      ],
+      "penalty_demands": [
+        1,
+        1,
+        1,
+        1
+      ],
+      "uncollectible_penalty": 3
+    }
+  ],
+  "conditional_chain": "P(S)*P(D|S)*P(C|S,D)*P(I|S,D,C)*P(U|S,D,C,I)*P(K|S,D,C,I,U)",
+  "correlated_failure_sensitivity": [
+    {
+      "correlation_input": "0",
+      "opportunities": 1,
+      "probability_any_detection": "4617/200000",
+      "probability_any_detection_decimal": 0.023085
+    },
+    {
+      "correlation_input": "1/2",
+      "opportunities": 1,
+      "probability_any_detection": "4617/200000",
+      "probability_any_detection_decimal": 0.023085
+    },
+    {
+      "correlation_input": "1",
+      "opportunities": 1,
+      "probability_any_detection": "4617/200000",
+      "probability_any_detection_decimal": 0.023085
+    },
+    {
+      "correlation_input": "0",
+      "opportunities": 2,
+      "probability_any_detection": "1825483311/40000000000",
+      "probability_any_detection_decimal": 0.045637082775
+    },
+    {
+      "correlation_input": "1/2",
+      "opportunities": 2,
+      "probability_any_detection": "2748883311/80000000000",
+      "probability_any_detection_decimal": 0.0343610413875
+    },
+    {
+      "correlation_input": "1",
+      "opportunities": 2,
+      "probability_any_detection": "4617/200000",
+      "probability_any_detection_decimal": 0.023085
+    },
+    {
+      "correlation_input": "0",
+      "opportunities": 4,
+      "probability_any_detection": "142706275561260477279/1600000000000000000000",
+      "probability_any_detection_decimal": 0.0891914222257878
+    },
+    {
+      "correlation_input": "1/2",
+      "opportunities": 4,
+      "probability_any_detection": "179642275561260477279/3200000000000000000000",
+      "probability_any_detection_decimal": 0.056138211112893896
+    },
+    {
+      "correlation_input": "1",
+      "opportunities": 4,
+      "probability_any_detection": "4617/200000",
+      "probability_any_detection_decimal": 0.023085
+    },
+    {
+      "correlation_input": "0",
+      "opportunities": 8,
+      "probability_any_detection": "436295000711467117943370225194549124756159/2560000000000000000000000000000000000000000",
+      "probability_any_detection_decimal": 0.17042773465291683
+    },
+    {
+      "correlation_input": "1/2",
+      "opportunities": 8,
+      "probability_any_detection": "495392600711467117943370225194549124756159/5120000000000000000000000000000000000000000",
+      "probability_any_detection_decimal": 0.09675636732645843
+    },
+    {
+      "correlation_input": "1",
+      "opportunities": 8,
+      "probability_any_detection": "4617/200000",
+      "probability_any_detection_decimal": 0.023085
+    },
+    {
+      "correlation_input": "0",
+      "opportunities": 16,
+      "probability_any_detection": "2043477075996892550917664668278934419324996656596110128325403066125062481318791566719/6553600000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "probability_any_detection_decimal": 0.3118098565669086
+    },
+    {
+      "correlation_input": "1/2",
+      "opportunities": 16,
+      "probability_any_detection": "2194766931996892550917664668278934419324996656596110128325403066125062481318791566719/13107200000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "probability_any_detection_decimal": 0.16744742828345432
+    },
+    {
+      "correlation_input": "1",
+      "opportunities": 16,
+      "probability_any_detection": "4617/200000",
+      "probability_any_detection_decimal": 0.023085
+    }
+  ],
+  "falsification": "In the exported sweep, bribes and future-revenue loss are zero: exposure >= p_effective * discounted collateral fails the modeled sufficient condition. In the general model compare net incremental gain against p_effective * (discounted collateral + conditional future-revenue loss). A failed sufficient condition does not rule out deterrence through sanctions outside this model.",
+  "not_established": [
+    "empirical values for downstream conditionals",
+    "challenger reward funding",
+    "miner-side aggregate exposure reservation across ordinary channels",
+    "pro-rata recovery after the first full-stake slash",
+    "independence across channels or epochs"
+  ],
+  "payoff_inputs": {
+    "avoided_costs": "Compute, data-publication, or other costs avoided only by attacking; exclude costs also avoided honestly.",
+    "bribes": "Attack costs paid regardless of detection in this model.",
+    "exposures": "Fraud-only revenue or external benefit above the honest baseline; use a conservative total attack-gain upper bound when classification is uncertain.",
+    "future_revenue_loss": "Expected future honest revenue lost only after a collectible verdict; multiplied by the verdict probability."
+  },
+  "ratified_or_wired": [
+    "selection rate is configured",
+    "fraud verdict routes to full-stake forgery slash",
+    "busy count blocks unbond while sessions/disputes remain open",
+    "unbonding sponsor principal remains slashable"
+  ],
+  "scenarios": [
+    {
+      "factors": {
+        "challenge": "1",
+        "collection": "1",
+        "data": "1",
+        "inclusion": "1",
+        "selection": "1/20",
+        "upheld": "1"
+      },
+      "p_effective": "1/20",
+      "p_effective_decimal": 0.05,
+      "scenario": "selection_only"
+    },
+    {
+      "factors": {
+        "challenge": "4/5",
+        "collection": "3/4",
+        "data": "9/10",
+        "inclusion": "19/20",
+        "selection": "1/20",
+        "upheld": "9/10"
+      },
+      "p_effective": "4617/200000",
+      "p_effective_decimal": 0.023085,
+      "scenario": "illustrative_stress"
+    },
+    {
+      "factors": {
+        "challenge": "1",
+        "collection": "1",
+        "data": "0",
+        "inclusion": "1",
+        "selection": "1/20",
+        "upheld": "1"
+      },
+      "p_effective": "0",
+      "p_effective_decimal": 0.0,
+      "scenario": "no_data"
+    },
+    {
+      "factors": {
+        "challenge": "0",
+        "collection": "1",
+        "data": "1",
+        "inclusion": "1",
+        "selection": "1/20",
+        "upheld": "1"
+      },
+      "p_effective": "0",
+      "p_effective_decimal": 0.0,
+      "scenario": "no_challenger"
+    },
+    {
+      "factors": {
+        "challenge": "1",
+        "collection": "1",
+        "data": "1",
+        "inclusion": "0",
+        "selection": "1/20",
+        "upheld": "1"
+      },
+      "p_effective": "0",
+      "p_effective_decimal": 0.0,
+      "scenario": "finality_stall"
+    }
+  ],
+  "schema_version": 1,
+  "scope": "Deterministic sensitivity model; probabilities are labeled inputs, not measurements.",
+  "shared_collateral": [
+    {
+      "channels": 1,
+      "collateral": 1,
+      "deterred": false,
+      "deterrence_margin": "-19/20",
+      "exposure": 1,
+      "exposure_per_collateral": 1,
+      "fraud_payoff": "19/20",
+      "scenario": "selection_only"
+    },
+    {
+      "channels": 2,
+      "collateral": 1,
+      "deterred": false,
+      "deterrence_margin": "-39/20",
+      "exposure": 2,
+      "exposure_per_collateral": 2,
+      "fraud_payoff": "39/20",
+      "scenario": "selection_only"
+    },
+    {
+      "channels": 4,
+      "collateral": 1,
+      "deterred": false,
+      "deterrence_margin": "-79/20",
+      "exposure": 4,
+      "exposure_per_collateral": 4,
+      "fraud_payoff": "79/20",
+      "scenario": "selection_only"
+    },
+    {
+      "channels": 8,
+      "collateral": 1,
+      "deterred": false,
+      "deterrence_margin": "-159/20",
+      "exposure": 8,
+      "exposure_per_collateral": 8,
+      "fraud_payoff": "159/20",
+      "scenario": "selection_only"
+    },
+    {
+      "channels": 16,
+      "collateral": 1,
+      "deterred": false,
+      "deterrence_margin": "-319/20",
+      "exposure": 16,
+      "exposure_per_collateral": 16,
+      "fraud_payoff": "319/20",
+      "scenario": "selection_only"
+    },
+    {
+      "channels": 1,
+      "collateral": 1,
+      "deterred": false,
+      "deterrence_margin": "-195383/200000",
+      "exposure": 1,
+      "exposure_per_collateral": 1,
+      "fraud_payoff": "195383/200000",
+      "scenario": "illustrative_stress"
+    },
+    {
+      "channels": 2,
+      "collateral": 1,
+      "deterred": false,
+      "deterrence_margin": "-395383/200000",
+      "exposure": 2,
+      "exposure_per_collateral": 2,
+      "fraud_payoff": "395383/200000",
+      "scenario": "illustrative_stress"
+    },
+    {
+      "channels": 4,
+      "collateral": 1,
+      "deterred": false,
+      "deterrence_margin": "-795383/200000",
+      "exposure": 4,
+      "exposure_per_collateral": 4,
+      "fraud_payoff": "795383/200000",
+      "scenario": "illustrative_stress"
+    },
+    {
+      "channels": 8,
+      "collateral": 1,
+      "deterred": false,
+      "deterrence_margin": "-1595383/200000",
+      "exposure": 8,
+      "exposure_per_collateral": 8,
+      "fraud_payoff": "1595383/200000",
+      "scenario": "illustrative_stress"
+    },
+    {
+      "channels": 16,
+      "collateral": 1,
+      "deterred": false,
+      "deterrence_margin": "-3195383/200000",
+      "exposure": 16,
+      "exposure_per_collateral": 16,
+      "fraud_payoff": "3195383/200000",
+      "scenario": "illustrative_stress"
+    },
+    {
+      "channels": 1,
+      "collateral": 1,
+      "deterred": false,
+      "deterrence_margin": "-1",
+      "exposure": 1,
+      "exposure_per_collateral": 1,
+      "fraud_payoff": "1",
+      "scenario": "no_data"
+    },
+    {
+      "channels": 2,
+      "collateral": 1,
+      "deterred": false,
+      "deterrence_margin": "-2",
+      "exposure": 2,
+      "exposure_per_collateral": 2,
+      "fraud_payoff": "2",
+      "scenario": "no_data"
+    },
+    {
+      "channels": 4,
+      "collateral": 1,
+      "deterred": false,
+      "deterrence_margin": "-4",
+      "exposure": 4,
+      "exposure_per_collateral": 4,
+      "fraud_payoff": "4",
+      "scenario": "no_data"
+    },
+    {
+      "channels": 8,
+      "collateral": 1,
+      "deterred": false,
+      "deterrence_margin": "-8",
+      "exposure": 8,
+      "exposure_per_collateral": 8,
+      "fraud_payoff": "8",
+      "scenario": "no_data"
+    },
+    {
+      "channels": 16,
+      "collateral": 1,
+      "deterred": false,
+      "deterrence_margin": "-16",
+      "exposure": 16,
+      "exposure_per_collateral": 16,
+      "fraud_payoff": "16",
+      "scenario": "no_data"
+    },
+    {
+      "channels": 1,
+      "collateral": 1,
+      "deterred": false,
+      "deterrence_margin": "-1",
+      "exposure": 1,
+      "exposure_per_collateral": 1,
+      "fraud_payoff": "1",
+      "scenario": "no_challenger"
+    },
+    {
+      "channels": 2,
+      "collateral": 1,
+      "deterred": false,
+      "deterrence_margin": "-2",
+      "exposure": 2,
+      "exposure_per_collateral": 2,
+      "fraud_payoff": "2",
+      "scenario": "no_challenger"
+    },
+    {
+      "channels": 4,
+      "collateral": 1,
+      "deterred": false,
+      "deterrence_margin": "-4",
+      "exposure": 4,
+      "exposure_per_collateral": 4,
+      "fraud_payoff": "4",
+      "scenario": "no_challenger"
+    },
+    {
+      "channels": 8,
+      "collateral": 1,
+      "deterred": false,
+      "deterrence_margin": "-8",
+      "exposure": 8,
+      "exposure_per_collateral": 8,
+      "fraud_payoff": "8",
+      "scenario": "no_challenger"
+    },
+    {
+      "channels": 16,
+      "collateral": 1,
+      "deterred": false,
+      "deterrence_margin": "-16",
+      "exposure": 16,
+      "exposure_per_collateral": 16,
+      "fraud_payoff": "16",
+      "scenario": "no_challenger"
+    },
+    {
+      "channels": 1,
+      "collateral": 1,
+      "deterred": false,
+      "deterrence_margin": "-1",
+      "exposure": 1,
+      "exposure_per_collateral": 1,
+      "fraud_payoff": "1",
+      "scenario": "finality_stall"
+    },
+    {
+      "channels": 2,
+      "collateral": 1,
+      "deterred": false,
+      "deterrence_margin": "-2",
+      "exposure": 2,
+      "exposure_per_collateral": 2,
+      "fraud_payoff": "2",
+      "scenario": "finality_stall"
+    },
+    {
+      "channels": 4,
+      "collateral": 1,
+      "deterred": false,
+      "deterrence_margin": "-4",
+      "exposure": 4,
+      "exposure_per_collateral": 4,
+      "fraud_payoff": "4",
+      "scenario": "finality_stall"
+    },
+    {
+      "channels": 8,
+      "collateral": 1,
+      "deterred": false,
+      "deterrence_margin": "-8",
+      "exposure": 8,
+      "exposure_per_collateral": 8,
+      "fraud_payoff": "8",
+      "scenario": "finality_stall"
+    },
+    {
+      "channels": 16,
+      "collateral": 1,
+      "deterred": false,
+      "deterrence_margin": "-16",
+      "exposure": 16,
+      "exposure_per_collateral": 16,
+      "fraud_payoff": "16",
+      "scenario": "finality_stall"
+    }
+  ],
+  "sources": [
+    {
+      "path": "pallets/pallets/compute-channel/src/lib.rs",
+      "references": [
+        {
+          "fragment": "Self::check_reservation_cap(&agent, escrow)?;",
+          "line": 2882
+        }
+      ],
+      "sha256": "d8e8167836b0b5894d2468668956762cf72c64f49222733f3e64000420bae4ce",
+      "span": [
+        "pub fn open_channel(",
+        "pub fn top_up_escrow("
+      ]
+    },
+    {
+      "path": "pallets/pallets/compute-channel/src/lib.rs",
+      "references": [
+        {
+          "fragment": "T::Slasher::slash_fraud(&ch.miner, channel_id)?;",
+          "line": 4011
+        }
+      ],
+      "sha256": "8405c248d2c37445337b7598a945dead757230df5c2bdbf62266541c0a79b54c",
+      "span": [
+        "pub fn resolve_timeout_dispute(",
+        "pub fn resolve_unrecoverable_transcript("
+      ]
+    },
+    {
+      "path": "pallets/runtime/zkverify/src/lib.rs",
+      "references": [
+        {
+          "fragment": "slash_proof_forgery_with_amount(",
+          "line": 1567
+        },
+        {
+          "fragment": "Error::<Runtime>::NotSlashable",
+          "line": 1579
+        },
+        {
+          "fragment": "Ok(0)",
+          "line": 1582
+        }
+      ],
+      "sha256": "a0a03e190685a10defb5e67389eea9d0ffbf610c3ef070db58f1e1033115910e",
+      "span": [
+        "impl pallet_compute_channel::ChannelSlasher",
+        "pub struct ChannelDaAvailability"
+      ]
+    },
+    {
+      "path": "pallets/pallets/miner-slashing/src/lib.rs",
+      "references": [
+        {
+          "fragment": "Perbill::from_percent(100)",
+          "line": 503
+        },
+        {
+          "fragment": "true, // permanent blacklist",
+          "line": 505
+        }
+      ],
+      "sha256": "4ceddce058635dd23b4672ba772891d7d42d2c859b817f59197b601fabccae77",
+      "span": [
+        "pub fn slash_proof_forgery_with_amount(",
+        "pub fn slash_audit_forfeit("
+      ]
+    },
+    {
+      "path": "pallets/pallets/miner-staking/src/lib.rs",
+      "references": [
+        {
+          "fragment": "Self::miner_busy_count(&miner) == 0",
+          "line": 744
+        }
+      ],
+      "sha256": "e4750cf9015afcc1310d017f049b7cc331ba3297332c16744ee09f1a9a201ebf",
+      "span": [
+        "pub fn unbond(",
+        "pub fn claim_unbonded("
+      ]
+    },
+    {
+      "path": "pallets/pallets/miner-staking/src/lib.rs",
+      "references": [
+        {
+          "fragment": "SponsorPositionStatus::Active | SponsorPositionStatus::Unbonding",
+          "line": 1457
+        }
+      ],
+      "sha256": "ab955d31a837564a2d0f3935e214ea1cb01cf2b1553e088e69164ec22bbc7998",
+      "span": [
+        "pub fn slash_sponsor_positions(",
+        "pub fn slash_delegator_positions("
+      ]
+    }
+  ]
+}
