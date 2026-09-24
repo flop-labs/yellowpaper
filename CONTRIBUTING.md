@@ -1,13 +1,13 @@
 # Contributing
 
-**Issues are the contribution channel. Pull requests are for typos.**
+**Issues are the current contribution channel. Pull requests are not currently open for general
+contribution.**
 
-That asymmetry is worth stating plainly before you spend time on a patch. This repository is a
-generated mirror: `yellowpaper.md` is built from FLOP's engineering repository, where the spec is
-gated against parameter drift (Appendix A is generated from the canonical parameter YAML) and
-citation drift. A substantive change here cannot carry the decision record, the regenerated
-parameter table, or the gate run that a spec change requires — so it cannot be merged as written,
-however correct it is.
+This repository is a generated mirror: `yellowpaper.md` is built from FLOP's engineering repository,
+where the spec is gated against parameter drift (Appendix A is generated from the canonical
+parameter YAML) and citation drift. Changes cannot be merged directly into this mirror without being
+overwritten by the next publish. A maintainer instead carries accepted corrections into the upstream
+source of truth and republishes them here.
 
 ## Open an issue
 
@@ -32,16 +32,20 @@ gap — though "E.22's placeholder does not work because…" is very much worth 
 
 ## Pull requests
 
-**Accepted:** typos, grammar, broken links, malformed tables, rendering fixes. Small, mechanical,
-no change in meaning.
+Pull requests are not currently open for general contribution, including typos, grammar, broken
+links, malformed tables, and rendering fixes.
 
-**Not accepted here:** anything that changes a requirement, a parameter, a bound, or an
-argument — including changes that are clearly right. These are closed with a pointer back to the
-issue templates, and the substance is then handled upstream where the decision record and the drift
-gates live. This is not a judgment on the patch; it is where the merge is possible.
+To submit one of these small mechanical corrections, open an **Erratum** issue and paste the exact
+change into the issue body as a fenced diff:
 
-A workflow closes substantive PRs automatically. It is not a bot brushing you off — the explanation
-above is the whole of it.
+```diff
+-text with the typo
++corrected text
+```
+
+For anything that changes a requirement, parameter, bound, or argument, use the matching issue
+template and describe the consequence. A maintainer will handle accepted changes upstream, where the
+decision record and drift gates are available.
 
 ## Security
 
@@ -49,5 +53,5 @@ Do not open an issue for a vulnerability. See [`SECURITY.md`](SECURITY.md).
 
 ## Attribution and license
 
-Contributions to the text are accepted under [CC BY 4.0](LICENSE). Accepted reports are credited in
-[`CHANGELOG.md`](CHANGELOG.md) by GitHub handle unless you ask otherwise.
+Contributions to the text are accepted under [CC BY 4.0](LICENSE). An accepted report keeps its credit
+in its issue, where the resolution is recorded.

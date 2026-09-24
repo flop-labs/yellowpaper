@@ -5,26 +5,22 @@
 > assurance result.
 
 This note records five analyses supporting the initial yellowpaper draft. The generated
-JSON preserves the complete field ledger, exact
+[JSON](../evidence/yellowpaper-claim-evidence.json) preserves the complete field ledger, exact
 binomial fraction, source fragments, assumptions, and open inputs. The
-CSV provides the main rows for independent analysis.
+[CSV](../evidence/yellowpaper-claim-evidence.csv) provides the main rows for independent analysis.
 The byte-for-byte [wire-format corpus](../evidence/wire-format-v1.json) separately covers the canonical
 Rust/TypeScript/Python encoders, signatures, Merkle paths, and malformed-input rejection profile.
 
 ## Reproduce
 
-From a `flop-core` checkout:
-
-```sh
-uv run --script scripts/research/yellowpaper_claim_evidence.py --check --verify-sources
-```
-
-Regenerate after an intentional input change by omitting `--check`. In the public yellowpaper bundle,
-where implementation sources are not required:
+From the public yellowpaper bundle root, where implementation sources are not required:
 
 ```sh
 uv run --script evidence/reproduce.py --check
 ```
+
+Regenerate after an intentional input change by omitting `--check`. The authoring repository's release
+gate additionally verifies source fragments against the complete implementation checkout.
 
 The script uses only the Python standard library. Its ledger fingerprint covers the expected declarations,
 runtime pallet/call indices, ordered call fields, transaction extensions, limits, and charged-weight

@@ -1,7 +1,7 @@
 # Copyright 2026 FLOP Network
 # SPDX-License-Identifier: Apache-2.0
 # /// script
-# requires-python = ">=3.10"
+# requires-python = ">=3.12"
 # dependencies = []
 # ///
 """Exact evidence for sequential weighted sampling without replacement.

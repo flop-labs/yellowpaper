@@ -489,7 +489,7 @@
       "references": [
         {
           "fragment": "Self::check_reservation_cap(&agent, escrow)?;",
-          "line": 2882
+          "line": 2886
         }
       ],
       "sha256": "d8e8167836b0b5894d2468668956762cf72c64f49222733f3e64000420bae4ce",
@@ -503,7 +503,7 @@
       "references": [
         {
           "fragment": "T::Slasher::slash_fraud(&ch.miner, channel_id)?;",
-          "line": 4011
+          "line": 4015
         }
       ],
       "sha256": "8405c248d2c37445337b7598a945dead757230df5c2bdbf62266541c0a79b54c",

@@ -1,6 +1,6 @@
 #!/usr/bin/env -S uv run --script
 # /// script
-# requires-python = ">=3.10"
+# requires-python = ">=3.12"
 # dependencies = ["jsonschema>=4.23,<5"]
 # ///
 """Generate/check the public Appendix F interoperable wire vectors."""
@@ -11,6 +11,7 @@ import argparse
 import importlib.util
 import json
 import sys
+from dataclasses import replace
 from hashlib import sha256
 from pathlib import Path
 
@@ -31,6 +32,7 @@ CHANNEL_ID_DOMAIN_V1 = wire.CHANNEL_ID_DOMAIN_V1
 RECEIPT_DOMAIN = wire.RECEIPT_DOMAIN
 TASK_HASH_DOMAIN_V1 = wire.TASK_HASH_DOMAIN_V1
 TranscriptLeafVersion = wire.TranscriptLeafVersion
+TurnAckRecord = wire.TurnAckRecord
 TurnRecord = wire.TurnRecord
 channel_id_v1 = wire.channel_id_v1
 compact_u32 = wire.compact_u32
@@ -92,16 +94,19 @@ def build() -> dict[str, object]:
     root = merkle_root(tree_leaves)
     assert root_from_path(tree_leaves[2], path) == root
 
-    enclave_public_key = bytes.fromhex(
+    agent_public_key = bytes.fromhex(
         "b41236c517514b30a4d6619f4b4354a2ce593cd4b64a7c29dd45e3de6972997a"
     )
+    enclave_public_key = bytes.fromhex(
+        "207b3ee770b7213b7e76bdb32702e2e166a8fea8a125613d6e98c765f5a06d40"
+    )
     leaf_signature = bytes.fromhex(
-        "94f2f8b99c2080051b431786b410153a928c37eff5054d6e2ab5a109f4a69148"
-        "d9113049764e517c2f9a1a8122a606a8366370f59440d3aabbfc289aeea72086"
+        "2e60e88466a203e1c106a6dfca39276cf97556c3af971f48c4da8845cc23e068"
+        "cbbcaf63aa20672cd21a6f64b9513d086f2ade15c90979e870fc2162c07d2f8d"
     )
     legacy_leaf_signature = bytes.fromhex(
-        "f0644a3f19b6ac702d30830163401c5a037010fa97231e19295de385acad4029ac"
-        "534e04ed9fc181c0de77c5f10507ed1cd90dd3b1163a6fe24de2acca572986"
+        "1454f6cf53b85cd7a0665ef54785cb037bb0464270b42fc0760ba28482eee44e"
+        "aa482284b51d7e23558bf5e844eca10b3c2b62f95504fccf2c4d57e86b910180"
     )
     record = TurnRecord(
         TranscriptLeafVersion.V3,
@@ -119,9 +124,31 @@ def build() -> dict[str, object]:
     )
     blob = encode_transcript_blob(channel_id, [record])
     assert decode_transcript_blob(blob) == (channel_id, [record])
+    agent_send_ms, agent_recv_ms = (1 << 64) - 5, (1 << 64) - 1
+    ack_preimage = (
+        channel_id
+        + fields["turn_index"].to_bytes(4, "little")  # type: ignore[union-attr]
+        + leaves["V3"]
+        + agent_send_ms.to_bytes(8, "little")
+        + agent_recv_ms.to_bytes(8, "little")
+    )
+    ack_signature = bytes.fromhex(
+        "4241d4420396f9478f3d9a7f302360665c56499d33b40f00866c6124faaa420d"
+        "3ad22f9670c010c7b4008f489cfd017b28dcb931d9ceb3c9eb16ce32a806d88a"
+    )
+    ack = TurnAckRecord(agent_send_ms, agent_recv_ms, ack_signature)
+    record_with_ack = replace(record, agent_ack=ack)
+    blob_with_ack = encode_transcript_blob(channel_id, [record_with_ack])
+    assert decode_transcript_blob(blob_with_ack) == (channel_id, [record_with_ack])
+    bad_ack = TurnAckRecord(
+        agent_send_ms,
+        agent_recv_ms,
+        bytes([ack_signature[0] ^ 1]) + ack_signature[1:],
+    )
+    blob_with_bad_ack = encode_transcript_blob(channel_id, [replace(record, agent_ack=bad_ack)])
     verified_turn = encode_verified_turn(record, path)
     wrong_path = list(path)
-    wrong_path[0] = (wrong_path[0][0], not wrong_path[0][1])
+    wrong_path[1] = (wrong_path[1][0], not wrong_path[1][1])
     wrong_path_turn = encode_verified_turn(record, wrong_path)
     wrong_version_turn = bytes([TranscriptLeafVersion.V2]) + verified_turn[1:]
     legacy_record = TurnRecord(
@@ -171,10 +198,10 @@ def build() -> dict[str, object]:
     )
     report_data = sha256(report_preimage).digest() + ZERO
     attestation_signable = report_preimage + b"\x01\x01" + hardware_hash
-    validator_id = bytes.fromhex("b41236c517514b30a4d6619f4b4354a2ce593cd4b64a7c29dd45e3de6972997a")
+    validator_id = bytes.fromhex("28cc07a97ff218ae057724f5d860f1ac5bcb9a1e907d141b2d6c06116a7ecf5c")
     attestation_signature = bytes.fromhex(
-        "90cdb722faea5e0a46b6a4e4e332e14b5d80cd175c9293577c9a356bd8a98d0e"
-        "774333666dc04cca932742e08a56e441aa4cdbadf4dabe3af0e8644e63e60b88"
+        "729d579cd385954df683730ce83bc81f18c30838d434b890ef05efb29b3ebf421"
+        "a93d4e01f57e0ecb4036b23b55c2c5b23bd84eaa912fbd724ceb3dde8533682"
     )
     attestation_scale = attestation_signable + validator_id + attestation_signature
     data_ref_scale = repeat(0x88) + b"\x00\x00"
@@ -220,7 +247,7 @@ def build() -> dict[str, object]:
                 {"bytes_hex": "feffff", "expected": "reject", "reason": "truncated mode 2"},
                 {"bytes_hex": "0100", "expected": "reject", "reason": "overlong zero"},
                 {"bytes_hex": "0301000000", "expected": "reject", "reason": "overlong big mode"},
-                {"bytes_hex": "070000000000", "expected": "reject", "reason": "exceeds u32"},
+                {"bytes_hex": "070000000001", "expected": "reject", "reason": "exceeds u32"},
             ],
         },
         "decode_policy_v1": {
@@ -334,6 +361,15 @@ def build() -> dict[str, object]:
             },
             "verified_turn_v3_scale_hex": hx(verified_turn),
             "fcc4_transcript_blob_hex": hx(blob),
+            "fcc4_transcript_with_ack": {
+                "ack_preimage_hex": hx(ack_preimage),
+                "agent_public_key_hex": hx(agent_public_key),
+                "agent_recv_ms": str(agent_recv_ms),
+                "agent_send_ms": str(agent_send_ms),
+                "agent_signature_hex": hx(ack_signature),
+                "blob_hex": hx(blob_with_ack),
+                "expected": "accept",
+            },
             "receipt": {
                 "inputs": {
                     "channel_id_hex": hx(signed_channel),
@@ -342,7 +378,7 @@ def build() -> dict[str, object]:
                     "payable": 1_000,
                 },
                 "preimage_hex": hx(receipt),
-                "public_key_hex": hx(enclave_public_key),
+                "public_key_hex": hx(agent_public_key),
                 "signature_hex": hx(receipt_signature),
                 "expected": "accept",
             },
@@ -387,6 +423,13 @@ def build() -> dict[str, object]:
                 "site": "TranscriptBlob.decode",
             },
             {
+                "id": "invalid_agent_ack_signature",
+                "bytes_hex": hx(blob_with_bad_ack),
+                "mutation": "flip agent ack signature byte",
+                "expected": "reject",
+                "site": "verify_turn_ack",
+            },
+            {
                 "id": "duplicate_turn_index",
                 "bytes_hex": hx(compact_u32(2) + verified_turn + verified_turn),
                 "mutation": "repeat turn_index",
@@ -410,7 +453,7 @@ def build() -> dict[str, object]:
             {
                 "id": "wrong_session",
                 "bytes_hex": hx(channel_id_v1(genesis, repeat(0x12), miner, 42)),
-                "mutation": "change agent/miner/nonce",
+                "mutation": "change agent",
                 "expected": "different channel_id",
                 "site": "channel_id",
             },

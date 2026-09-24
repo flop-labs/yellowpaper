@@ -14,7 +14,8 @@ stated assumptions and status.
 | **Read** | [`yellowpaper.md`](yellowpaper.md) |
 | **Version** | 0.5.0 (draft) — initial public draft |
 | **Changes** | [`CHANGELOG.md`](CHANGELOG.md) |
-| **Claim evidence** | [`research/prepublication-evidence.md`](research/prepublication-evidence.md) |
+| **Claim evidence** | [`research/prepublication-evidence.md`](research/prepublication-evidence.md) · [`ledger`](evidence/yellowpaper-claim-evidence.json) · [`reproducer`](evidence/reproduce.py) |
+| **Parameter source** | [`params/flop-protocol-params.yaml`](params/flop-protocol-params.yaml) · [`table generator`](scripts/gen_param_table.py) |
 | **Wire-format vectors** | [`evidence/wire-format-v1.json`](evidence/wire-format-v1.json) · [`schema`](evidence/wire-format-v1.schema.json) |
 | **Formal claims and publication status** | [`evidence/proof-bundle/README.md`](evidence/proof-bundle/README.md) · [`yellowpaper-attribution.md`](yellowpaper-attribution.md) |
 | **Give feedback** | [Open an issue](../../issues/new/choose) |
@@ -25,7 +26,7 @@ stated assumptions and status.
 A **read-only mirror**. The spec is authored in FLOP's engineering repository, where it is gated
 against parameter drift (Appendix A is generated from the canonical parameter YAML) and against
 citation drift. Corrections land upstream and are re-published here; see
-[`CONTRIBUTING.md`](CONTRIBUTING.md) for what that means for pull requests.
+[`CONTRIBUTING.md`](CONTRIBUTING.md) for how to submit corrections.
 
 Three transforms are applied at publish time, noted at the top of the spec itself: Appendix H's
 code-path/tracker column is removed, local links are retargeted to published paths/anchors or
@@ -35,7 +36,8 @@ flattened when their file is unpublished, and machine-readable citation comments
 The mirror also publishes a curated claim-evidence ledger. Raw mechanism-failure diagnostics and their
 reproducer remain in the private engineering repository until the pending mechanism work is complete.
 The mirror does not imply that every cited Lean, Quint, Julia, research, test, or implementation artifact
-is publicly available.
+is publicly available. References of the form `#NNN` and links into `flop-labs/flop-core`, in the spec,
+the decision records, and the parameter YAML alike, point at that private repository, not at issues here.
 
 ## How to interpret evidence
 
@@ -68,6 +70,10 @@ The [wire-format corpus](evidence/wire-format-v1.json) freezes Appendix F's posi
 cases. Check it without the private repository using
 `uv run --script evidence/generate-wire-format-vectors.py --check`; the adjacent
 `evidence/compute-channel.py` is the standalone Python implementation used by that command.
+`uv run --script scripts/gen_param_table.py --check` likewise checks Appendix A against the parameter
+YAML here. `scripts/check_params.py` and `scripts/check_param_identities.py` check the YAML against
+implementation and proof files that exist only in the authoring repository, so they report those files
+missing when run from this mirror.
 
 ## Where the interesting problems are
 
@@ -102,7 +108,8 @@ implementation status is out of band in Appendix H; parameter values of record a
 ## Citing
 
 Cite by **version and section**, e.g. *FLOP Yellow Paper v0.5 §3.4*. Section numbering and
-requirement IDs are stable within a version; a release tag pins the exact text.
+requirement IDs are stable within a version. Until the first tagged release the draft text changes
+between syncs, so add the mirror commit when you need to pin the exact text.
 
 ## License
 

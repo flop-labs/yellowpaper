@@ -1,5 +1,5 @@
 # /// script
-# requires-python = ">=3.11"
+# requires-python = ">=3.12"
 # ///
 """Reproduce conditional-audit and shared-collateral sensitivity evidence."""
 
@@ -58,14 +58,14 @@ SOURCE_LEDGER = [
         "path": "pallets/pallets/compute-channel/src/lib.rs",
         "span": ["pub fn open_channel(", "pub fn top_up_escrow("],
         "sha256": "d8e8167836b0b5894d2468668956762cf72c64f49222733f3e64000420bae4ce",
-        "references": [{"fragment": "Self::check_reservation_cap(&agent, escrow)?;", "line": 2882}],
+        "references": [{"fragment": "Self::check_reservation_cap(&agent, escrow)?;", "line": 2886}],
     },
     {
         "path": "pallets/pallets/compute-channel/src/lib.rs",
         "span": ["pub fn resolve_timeout_dispute(", "pub fn resolve_unrecoverable_transcript("],
         "sha256": "8405c248d2c37445337b7598a945dead757230df5c2bdbf62266541c0a79b54c",
         "references": [
-            {"fragment": "T::Slasher::slash_fraud(&ch.miner, channel_id)?;", "line": 4011}
+            {"fragment": "T::Slasher::slash_fraud(&ch.miner, channel_id)?;", "line": 4015}
         ],
     },
     {

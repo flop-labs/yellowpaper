@@ -14,7 +14,7 @@ the committee always contains 39 or 40 attacker seats. The attacker owns 40/223 
 stake, yet the probability of violating AlephBFT's strict `3f < n` premise is exactly one: failure
 begins at 34 attacker seats for `n = 100`.
 
-`scripts/research/yellowpaper_sampler_evidence.py` enumerates the exact joint distribution of the
+`evidence/reproduce-sampler.py` enumerates the exact joint distribution of the
 remaining group counts after each probability-proportional-to-remaining-weight draw. Its committed
 JSON output records rational probabilities, population, voting unit, threshold, and scope. This is
 an exact result for homogeneous identity groups with the stated inputs. It does not establish PRNG
@@ -46,17 +46,11 @@ number of exposed rotations. Until those are ratified and analyzed, E.42 remains
 From the published bundle root (the reproducer uses only the Python standard library):
 
 ```sh
-python3 evidence/reproduce-sampler.py \
+uv run --script evidence/reproduce-sampler.py \
   --check evidence/yellowpaper-sampler-evidence.json
 ```
 
-Repository tests additionally run:
-
-```sh
-uv run pytest scripts/python/tests/test_yellowpaper_sampler_evidence.py -q
-```
-
-The first command checks the evidence file byte-for-byte against the exact enumerator.
+The command checks the evidence file byte-for-byte against the exact enumerator.
 
 The isolated `hp-consensus` Rust suite passed all 14 tests, including the concrete sampler
 counterexample. A validator-entrypoint regression is also written, but its execution is blocked

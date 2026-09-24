@@ -4,17 +4,18 @@
 
 Protocol scope: [yellowpaper §3.5](../yellowpaper.md#35-tier-3--independent-optimistic-re-execution--slashing), E.45/E.22.
 
-This note closes the arithmetic and implementation-trace portion of issue #1495. Run:
+This note closes the arithmetic and implementation-trace portion of issue #1495. From the published
+bundle root, run:
 
 ```sh
-UV_CACHE_DIR=/tmp/flop-yellowpaper-uv UV_NO_PROJECT=1 uv run --script scripts/research/yellowpaper_audit_evidence.py --check --verify-sources
-UV_CACHE_DIR=/tmp/flop-yellowpaper-uv UV_NO_PROJECT=1 uv run pytest -q scripts/python/tests/test_yellowpaper_audit_evidence.py
+uv run --script evidence/reproduce-audit.py --check
 ```
 
 The generated [JSON](../evidence/yellowpaper-audit-evidence.json) contains exact rational results,
 scoped source-span hashes, and line references. The [CSV](../evidence/yellowpaper-audit-evidence.csv) is the
-concurrent-exposure sweep. `--verify-sources` verifies named source fragments and scoped hashes. An
-exported copy beside the JSON/CSV reproduces arithmetic with `--check` without private sources.
+concurrent-exposure sweep. The exported `evidence/reproduce-audit.py` beside the JSON/CSV reproduces
+arithmetic with `--check` without private sources. The authoring release gate additionally verifies
+named source fragments and scoped hashes.
 
 ## Claim supported by this evidence
 

@@ -1,0 +1,1788 @@
+{
+  "audit_exposure": {
+    "exposure_condition": "total_profitable_exposure < p_effective * collectible_slashable_collateral",
+    "formula": "p_effective = P(S)*P(D|S)*P(C|S,D)*P(I|S,D,C)*P(U|S,D,C,I)*P(K|S,D,C,I,U)",
+    "interpretation": "Each factor conditions on every prior gate succeeding; this is the probability chain rule and does not assert independence.",
+    "open_inputs": [
+      "Data availability over the full challenge window",
+      "Challenger participation and cost/reward model",
+      "Transaction inclusion before deadline",
+      "Adjudication false-negative rate for the specified attack class",
+      "Collateral reservation across concurrent exposure and collectibility at slash time"
+    ],
+    "rows": [
+      {
+        "max_profitable_exposure_per_unit_collectible_collateral": 0.05,
+        "p_challenger_given_selected_and_data": 1.0,
+        "p_collectible_given_all_prior": 1.0,
+        "p_data_given_selected": 1.0,
+        "p_effective": 0.05,
+        "p_included_given_selected_data_and_challenge": 1.0,
+        "p_selected": 0.05,
+        "p_upheld_given_selected_data_challenge_and_inclusion": 1.0,
+        "scenario": "configured-selection-only",
+        "status": "illustrative assumptions"
+      },
+      {
+        "max_profitable_exposure_per_unit_collectible_collateral": 0.023085,
+        "p_challenger_given_selected_and_data": 0.8,
+        "p_collectible_given_all_prior": 0.75,
+        "p_data_given_selected": 0.9,
+        "p_effective": 0.023085,
+        "p_included_given_selected_data_and_challenge": 0.95,
+        "p_selected": 0.05,
+        "p_upheld_given_selected_data_challenge_and_inclusion": 0.9,
+        "scenario": "conditional-stress",
+        "status": "illustrative assumptions"
+      },
+      {
+        "max_profitable_exposure_per_unit_collectible_collateral": 0.0,
+        "p_challenger_given_selected_and_data": 1.0,
+        "p_collectible_given_all_prior": 1.0,
+        "p_data_given_selected": 0.0,
+        "p_effective": 0.0,
+        "p_included_given_selected_data_and_challenge": 1.0,
+        "p_selected": 0.05,
+        "p_upheld_given_selected_data_challenge_and_inclusion": 1.0,
+        "scenario": "data-outage",
+        "status": "boundary scenario"
+      }
+    ],
+    "status": "conditional scenarios; inputs are illustrative, not measurements"
+  },
+  "capacity_evidence": {
+    "claim_disposition": {
+      "removed_claims": [
+        "125,000-byte propagation budget",
+        "96 steady / 128 burst session-control transactions per block",
+        "48 steady / 64 burst cooperative lifecycles per second",
+        "sub-second finality latency"
+      ],
+      "replacement": "No capacity or latency guarantee. Runtime admission remains jointly byte-, weight-, state-, and validity-gated.",
+      "status": "removed from the v0.5 conformance profile"
+    },
+    "network_workload_matrix": {
+      "hardware_resource_profile": null,
+      "raw_log_paths": [],
+      "required_dimensions": {
+        "co_load": [
+          "DA/checker",
+          "ordinary Normal",
+          "Operational"
+        ],
+        "faults": [
+          "below one-third seats",
+          "partition/recovery",
+          "at one-third",
+          "above one-third"
+        ],
+        "finality_committee": "all supported realized sizes up to the runtime cap of 100",
+        "latency_loss": "disclosed latency and packet-loss sweep",
+        "node_gpu_hardware": "CPU, memory, disk, NIC, GPU, driver, and TEE profile",
+        "offered_load": "sustained below, at, and above admission",
+        "settlement": "turn counts 1/16/128/1024; path lengths 0/8/32/64; duplicate-last",
+        "topology": [
+          "single-region",
+          "multi-region"
+        ]
+      },
+      "required_outputs": [
+        "admission failures, backlog, and stalled runs",
+        "sustained finalized lifecycle throughput",
+        "inclusion and finality p50/p95/p99 plus tail stalls",
+        "resource saturation, duration, warm-up, repetitions, and uncertainty",
+        "chain capacity, serving capacity, and client-perceived latency"
+      ],
+      "runtime_hash": null,
+      "seeds": [],
+      "status": "not run; no throughput or latency sample exists",
+      "workload_generator": null
+    },
+    "runtime_benchmark_build": {
+      "benchmark_output_hash": null,
+      "command": "WASM_BUILD_WORKSPACE_HINT=$PWD/pallets cargo check --manifest-path pallets/Cargo.toml -p zkv-runtime --features runtime-benchmarks",
+      "diagnosis": "The runtime mixes incompatible Polkadot SDK generations (including sp-runtime 39/45/47, sp-core 34/41/43, and sp-io 38/48).",
+      "failures": [
+        "host and WASM compilation hit cross-version KeyTypeId and crypto/hash API errors",
+        "WASM crates link multiple sp-io implementations and abort on duplicate lang item panic_impl"
+      ],
+      "runtime_wasm_hash": null,
+      "status": "blocked; no benchmarked weight is claimed",
+      "tracking": "#550"
+    },
+    "runtime_envelope": {
+      "normal_max_bytes": 3932160,
+      "normal_max_ref_time": 562500000000,
+      "operational_max_bytes": 5242880,
+      "operational_max_ref_time": 750000000000,
+      "scope": "configured maxima, not serving/finality measurements; base block/extrinsic work and competing traffic consume the envelope"
+    }
+  },
+  "committee_counterexample": {
+    "binomial_comparison": {
+      "model": "Binom(100, 40/223), independent with-replacement seats",
+      "scope": "Comparison model only. It does not describe the unequal-weight distinct-identity draw in this counterexample.",
+      "tail_exact_denominator": "6768404488755983222468951085913196197321045332972549768287315252131184858012293264319459582013409471654516793145335823336910135847801318266759317929823589572594241737503472837875621994517856576545775975304737931885790627993286753616001",
+      "tail_exact_numerator": "600524601188233812232621668698791406091214107777271441373907588808146125462114565391560183865818045968864244776353971006851377465559518100451021930076354749194123173976917897283506727471904980992000000000000000000000000000000000000",
+      "tail_probability": 8.87246916442207e-05,
+      "threshold_bad_seats": 34
+    },
+    "conclusion": "The actual tail is 1, so SelectionTailDominated at f=34 is false for this population and p=40/223.",
+    "draw": {
+      "distinct_identities": 100,
+      "omitted_identities": 1,
+      "possible_bad_committee_stake_percent": [
+        17.56756756756757,
+        18.181818181818183
+      ],
+      "possible_bad_seat_percent": [
+        39.0,
+        40.0
+      ],
+      "possible_bad_seats": [
+        39,
+        40
+      ],
+      "probability_bad_seats_at_least_34": 1.0,
+      "reason": "Any 100-subset of 101 omits one identity, hence omits at most one of 40 bad identities."
+    },
+    "population": {
+      "bad_identities": 40,
+      "bad_stake_each": 1,
+      "bad_stake_fraction": "40/223",
+      "bad_stake_percent": 17.937219730941703,
+      "honest_identities": 61,
+      "honest_stake_each": 3,
+      "stake_unit": "common scale at least the eligibility floor; all identities assumed work-eligible",
+      "total_identities": 101,
+      "total_stake": 223
+    },
+    "status": "exact finite-population arithmetic; counterexample, not an exploit theorem"
+  },
+  "direct_attestation_rail": {
+    "active_set": {
+      "runtime_max": 200,
+      "supported_sizes_exercised": [
+        100,
+        200
+      ],
+      "unsupported_boundary": {
+        "active_validators": 1000,
+        "status": "not a supported active-set state; excluded from capacity rows"
+      }
+    },
+    "call_formula": "runtime_pallet_index + pallet_call_index + compact_len(n) + 275*n",
+    "extrinsic_format": "v5 bare: Compact(body_len) || 0x05 || RuntimeCall",
+    "finality_committee": {
+      "relationship": "separate from the direct-rail active-validator quorum",
+      "runtime_cap": 100,
+      "serialized_call": "none; finality messages are network traffic, not RuntimeCall extrinsics"
+    },
+    "limits": [
+      "Fixture attestation signature fields are populated but not cryptographically validated by this serializer.",
+      "The charged direct weight is explicitly a placeholder and has zero proof-size charge.",
+      "No count is divided into a byte budget or reported as throughput."
+    ],
+    "rows": [
+      {
+        "call_bytes": 18429,
+        "charged_call_weight": {
+          "class": "Normal",
+          "proof_size": 0,
+          "ref_time": 3350000000,
+          "status": "placeholder charged weight; dedicated benchmark absent"
+        },
+        "dimensions": {
+          "active_validators": 100,
+          "required_signatures": 67
+        },
+        "extrinsic_bytes": 18434,
+        "extrinsic_length_prefix_bytes": 4,
+        "extrinsic_sha256": "dc70a1f9b1fd60c5c3da6eef0b5fb780409d58ad277767dbff46f30f275a49c4",
+        "origin": "none",
+        "pallet_call_index": 15,
+        "runtime_pallet_index": 86,
+        "scenario": "direct_validator_attestation_quorum"
+      },
+      {
+        "call_bytes": 36854,
+        "charged_call_weight": {
+          "class": "Normal",
+          "proof_size": 0,
+          "ref_time": 6700000000,
+          "status": "placeholder charged weight; dedicated benchmark absent"
+        },
+        "dimensions": {
+          "active_validators": 200,
+          "required_signatures": 134
+        },
+        "extrinsic_bytes": 36859,
+        "extrinsic_length_prefix_bytes": 4,
+        "extrinsic_sha256": "d381c0c3dbada437eb9e601927c3789f993db0e3258e0ce95526c121ec2c1d39",
+        "origin": "none",
+        "pallet_call_index": 15,
+        "runtime_pallet_index": 86,
+        "scenario": "direct_validator_attestation_quorum"
+      }
+    ],
+    "status": "deterministic SCALE serialization from a source-checked runtime wire ledger",
+    "validator_attestation_bytes": 275,
+    "validator_attestation_fields": [
+      {
+        "bytes": 32,
+        "name": "task_hash",
+        "type": "H256"
+      },
+      {
+        "bytes": 8,
+        "name": "gn_weight",
+        "type": "u64"
+      },
+      {
+        "bytes": 8,
+        "name": "latency_ms",
+        "type": "u64"
+      },
+      {
+        "bytes": 32,
+        "name": "model_hash",
+        "type": "H256"
+      },
+      {
+        "bytes": 32,
+        "name": "output_hash",
+        "type": "H256"
+      },
+      {
+        "bytes": 32,
+        "name": "decode_policy_hash",
+        "type": "H256"
+      },
+      {
+        "bytes": 1,
+        "name": "tee_type",
+        "type": "unit enum discriminant"
+      },
+      {
+        "bytes": 1,
+        "name": "quote_verified",
+        "type": "bool"
+      },
+      {
+        "bytes": 1,
+        "name": "event_log_verified",
+        "type": "bool"
+      },
+      {
+        "bytes": 32,
+        "name": "hardware_id_hash",
+        "type": "H256"
+      },
+      {
+        "bytes": 32,
+        "name": "validator_id",
+        "type": "[u8; 32]"
+      },
+      {
+        "bytes": 64,
+        "name": "signature",
+        "type": "[u8; 64]"
+      }
+    ]
+  },
+  "embedded_ledger_sha256": "5e74ca4a8741d38ac6c2b851afd6ac739d0358f31ba6fde7891b90e5556c164b",
+  "generated_by": "evidence/reproduce.py",
+  "schema_version": 2,
+  "scope": "Deterministic SCALE fixtures, charged-weight ledger, and claim disposition; no runtime execution, empirical security assurance, or network benchmark.",
+  "session_settlement": {
+    "caps": {
+      "path_entries_per_turn": 64,
+      "turns": 1024
+    },
+    "control_calls": [
+      {
+        "call_bytes": 232,
+        "charged_call_weight": {
+          "class": "Normal",
+          "proof_size": 18940,
+          "ref_time": 663133000,
+          "status": "charged estimate; not freshly benchmarked"
+        },
+        "dimensions": {},
+        "extrinsic_bytes": 338,
+        "extrinsic_length_prefix_bytes": 2,
+        "extrinsic_sha256": "0aa78e1f19f9070b63e3b34597e13db3442341e94bff2c2d8123599f5fbf48fc",
+        "origin": "signed",
+        "pallet_call_index": 0,
+        "runtime_pallet_index": 103,
+        "scenario": "open_channel"
+      },
+      {
+        "call_bytes": 66,
+        "charged_call_weight": {
+          "class": "Normal",
+          "proof_size": 4000,
+          "ref_time": 120375000,
+          "status": "charged estimate; not freshly benchmarked"
+        },
+        "dimensions": {},
+        "extrinsic_bytes": 172,
+        "extrinsic_length_prefix_bytes": 2,
+        "extrinsic_sha256": "2d21d752fa1dca316f36c68aedf43242bc88019d19c1b1b8ad33aacdebc6d299",
+        "origin": "signed",
+        "pallet_call_index": 21,
+        "runtime_pallet_index": 103,
+        "scenario": "toploc_evidence_publication"
+      },
+      {
+        "call_bytes": 38,
+        "charged_call_weight": {
+          "class": "Normal",
+          "proof_size": 12400,
+          "ref_time": 295469000,
+          "status": "charged estimate; not freshly benchmarked"
+        },
+        "dimensions": {},
+        "extrinsic_bytes": 144,
+        "extrinsic_length_prefix_bytes": 2,
+        "extrinsic_sha256": "30859700e3f7606adf353db6cfa7515937fcfb14fe1437531246ea1fb77ae6b0",
+        "origin": "signed",
+        "pallet_call_index": 6,
+        "runtime_pallet_index": 103,
+        "scenario": "open_dispute"
+      },
+      {
+        "call_bytes": 2417,
+        "charged_call_weight": {
+          "class": "Normal",
+          "proof_size": 20260,
+          "ref_time": 367645000,
+          "status": "charged estimate; not freshly benchmarked"
+        },
+        "dimensions": {
+          "merkle_path_entries": 64
+        },
+        "extrinsic_bytes": 2523,
+        "extrinsic_length_prefix_bytes": 2,
+        "extrinsic_sha256": "d3fcb541e500fb04312d9916bf94f8cfe137929cd2ed67c280f1f20cc66d650e",
+        "origin": "signed",
+        "pallet_call_index": 7,
+        "runtime_pallet_index": 103,
+        "scenario": "respond_dispute_max_path"
+      },
+      {
+        "call_bytes": 34,
+        "charged_call_weight": {
+          "class": "Normal",
+          "proof_size": 13120,
+          "ref_time": 613089000,
+          "status": "charged estimate; not freshly benchmarked"
+        },
+        "dimensions": {},
+        "extrinsic_bytes": 140,
+        "extrinsic_length_prefix_bytes": 2,
+        "extrinsic_sha256": "97c1fc5ef286cad3df76c1afadb8379bbb87ee40c9179f7454fa22e638befd66",
+        "origin": "signed",
+        "pallet_call_index": 4,
+        "runtime_pallet_index": 103,
+        "scenario": "finalize_unilateral_settlement"
+      }
+    ],
+    "duplicate_scan": {
+      "call_bytes": 34775,
+      "charged_call_weight": {
+        "class": "Normal",
+        "proof_size": 16360,
+        "ref_time": 5152317000,
+        "status": "charged estimate; not freshly benchmarked"
+      },
+      "dimensions": {
+        "merkle_path_entries_per_turn": 0,
+        "turn_indices": "duplicate_last",
+        "turns": 128
+      },
+      "extrinsic_bytes": 34883,
+      "extrinsic_length_prefix_bytes": 4,
+      "extrinsic_sha256": "990fcbfca20765f8f4539cebe716e6cddb74fdcbca2269410c03f6b23ca43726",
+      "origin": "signed",
+      "pallet_call_index": 2,
+      "runtime_pallet_index": 103,
+      "scenario": "cooperative_settle_duplicate_last"
+    },
+    "encoding": {
+      "extrinsic_format": "v4 signed: Compact(body_len) || 0x84 || MultiAddress || MultiSignature || TxExtension || RuntimeCall",
+      "outer_signature": "MultiSignature::Sr25519 field populated with deterministic fixture bytes; validity not asserted",
+      "signed_extension_fixture_hex": "1500040000",
+      "signed_extension_order": [
+        "CheckNonZeroSender",
+        "CheckSpecVersion",
+        "CheckTxVersion",
+        "CheckGenesis",
+        "CheckMortality",
+        "CheckNonce",
+        "CheckWeight",
+        "ChargeTransactionPayment",
+        "CheckMetadataHash"
+      ]
+    },
+    "fixed_bytes_per_turn": 269,
+    "leaf_preimage_bytes": {
+      "v0": 116,
+      "v1": 140,
+      "v2": 172,
+      "v3": 236
+    },
+    "limits": [
+      "Rows include pallet/call indices, signatures, signed extensions, length prefixes, and Some(DataRef).",
+      "Encoded fixtures are not dispatched and signature fields are not validated.",
+      "Charged weights are source values, not fresh measurements; path length and duplicate-scan work are not weight parameters."
+    ],
+    "matrix": [
+      {
+        "call_bytes": 484,
+        "charged_call_weight": {
+          "class": "Normal",
+          "proof_size": 16360,
+          "ref_time": 707317000,
+          "status": "charged estimate; not freshly benchmarked"
+        },
+        "dimensions": {
+          "merkle_path_entries_per_turn": 0,
+          "transcript_data_ref": "Some(Ephemeral sovereign-validator ref)",
+          "turn_indices": "unique",
+          "turns": 1
+        },
+        "extrinsic_bytes": 590,
+        "extrinsic_length_prefix_bytes": 2,
+        "extrinsic_sha256": "b2d799cf13e53921520b14bf92f94e18ab9f458533aada10d89fe66348bd0909",
+        "origin": "signed",
+        "pallet_call_index": 2,
+        "runtime_pallet_index": 103,
+        "scenario": "cooperative_settle"
+      },
+      {
+        "call_bytes": 484,
+        "charged_call_weight": {
+          "class": "Normal",
+          "proof_size": 17480,
+          "ref_time": 355892000,
+          "status": "charged estimate; not freshly benchmarked"
+        },
+        "dimensions": {
+          "merkle_path_entries_per_turn": 0,
+          "transcript_data_ref": "Some(Ephemeral sovereign-validator ref)",
+          "turn_indices": "unique",
+          "turns": 1
+        },
+        "extrinsic_bytes": 590,
+        "extrinsic_length_prefix_bytes": 2,
+        "extrinsic_sha256": "8c14747b690f4b72c12be0145e15e3b666876302a44f81375f6a3625cd905ffa",
+        "origin": "signed",
+        "pallet_call_index": 3,
+        "runtime_pallet_index": 103,
+        "scenario": "unilateral_force_settle"
+      },
+      {
+        "call_bytes": 748,
+        "charged_call_weight": {
+          "class": "Normal",
+          "proof_size": 16360,
+          "ref_time": 707317000,
+          "status": "charged estimate; not freshly benchmarked"
+        },
+        "dimensions": {
+          "merkle_path_entries_per_turn": 8,
+          "transcript_data_ref": "Some(Ephemeral sovereign-validator ref)",
+          "turn_indices": "unique",
+          "turns": 1
+        },
+        "extrinsic_bytes": 854,
+        "extrinsic_length_prefix_bytes": 2,
+        "extrinsic_sha256": "b1ddd1aa4c550c8f1f13ae7832ca4c4af79a0c66903f0c002a9417f10889fb84",
+        "origin": "signed",
+        "pallet_call_index": 2,
+        "runtime_pallet_index": 103,
+        "scenario": "cooperative_settle"
+      },
+      {
+        "call_bytes": 748,
+        "charged_call_weight": {
+          "class": "Normal",
+          "proof_size": 17480,
+          "ref_time": 355892000,
+          "status": "charged estimate; not freshly benchmarked"
+        },
+        "dimensions": {
+          "merkle_path_entries_per_turn": 8,
+          "transcript_data_ref": "Some(Ephemeral sovereign-validator ref)",
+          "turn_indices": "unique",
+          "turns": 1
+        },
+        "extrinsic_bytes": 854,
+        "extrinsic_length_prefix_bytes": 2,
+        "extrinsic_sha256": "fbb181b4a4613bafd9cba3ab78cc24ca79c0089778ab133b6689e8cc569d5dfb",
+        "origin": "signed",
+        "pallet_call_index": 3,
+        "runtime_pallet_index": 103,
+        "scenario": "unilateral_force_settle"
+      },
+      {
+        "call_bytes": 1540,
+        "charged_call_weight": {
+          "class": "Normal",
+          "proof_size": 16360,
+          "ref_time": 707317000,
+          "status": "charged estimate; not freshly benchmarked"
+        },
+        "dimensions": {
+          "merkle_path_entries_per_turn": 32,
+          "transcript_data_ref": "Some(Ephemeral sovereign-validator ref)",
+          "turn_indices": "unique",
+          "turns": 1
+        },
+        "extrinsic_bytes": 1646,
+        "extrinsic_length_prefix_bytes": 2,
+        "extrinsic_sha256": "27b1028d17f632b788dfc1e2549866138df4fea36b7039e1264f220ad63617c4",
+        "origin": "signed",
+        "pallet_call_index": 2,
+        "runtime_pallet_index": 103,
+        "scenario": "cooperative_settle"
+      },
+      {
+        "call_bytes": 1540,
+        "charged_call_weight": {
+          "class": "Normal",
+          "proof_size": 17480,
+          "ref_time": 355892000,
+          "status": "charged estimate; not freshly benchmarked"
+        },
+        "dimensions": {
+          "merkle_path_entries_per_turn": 32,
+          "transcript_data_ref": "Some(Ephemeral sovereign-validator ref)",
+          "turn_indices": "unique",
+          "turns": 1
+        },
+        "extrinsic_bytes": 1646,
+        "extrinsic_length_prefix_bytes": 2,
+        "extrinsic_sha256": "9cefba040a8a64befaf35ae45142d859de1cc1aeb7d6567f13e46d817f9d1002",
+        "origin": "signed",
+        "pallet_call_index": 3,
+        "runtime_pallet_index": 103,
+        "scenario": "unilateral_force_settle"
+      },
+      {
+        "call_bytes": 2597,
+        "charged_call_weight": {
+          "class": "Normal",
+          "proof_size": 16360,
+          "ref_time": 707317000,
+          "status": "charged estimate; not freshly benchmarked"
+        },
+        "dimensions": {
+          "merkle_path_entries_per_turn": 64,
+          "transcript_data_ref": "Some(Ephemeral sovereign-validator ref)",
+          "turn_indices": "unique",
+          "turns": 1
+        },
+        "extrinsic_bytes": 2703,
+        "extrinsic_length_prefix_bytes": 2,
+        "extrinsic_sha256": "cf37167d3a7487ee210ba12d19f77493369783645fe1ff2259f37942a659164e",
+        "origin": "signed",
+        "pallet_call_index": 2,
+        "runtime_pallet_index": 103,
+        "scenario": "cooperative_settle"
+      },
+      {
+        "call_bytes": 2597,
+        "charged_call_weight": {
+          "class": "Normal",
+          "proof_size": 17480,
+          "ref_time": 355892000,
+          "status": "charged estimate; not freshly benchmarked"
+        },
+        "dimensions": {
+          "merkle_path_entries_per_turn": 64,
+          "transcript_data_ref": "Some(Ephemeral sovereign-validator ref)",
+          "turn_indices": "unique",
+          "turns": 1
+        },
+        "extrinsic_bytes": 2703,
+        "extrinsic_length_prefix_bytes": 2,
+        "extrinsic_sha256": "6e39f93dcbc22bfa4387efe6550ed383134b262c650178a47d0a848c6fa2f2c3",
+        "origin": "signed",
+        "pallet_call_index": 3,
+        "runtime_pallet_index": 103,
+        "scenario": "unilateral_force_settle"
+      },
+      {
+        "call_bytes": 4534,
+        "charged_call_weight": {
+          "class": "Normal",
+          "proof_size": 16360,
+          "ref_time": 1232317000,
+          "status": "charged estimate; not freshly benchmarked"
+        },
+        "dimensions": {
+          "merkle_path_entries_per_turn": 0,
+          "transcript_data_ref": "Some(Ephemeral sovereign-validator ref)",
+          "turn_indices": "unique",
+          "turns": 16
+        },
+        "extrinsic_bytes": 4640,
+        "extrinsic_length_prefix_bytes": 2,
+        "extrinsic_sha256": "7e33d696022d1f191b15e45fa10abea76b41ba79e5a8b7785a192badbddd2ade",
+        "origin": "signed",
+        "pallet_call_index": 2,
+        "runtime_pallet_index": 103,
+        "scenario": "cooperative_settle"
+      },
+      {
+        "call_bytes": 4534,
+        "charged_call_weight": {
+          "class": "Normal",
+          "proof_size": 17480,
+          "ref_time": 880892000,
+          "status": "charged estimate; not freshly benchmarked"
+        },
+        "dimensions": {
+          "merkle_path_entries_per_turn": 0,
+          "transcript_data_ref": "Some(Ephemeral sovereign-validator ref)",
+          "turn_indices": "unique",
+          "turns": 16
+        },
+        "extrinsic_bytes": 4640,
+        "extrinsic_length_prefix_bytes": 2,
+        "extrinsic_sha256": "8cb5ed25bebcc8153860808d57d9db8e70092cc218fc31b3e7dd489a816641f1",
+        "origin": "signed",
+        "pallet_call_index": 3,
+        "runtime_pallet_index": 103,
+        "scenario": "unilateral_force_settle"
+      },
+      {
+        "call_bytes": 8758,
+        "charged_call_weight": {
+          "class": "Normal",
+          "proof_size": 16360,
+          "ref_time": 1232317000,
+          "status": "charged estimate; not freshly benchmarked"
+        },
+        "dimensions": {
+          "merkle_path_entries_per_turn": 8,
+          "transcript_data_ref": "Some(Ephemeral sovereign-validator ref)",
+          "turn_indices": "unique",
+          "turns": 16
+        },
+        "extrinsic_bytes": 8864,
+        "extrinsic_length_prefix_bytes": 2,
+        "extrinsic_sha256": "6892437a922ae74259b3e06c0e20640473aebf27c81ff1c42550edc95cda7725",
+        "origin": "signed",
+        "pallet_call_index": 2,
+        "runtime_pallet_index": 103,
+        "scenario": "cooperative_settle"
+      },
+      {
+        "call_bytes": 8758,
+        "charged_call_weight": {
+          "class": "Normal",
+          "proof_size": 17480,
+          "ref_time": 880892000,
+          "status": "charged estimate; not freshly benchmarked"
+        },
+        "dimensions": {
+          "merkle_path_entries_per_turn": 8,
+          "transcript_data_ref": "Some(Ephemeral sovereign-validator ref)",
+          "turn_indices": "unique",
+          "turns": 16
+        },
+        "extrinsic_bytes": 8864,
+        "extrinsic_length_prefix_bytes": 2,
+        "extrinsic_sha256": "3893bf2efde1e46e056f5caffeb8aecc3693583f9f8d1816613280d2f025e790",
+        "origin": "signed",
+        "pallet_call_index": 3,
+        "runtime_pallet_index": 103,
+        "scenario": "unilateral_force_settle"
+      },
+      {
+        "call_bytes": 21430,
+        "charged_call_weight": {
+          "class": "Normal",
+          "proof_size": 16360,
+          "ref_time": 1232317000,
+          "status": "charged estimate; not freshly benchmarked"
+        },
+        "dimensions": {
+          "merkle_path_entries_per_turn": 32,
+          "transcript_data_ref": "Some(Ephemeral sovereign-validator ref)",
+          "turn_indices": "unique",
+          "turns": 16
+        },
+        "extrinsic_bytes": 21538,
+        "extrinsic_length_prefix_bytes": 4,
+        "extrinsic_sha256": "4bd742bb95c5240797e3e597658f75365afb0bb315a205d66609d956263e9b46",
+        "origin": "signed",
+        "pallet_call_index": 2,
+        "runtime_pallet_index": 103,
+        "scenario": "cooperative_settle"
+      },
+      {
+        "call_bytes": 21430,
+        "charged_call_weight": {
+          "class": "Normal",
+          "proof_size": 17480,
+          "ref_time": 880892000,
+          "status": "charged estimate; not freshly benchmarked"
+        },
+        "dimensions": {
+          "merkle_path_entries_per_turn": 32,
+          "transcript_data_ref": "Some(Ephemeral sovereign-validator ref)",
+          "turn_indices": "unique",
+          "turns": 16
+        },
+        "extrinsic_bytes": 21538,
+        "extrinsic_length_prefix_bytes": 4,
+        "extrinsic_sha256": "e8391f4299ba01b48675bb7cf41208f71a36986487e54fe4759f142f46dce2b0",
+        "origin": "signed",
+        "pallet_call_index": 3,
+        "runtime_pallet_index": 103,
+        "scenario": "unilateral_force_settle"
+      },
+      {
+        "call_bytes": 38342,
+        "charged_call_weight": {
+          "class": "Normal",
+          "proof_size": 16360,
+          "ref_time": 1232317000,
+          "status": "charged estimate; not freshly benchmarked"
+        },
+        "dimensions": {
+          "merkle_path_entries_per_turn": 64,
+          "transcript_data_ref": "Some(Ephemeral sovereign-validator ref)",
+          "turn_indices": "unique",
+          "turns": 16
+        },
+        "extrinsic_bytes": 38450,
+        "extrinsic_length_prefix_bytes": 4,
+        "extrinsic_sha256": "75d600d352e1cb4330513015813ed9958ab67a0c1ef9b694ca99764dd345a28a",
+        "origin": "signed",
+        "pallet_call_index": 2,
+        "runtime_pallet_index": 103,
+        "scenario": "cooperative_settle"
+      },
+      {
+        "call_bytes": 38342,
+        "charged_call_weight": {
+          "class": "Normal",
+          "proof_size": 17480,
+          "ref_time": 880892000,
+          "status": "charged estimate; not freshly benchmarked"
+        },
+        "dimensions": {
+          "merkle_path_entries_per_turn": 64,
+          "transcript_data_ref": "Some(Ephemeral sovereign-validator ref)",
+          "turn_indices": "unique",
+          "turns": 16
+        },
+        "extrinsic_bytes": 38450,
+        "extrinsic_length_prefix_bytes": 4,
+        "extrinsic_sha256": "8004452f37ab5f432279c14d6fbf1fca8146da1938c5e46449d343e9dd9c5523",
+        "origin": "signed",
+        "pallet_call_index": 3,
+        "runtime_pallet_index": 103,
+        "scenario": "unilateral_force_settle"
+      },
+      {
+        "call_bytes": 34775,
+        "charged_call_weight": {
+          "class": "Normal",
+          "proof_size": 16360,
+          "ref_time": 5152317000,
+          "status": "charged estimate; not freshly benchmarked"
+        },
+        "dimensions": {
+          "merkle_path_entries_per_turn": 0,
+          "transcript_data_ref": "Some(Ephemeral sovereign-validator ref)",
+          "turn_indices": "unique",
+          "turns": 128
+        },
+        "extrinsic_bytes": 34883,
+        "extrinsic_length_prefix_bytes": 4,
+        "extrinsic_sha256": "b0e7c3504aa47e4edeb4cb8ef4555e0eba190761d70ce000ab583402674512bd",
+        "origin": "signed",
+        "pallet_call_index": 2,
+        "runtime_pallet_index": 103,
+        "scenario": "cooperative_settle"
+      },
+      {
+        "call_bytes": 34775,
+        "charged_call_weight": {
+          "class": "Normal",
+          "proof_size": 17480,
+          "ref_time": 4800892000,
+          "status": "charged estimate; not freshly benchmarked"
+        },
+        "dimensions": {
+          "merkle_path_entries_per_turn": 0,
+          "transcript_data_ref": "Some(Ephemeral sovereign-validator ref)",
+          "turn_indices": "unique",
+          "turns": 128
+        },
+        "extrinsic_bytes": 34883,
+        "extrinsic_length_prefix_bytes": 4,
+        "extrinsic_sha256": "5ca89a8bd51b15099fe39f1294587d5b27a11e3684410605e34798c0228fbaf3",
+        "origin": "signed",
+        "pallet_call_index": 3,
+        "runtime_pallet_index": 103,
+        "scenario": "unilateral_force_settle"
+      },
+      {
+        "call_bytes": 68567,
+        "charged_call_weight": {
+          "class": "Normal",
+          "proof_size": 16360,
+          "ref_time": 5152317000,
+          "status": "charged estimate; not freshly benchmarked"
+        },
+        "dimensions": {
+          "merkle_path_entries_per_turn": 8,
+          "transcript_data_ref": "Some(Ephemeral sovereign-validator ref)",
+          "turn_indices": "unique",
+          "turns": 128
+        },
+        "extrinsic_bytes": 68675,
+        "extrinsic_length_prefix_bytes": 4,
+        "extrinsic_sha256": "db0521349fdba4f4e283454bbf6197dfabd4ba11c6a0734aee345708b92e0910",
+        "origin": "signed",
+        "pallet_call_index": 2,
+        "runtime_pallet_index": 103,
+        "scenario": "cooperative_settle"
+      },
+      {
+        "call_bytes": 68567,
+        "charged_call_weight": {
+          "class": "Normal",
+          "proof_size": 17480,
+          "ref_time": 4800892000,
+          "status": "charged estimate; not freshly benchmarked"
+        },
+        "dimensions": {
+          "merkle_path_entries_per_turn": 8,
+          "transcript_data_ref": "Some(Ephemeral sovereign-validator ref)",
+          "turn_indices": "unique",
+          "turns": 128
+        },
+        "extrinsic_bytes": 68675,
+        "extrinsic_length_prefix_bytes": 4,
+        "extrinsic_sha256": "decb33954aeec3d8c78dd56ed76c027b9d6f5902ac8438051f173df597b1f115",
+        "origin": "signed",
+        "pallet_call_index": 3,
+        "runtime_pallet_index": 103,
+        "scenario": "unilateral_force_settle"
+      },
+      {
+        "call_bytes": 169943,
+        "charged_call_weight": {
+          "class": "Normal",
+          "proof_size": 16360,
+          "ref_time": 5152317000,
+          "status": "charged estimate; not freshly benchmarked"
+        },
+        "dimensions": {
+          "merkle_path_entries_per_turn": 32,
+          "transcript_data_ref": "Some(Ephemeral sovereign-validator ref)",
+          "turn_indices": "unique",
+          "turns": 128
+        },
+        "extrinsic_bytes": 170051,
+        "extrinsic_length_prefix_bytes": 4,
+        "extrinsic_sha256": "edc4688f6d2d4c2572af5e01e58835c3acaf364eb195b451e79cecb49b9de5bc",
+        "origin": "signed",
+        "pallet_call_index": 2,
+        "runtime_pallet_index": 103,
+        "scenario": "cooperative_settle"
+      },
+      {
+        "call_bytes": 169943,
+        "charged_call_weight": {
+          "class": "Normal",
+          "proof_size": 17480,
+          "ref_time": 4800892000,
+          "status": "charged estimate; not freshly benchmarked"
+        },
+        "dimensions": {
+          "merkle_path_entries_per_turn": 32,
+          "transcript_data_ref": "Some(Ephemeral sovereign-validator ref)",
+          "turn_indices": "unique",
+          "turns": 128
+        },
+        "extrinsic_bytes": 170051,
+        "extrinsic_length_prefix_bytes": 4,
+        "extrinsic_sha256": "136e61a549a276f1bd56942308256cdf2eb8e1e84a5cc709f58e6ba5915907dd",
+        "origin": "signed",
+        "pallet_call_index": 3,
+        "runtime_pallet_index": 103,
+        "scenario": "unilateral_force_settle"
+      },
+      {
+        "call_bytes": 305239,
+        "charged_call_weight": {
+          "class": "Normal",
+          "proof_size": 16360,
+          "ref_time": 5152317000,
+          "status": "charged estimate; not freshly benchmarked"
+        },
+        "dimensions": {
+          "merkle_path_entries_per_turn": 64,
+          "transcript_data_ref": "Some(Ephemeral sovereign-validator ref)",
+          "turn_indices": "unique",
+          "turns": 128
+        },
+        "extrinsic_bytes": 305347,
+        "extrinsic_length_prefix_bytes": 4,
+        "extrinsic_sha256": "4ba78e799dd06be141bf1209adc3859368b48819477482acd090d376096e2ca4",
+        "origin": "signed",
+        "pallet_call_index": 2,
+        "runtime_pallet_index": 103,
+        "scenario": "cooperative_settle"
+      },
+      {
+        "call_bytes": 305239,
+        "charged_call_weight": {
+          "class": "Normal",
+          "proof_size": 17480,
+          "ref_time": 4800892000,
+          "status": "charged estimate; not freshly benchmarked"
+        },
+        "dimensions": {
+          "merkle_path_entries_per_turn": 64,
+          "transcript_data_ref": "Some(Ephemeral sovereign-validator ref)",
+          "turn_indices": "unique",
+          "turns": 128
+        },
+        "extrinsic_bytes": 305347,
+        "extrinsic_length_prefix_bytes": 4,
+        "extrinsic_sha256": "4c2f63df73f20bc3ed9a0e74b6f0463093277903365e93497e25d6e84e763186",
+        "origin": "signed",
+        "pallet_call_index": 3,
+        "runtime_pallet_index": 103,
+        "scenario": "unilateral_force_settle"
+      },
+      {
+        "call_bytes": 276695,
+        "charged_call_weight": {
+          "class": "Normal",
+          "proof_size": 16360,
+          "ref_time": 36512317000,
+          "status": "charged estimate; not freshly benchmarked"
+        },
+        "dimensions": {
+          "merkle_path_entries_per_turn": 0,
+          "transcript_data_ref": "Some(Ephemeral sovereign-validator ref)",
+          "turn_indices": "unique",
+          "turns": 1024
+        },
+        "extrinsic_bytes": 276803,
+        "extrinsic_length_prefix_bytes": 4,
+        "extrinsic_sha256": "a2bc34cc497aa518ab63c92303fddc365f859ab62bbfaff84c7310d3951b11e1",
+        "origin": "signed",
+        "pallet_call_index": 2,
+        "runtime_pallet_index": 103,
+        "scenario": "cooperative_settle"
+      },
+      {
+        "call_bytes": 276695,
+        "charged_call_weight": {
+          "class": "Normal",
+          "proof_size": 17480,
+          "ref_time": 36160892000,
+          "status": "charged estimate; not freshly benchmarked"
+        },
+        "dimensions": {
+          "merkle_path_entries_per_turn": 0,
+          "transcript_data_ref": "Some(Ephemeral sovereign-validator ref)",
+          "turn_indices": "unique",
+          "turns": 1024
+        },
+        "extrinsic_bytes": 276803,
+        "extrinsic_length_prefix_bytes": 4,
+        "extrinsic_sha256": "e314c6aa787c4765bf5ad920dc9a1ea98c8fa0488ad2ed74461fbe3adf65118a",
+        "origin": "signed",
+        "pallet_call_index": 3,
+        "runtime_pallet_index": 103,
+        "scenario": "unilateral_force_settle"
+      },
+      {
+        "call_bytes": 547031,
+        "charged_call_weight": {
+          "class": "Normal",
+          "proof_size": 16360,
+          "ref_time": 36512317000,
+          "status": "charged estimate; not freshly benchmarked"
+        },
+        "dimensions": {
+          "merkle_path_entries_per_turn": 8,
+          "transcript_data_ref": "Some(Ephemeral sovereign-validator ref)",
+          "turn_indices": "unique",
+          "turns": 1024
+        },
+        "extrinsic_bytes": 547139,
+        "extrinsic_length_prefix_bytes": 4,
+        "extrinsic_sha256": "b3d3e97a3c581064faa39fbeed768ef57c2dd03eb9ae9b500233f76b24596acf",
+        "origin": "signed",
+        "pallet_call_index": 2,
+        "runtime_pallet_index": 103,
+        "scenario": "cooperative_settle"
+      },
+      {
+        "call_bytes": 547031,
+        "charged_call_weight": {
+          "class": "Normal",
+          "proof_size": 17480,
+          "ref_time": 36160892000,
+          "status": "charged estimate; not freshly benchmarked"
+        },
+        "dimensions": {
+          "merkle_path_entries_per_turn": 8,
+          "transcript_data_ref": "Some(Ephemeral sovereign-validator ref)",
+          "turn_indices": "unique",
+          "turns": 1024
+        },
+        "extrinsic_bytes": 547139,
+        "extrinsic_length_prefix_bytes": 4,
+        "extrinsic_sha256": "96778535f0d4c895787a1bcb27b5fe739e549e94bb7d9ce99807e2bdfaf46d4e",
+        "origin": "signed",
+        "pallet_call_index": 3,
+        "runtime_pallet_index": 103,
+        "scenario": "unilateral_force_settle"
+      },
+      {
+        "call_bytes": 1358039,
+        "charged_call_weight": {
+          "class": "Normal",
+          "proof_size": 16360,
+          "ref_time": 36512317000,
+          "status": "charged estimate; not freshly benchmarked"
+        },
+        "dimensions": {
+          "merkle_path_entries_per_turn": 32,
+          "transcript_data_ref": "Some(Ephemeral sovereign-validator ref)",
+          "turn_indices": "unique",
+          "turns": 1024
+        },
+        "extrinsic_bytes": 1358147,
+        "extrinsic_length_prefix_bytes": 4,
+        "extrinsic_sha256": "ece6a7a272593b43af3c5811bf2a53e782ce57df44fe05450ec6d53caea328a1",
+        "origin": "signed",
+        "pallet_call_index": 2,
+        "runtime_pallet_index": 103,
+        "scenario": "cooperative_settle"
+      },
+      {
+        "call_bytes": 1358039,
+        "charged_call_weight": {
+          "class": "Normal",
+          "proof_size": 17480,
+          "ref_time": 36160892000,
+          "status": "charged estimate; not freshly benchmarked"
+        },
+        "dimensions": {
+          "merkle_path_entries_per_turn": 32,
+          "transcript_data_ref": "Some(Ephemeral sovereign-validator ref)",
+          "turn_indices": "unique",
+          "turns": 1024
+        },
+        "extrinsic_bytes": 1358147,
+        "extrinsic_length_prefix_bytes": 4,
+        "extrinsic_sha256": "2d55f4161f9237903b395cd0bfbaae0f81aa076bace323e9759941b41aa86ba8",
+        "origin": "signed",
+        "pallet_call_index": 3,
+        "runtime_pallet_index": 103,
+        "scenario": "unilateral_force_settle"
+      },
+      {
+        "call_bytes": 2440407,
+        "charged_call_weight": {
+          "class": "Normal",
+          "proof_size": 16360,
+          "ref_time": 36512317000,
+          "status": "charged estimate; not freshly benchmarked"
+        },
+        "dimensions": {
+          "merkle_path_entries_per_turn": 64,
+          "transcript_data_ref": "Some(Ephemeral sovereign-validator ref)",
+          "turn_indices": "unique",
+          "turns": 1024
+        },
+        "extrinsic_bytes": 2440515,
+        "extrinsic_length_prefix_bytes": 4,
+        "extrinsic_sha256": "96f55b38168c697a03f8d4568f5522226f83786d101968b74d8c94d3bd3770b1",
+        "origin": "signed",
+        "pallet_call_index": 2,
+        "runtime_pallet_index": 103,
+        "scenario": "cooperative_settle"
+      },
+      {
+        "call_bytes": 2440407,
+        "charged_call_weight": {
+          "class": "Normal",
+          "proof_size": 17480,
+          "ref_time": 36160892000,
+          "status": "charged estimate; not freshly benchmarked"
+        },
+        "dimensions": {
+          "merkle_path_entries_per_turn": 64,
+          "transcript_data_ref": "Some(Ephemeral sovereign-validator ref)",
+          "turn_indices": "unique",
+          "turns": 1024
+        },
+        "extrinsic_bytes": 2440515,
+        "extrinsic_length_prefix_bytes": 4,
+        "extrinsic_sha256": "ec6308bd434d86cfb647e5b4fedfb0515c64250cd297a15876661543e7c19167",
+        "origin": "signed",
+        "pallet_call_index": 3,
+        "runtime_pallet_index": 103,
+        "scenario": "unilateral_force_settle"
+      }
+    ],
+    "merkle_entry_bytes": 33,
+    "settle_argument_formula_with_data_ref": "176 + 35 + compact_len(turns) + turns*verified_turn_bytes",
+    "settle_argument_formula_without_data_ref": "176 + 1 + compact_len(turns) + turns*verified_turn_bytes",
+    "status": "deterministic SCALE serialization plus charged runtime weights; not dispatch or benchmark results",
+    "verified_turn_fixed_fields": [
+      {
+        "bytes": 1,
+        "name": "leaf_version",
+        "type": "TranscriptLeafVersion"
+      },
+      {
+        "bytes": 4,
+        "name": "turn_index",
+        "type": "u32"
+      },
+      {
+        "bytes": 32,
+        "name": "h_in",
+        "type": "H256"
+      },
+      {
+        "bytes": 32,
+        "name": "h_out",
+        "type": "H256"
+      },
+      {
+        "bytes": 16,
+        "name": "g_n",
+        "type": "u128"
+      },
+      {
+        "bytes": 32,
+        "name": "decode_policy_hash",
+        "type": "H256"
+      },
+      {
+        "bytes": 32,
+        "name": "h_ids",
+        "type": "H256"
+      },
+      {
+        "bytes": 32,
+        "name": "toploc_commitment_hash",
+        "type": "H256"
+      },
+      {
+        "bytes": 8,
+        "name": "miner_recv_ms",
+        "type": "u64"
+      },
+      {
+        "bytes": 8,
+        "name": "miner_done_ms",
+        "type": "u64"
+      },
+      {
+        "bytes": 8,
+        "name": "latency_ms",
+        "type": "u64"
+      },
+      {
+        "bytes": 64,
+        "name": "enclave_sig",
+        "type": "[u8; 64]"
+      }
+    ],
+    "verified_turn_formula": "269 + compact_len(path_len) + 33*path_len",
+    "version_note": "VerifiedTurn carries an explicit V0-V3 tag. Verification selects exactly that fixed preimage and never retries another version.",
+    "work_note": "Verification loops over turns and path entries; duplicate detection scans prior turns, giving O(turns^2) comparisons in the worst case."
+  },
+  "source_inputs": [
+    {
+      "path": "formal-specs/lean/FlopSpecs/CommitteeSampling.lean",
+      "required_fragments": [
+        "def SelectionTailDominated (selTail : \u2115 \u2192 \u211d) (N : \u2115) (p : \u211d) : Prop :=",
+        "\u2200 f, selTail f \u2264 binomialTail N f p"
+      ]
+    },
+    {
+      "path": "pallets/pallets/compute-channel/src/lib.rs",
+      "required_fragments": [
+        "verified_turns: Vec<VerifiedTurn>,",
+        "!verified_turns[..idx]",
+        ".any(|prev| prev.turn_index == turn.turn_index)",
+        "turn.merkle_path.len() as u32 <= T::MaxMerklePathLen::get()"
+      ]
+    },
+    {
+      "path": "pallets/pallets/compute-channel/src/weights.rs",
+      "required_fragments": [
+        "fn settle(n: u32) -> Weight {",
+        "fn force_settle(n: u32) -> Weight {",
+        "Weight::from_parts(35_000_000, 0).saturating_mul(n as u64)"
+      ]
+    },
+    {
+      "path": "pallets/pallets/da-registry/src/lib.rs",
+      "required_fragments": [
+        "pub type ProviderId = u8;",
+        "pub const PROVIDER_SOVEREIGN_VALIDATORS: ProviderId = 0;"
+      ]
+    },
+    {
+      "path": "pallets/pallets/flop-poui/src/lib.rs",
+      "required_fragments": [
+        "pub fn submit_validator_attestations(",
+        "attestations: Vec<ValidatorAttestation>,",
+        "T::WeightInfo::submit_oracle_attestation()",
+        ".saturating_mul(attestations.len().max(1) as u64)"
+      ]
+    },
+    {
+      "path": "pallets/pallets/flop-poui/src/weights.rs",
+      "required_fragments": [
+        "auto-generated stub - to be benchmarked",
+        "Weight::from_parts(50_000_000, 0)"
+      ]
+    },
+    {
+      "path": "pallets/primitives/hp-consensus/src/committee.rs",
+      "required_fragments": [
+        "VRF-seeded, stake-weighted, without-replacement committee sampler",
+        "let (stake, who) = pool.swap_remove(hit);"
+      ]
+    },
+    {
+      "path": "pallets/primitives/hp-poui/src/lib.rs",
+      "required_fragments": []
+    },
+    {
+      "path": "pallets/runtime/zkverify/src/lib.rs",
+      "required_fragments": [
+        "PouiDefaultValidatorAttestationThreshold: Perbill = Perbill::from_parts(666_666_666)",
+        "pub const ChannelMaxSettlementTurns: u32 = 1024;",
+        "pub const ChannelMaxMerklePathLen: u32 = 64;",
+        "FlopPoui: pallet_flop_poui = 86,",
+        "ComputeChannel: pallet_compute_channel = 103,",
+        "pub const MAX_ACTIVE_VALIDATORS: u32 = 200;",
+        "pub const AlephMaxCommittee: u32 = 100;",
+        "::max_with_normal_ratio(5 * 1024 * 1024, NORMAL_DISPATCH_RATIO)",
+        "const NORMAL_DISPATCH_RATIO: Perbill = Perbill::from_percent(75);",
+        "Weight::from_parts(WEIGHT_REF_TIME_PER_SECOND * 3 / 4, u64::MAX)",
+        "pub type TxExtension = (",
+        "frame_system::CheckNonZeroSender<Runtime>,",
+        "frame_system::CheckSpecVersion<Runtime>,",
+        "frame_system::CheckTxVersion<Runtime>,",
+        "frame_system::CheckGenesis<Runtime>,",
+        "frame_system::CheckEra<Runtime>,",
+        "frame_system::CheckNonce<Runtime>,",
+        "frame_system::CheckWeight<Runtime>,",
+        "pallet_transaction_payment::ChargeTransactionPayment<Runtime>,",
+        "frame_metadata_hash_extension::CheckMetadataHash<Runtime>,",
+        "pub type Address = sp_runtime::MultiAddress<AccountId, ()>;",
+        "generic::UncheckedExtrinsic<Address, RuntimeCall, Signature, TxExtension>;",
+        "type DbWeight = weights::db::constants::RocksDbWeight;"
+      ]
+    },
+    {
+      "path": "pallets/runtime/zkverify/src/types.rs",
+      "required_fragments": [
+        "pub type BlockNumber = u32;",
+        "pub type AccountId = <<Signature as Verify>::Signer as IdentifyAccount>::AccountId;",
+        "pub type Signature = MultiSignature;",
+        "pub type Balance = u128;"
+      ]
+    },
+    {
+      "path": "pallets/runtime/zkverify/src/weights/db.rs",
+      "required_fragments": []
+    }
+  ],
+  "source_schema_constraints": [
+    {
+      "declaration": "VerifiedTurn",
+      "ordered_fields": [
+        [
+          "leaf_version",
+          "crate::TranscriptLeafVersion"
+        ],
+        [
+          "turn_index",
+          "u32"
+        ],
+        [
+          "h_in",
+          "H256"
+        ],
+        [
+          "h_out",
+          "H256"
+        ],
+        [
+          "g_n",
+          "u128"
+        ],
+        [
+          "decode_policy_hash",
+          "H256"
+        ],
+        [
+          "h_ids",
+          "H256"
+        ],
+        [
+          "toploc_commitment_hash",
+          "H256"
+        ],
+        [
+          "miner_recv_ms",
+          "u64"
+        ],
+        [
+          "miner_done_ms",
+          "u64"
+        ],
+        [
+          "latency_ms",
+          "u64"
+        ],
+        [
+          "enclave_sig",
+          "[u8; 64]"
+        ],
+        [
+          "merkle_path",
+          "Vec<(H256, bool)>"
+        ]
+      ],
+      "path": "pallets/pallets/compute-channel/src/lib.rs"
+    },
+    {
+      "declaration": "DataRef",
+      "ordered_fields": [
+        [
+          "commitment",
+          "H256"
+        ],
+        [
+          "provider_id",
+          "ProviderId"
+        ],
+        [
+          "retention",
+          "RetentionClass"
+        ]
+      ],
+      "path": "pallets/pallets/da-registry/src/lib.rs"
+    },
+    {
+      "declaration": "ValidatorAttestation",
+      "ordered_fields": [
+        [
+          "task_hash",
+          "H256"
+        ],
+        [
+          "gn_weight",
+          "u64"
+        ],
+        [
+          "latency_ms",
+          "u64"
+        ],
+        [
+          "model_hash",
+          "H256"
+        ],
+        [
+          "output_hash",
+          "H256"
+        ],
+        [
+          "decode_policy_hash",
+          "H256"
+        ],
+        [
+          "tee_type",
+          "TeeType"
+        ],
+        [
+          "quote_verified",
+          "bool"
+        ],
+        [
+          "event_log_verified",
+          "bool"
+        ],
+        [
+          "hardware_id_hash",
+          "H256"
+        ],
+        [
+          "validator_id",
+          "[u8; 32]"
+        ],
+        [
+          "signature",
+          "[u8; 64]"
+        ]
+      ],
+      "path": "pallets/primitives/hp-poui/src/lib.rs"
+    },
+    {
+      "declaration": "RetentionClass",
+      "path": "pallets/pallets/da-registry/src/lib.rs",
+      "unit_variants": [
+        "Ephemeral",
+        "Leased"
+      ]
+    },
+    {
+      "declaration": "TeeType",
+      "path": "pallets/primitives/hp-poui/src/lib.rs",
+      "unit_variants": [
+        "IntelTdx",
+        "NvidiaHopperCc",
+        "NvidiaRubinCc",
+        "Simulator"
+      ]
+    },
+    {
+      "call": "finalize",
+      "index": 4,
+      "ordered_fields": [
+        [
+          "channel_id",
+          "H256"
+        ]
+      ],
+      "path": "pallets/pallets/compute-channel/src/lib.rs"
+    },
+    {
+      "call": "force_settle",
+      "index": 3,
+      "ordered_fields": [
+        [
+          "channel_id",
+          "H256"
+        ],
+        [
+          "final_root",
+          "H256"
+        ],
+        [
+          "aggregate_gn",
+          "u128"
+        ],
+        [
+          "claimed_measured_root",
+          "H256"
+        ],
+        [
+          "agent_receipt_sig",
+          "[u8; 64]"
+        ],
+        [
+          "transcript_ref",
+          "Option<DataRef>"
+        ],
+        [
+          "verified_turns",
+          "Vec<VerifiedTurn>"
+        ]
+      ],
+      "path": "pallets/pallets/compute-channel/src/lib.rs"
+    },
+    {
+      "call": "open_channel",
+      "index": 0,
+      "ordered_fields": [
+        [
+          "miner",
+          "T::AccountId"
+        ],
+        [
+          "model_hash",
+          "H256"
+        ],
+        [
+          "measured_root",
+          "H256"
+        ],
+        [
+          "decode_policy_hash",
+          "H256"
+        ],
+        [
+          "precision",
+          "ModelPrecision"
+        ],
+        [
+          "enclave_key",
+          "[u8; 32]"
+        ],
+        [
+          "agent_key",
+          "[u8; 32]"
+        ],
+        [
+          "sla",
+          "Sla<BlockNumberFor<T>>"
+        ],
+        [
+          "escrow",
+          "BalanceOf<T>"
+        ],
+        [
+          "nonce",
+          "u64"
+        ],
+        [
+          "settlement_class",
+          "SettlementClass"
+        ]
+      ],
+      "path": "pallets/pallets/compute-channel/src/lib.rs"
+    },
+    {
+      "call": "open_dispute",
+      "index": 6,
+      "ordered_fields": [
+        [
+          "channel_id",
+          "H256"
+        ],
+        [
+          "contested_turn",
+          "u32"
+        ]
+      ],
+      "path": "pallets/pallets/compute-channel/src/lib.rs"
+    },
+    {
+      "call": "respond_dispute",
+      "index": 7,
+      "ordered_fields": [
+        [
+          "channel_id",
+          "H256"
+        ],
+        [
+          "leaf_version",
+          "crate::TranscriptLeafVersion"
+        ],
+        [
+          "turn_index",
+          "u32"
+        ],
+        [
+          "h_in",
+          "H256"
+        ],
+        [
+          "h_out",
+          "H256"
+        ],
+        [
+          "g_n",
+          "u128"
+        ],
+        [
+          "decode_policy_hash",
+          "H256"
+        ],
+        [
+          "h_ids",
+          "H256"
+        ],
+        [
+          "toploc_commitment_hash",
+          "H256"
+        ],
+        [
+          "miner_recv_ms",
+          "u64"
+        ],
+        [
+          "miner_done_ms",
+          "u64"
+        ],
+        [
+          "latency_ms",
+          "u64"
+        ],
+        [
+          "enclave_sig",
+          "[u8; 64]"
+        ],
+        [
+          "merkle_path",
+          "Vec<(H256, bool)>"
+        ]
+      ],
+      "path": "pallets/pallets/compute-channel/src/lib.rs"
+    },
+    {
+      "call": "settle",
+      "index": 2,
+      "ordered_fields": [
+        [
+          "channel_id",
+          "H256"
+        ],
+        [
+          "final_root",
+          "H256"
+        ],
+        [
+          "aggregate_gn",
+          "u128"
+        ],
+        [
+          "claimed_measured_root",
+          "H256"
+        ],
+        [
+          "agent_receipt_sig",
+          "[u8; 64]"
+        ],
+        [
+          "transcript_ref",
+          "Option<DataRef>"
+        ],
+        [
+          "verified_turns",
+          "Vec<VerifiedTurn>"
+        ]
+      ],
+      "path": "pallets/pallets/compute-channel/src/lib.rs"
+    },
+    {
+      "call": "submit_toploc_evidence",
+      "index": 21,
+      "ordered_fields": [
+        [
+          "channel_id",
+          "H256"
+        ],
+        [
+          "commitment_ref",
+          "H256"
+        ]
+      ],
+      "path": "pallets/pallets/compute-channel/src/lib.rs"
+    },
+    {
+      "call": "submit_validator_attestations",
+      "index": 15,
+      "ordered_fields": [
+        [
+          "attestations",
+          "Vec<ValidatorAttestation>"
+        ]
+      ],
+      "path": "pallets/pallets/flop-poui/src/lib.rs"
+    },
+    {
+      "base_ref_time": 55440000,
+      "parameter": null,
+      "path": "pallets/pallets/compute-channel/src/weights.rs",
+      "per_unit_ref_time": 0,
+      "proof_size": 13120,
+      "reads": 6,
+      "weight": "finalize",
+      "writes": 7
+    },
+    {
+      "base_ref_time": 83910000,
+      "parameter": "n: u32",
+      "path": "pallets/pallets/compute-channel/src/weights.rs",
+      "per_unit_ref_time": 35000000,
+      "proof_size": 17480,
+      "reads": 10,
+      "weight": "force_settle",
+      "writes": 2
+    },
+    {
+      "base_ref_time": 86740000,
+      "parameter": null,
+      "path": "pallets/pallets/compute-channel/src/weights.rs",
+      "per_unit_ref_time": 0,
+      "proof_size": 18940,
+      "reads": 8,
+      "weight": "open_channel",
+      "writes": 7
+    },
+    {
+      "base_ref_time": 52460000,
+      "parameter": null,
+      "path": "pallets/pallets/compute-channel/src/weights.rs",
+      "per_unit_ref_time": 0,
+      "proof_size": 12400,
+      "reads": 3,
+      "weight": "open_dispute",
+      "writes": 3
+    },
+    {
+      "base_ref_time": 96520000,
+      "parameter": null,
+      "path": "pallets/pallets/compute-channel/src/weights.rs",
+      "per_unit_ref_time": 0,
+      "proof_size": 20260,
+      "reads": 6,
+      "weight": "respond_dispute",
+      "writes": 3
+    },
+    {
+      "base_ref_time": 77180000,
+      "parameter": "n: u32",
+      "path": "pallets/pallets/compute-channel/src/weights.rs",
+      "per_unit_ref_time": 35000000,
+      "proof_size": 16360,
+      "reads": 10,
+      "weight": "settle",
+      "writes": 7
+    },
+    {
+      "base_ref_time": 30000000,
+      "parameter": null,
+      "path": "pallets/pallets/compute-channel/src/weights.rs",
+      "per_unit_ref_time": 0,
+      "proof_size": 4000,
+      "reads": 2,
+      "weight": "submit_toploc_evidence",
+      "writes": 1
+    },
+    {
+      "base_ref_time": 50000000,
+      "parameter": null,
+      "path": "pallets/pallets/flop-poui/src/weights.rs",
+      "per_unit_ref_time": 0,
+      "proof_size": 0,
+      "reads": 0,
+      "weight": "submit_oracle_attestation",
+      "writes": 0
+    }
+  ],
+  "wire_ledger_assumptions": [
+    "parity-scale-codec primitive/container encoding",
+    "sp-runtime 47 UncheckedExtrinsic: current v5 bare and legacy v4 signed preambles",
+    "runtime RocksDbWeight read=9,372,000 and write=71,631,000 ref-time"
+  ]
+}

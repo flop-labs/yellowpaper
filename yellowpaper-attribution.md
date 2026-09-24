@@ -28,8 +28,8 @@ The private Quint subset has a pinned check plan and deterministic witnesses. It
 by detecting an intentionally broken presence-only variant; the raw diagnostic trace stays internal.
 Those seeded runs are bounded simulations, not runtime refinement or exhaustive proofs.
 
-**Maintenance.** Unlike the yellowpaper's inline `<!-- cite:… -->` comments (gated by
-`scripts/check_yellowpaper_links.py`), this file is **not** machine-checked. Symbols and paths were
+**Maintenance.** Unlike the yellowpaper's inline `<!-- cite:… -->` comments (covered by the
+authoring repository's link gate), this file is **not** machine-checked. Symbols and paths were
 verified to exist when written; treat it as a maintained index and re-verify on rename. The gated,
 section-level evidence view is [`yellowpaper-coverage.md`](yellowpaper-coverage.md); the parameter
 cross-language names (canonical ⇄ Rust ⇄ Lean ⇄ Quint) are the yellowpaper's Appendix A; per-mechanism
@@ -122,7 +122,7 @@ build status is its Appendix H.
 |------|-------------|------|-------|------|
 | R9.1 | Block reward sourced from params, bounded `≤ 96` | — | `economics/tokenomics-supply::inv_reward_le_initial` | `pallets/pallets/block-rewards` |
 | R9.2 | Geometric floored halving; supply monotone | `HalvingBoundary::halving_no_exodus` | `economics/tokenomics-supply::inv_reward_non_increasing`, `inv_supply_monotone`, `inv_reward_floored` | `block-rewards` |
-| R9.3 | Separate subsidy, era 1 only | — | — | `pallets/pallets/flop-subsidy` |
+| R9.3 | Separate subsidy: 5 eras (8→4→2→1→0.5 per recipient), zero from era 5 | — | — | `pallets/pallets/flop-subsidy` |
 | R9.4 | Work-first genesis (airdrops only) | — | — | genesis config |
 | R9.5 | Committee premium inside the validator pool (no second mint) | — | — | `validators::distribute_consensus_reward` |
 | R9.6 | Tx-fee split: 10% burn / 100% remainder to author | — | `economics/tokenomics-supply::inv_burn_tier_monotone` | `pallets/pallets/transaction-fees`; runtime `DealWithFees` |

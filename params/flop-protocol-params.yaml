@@ -1,0 +1,1501 @@
+# =============================================================================
+# FLOP PROTOCOL PARAMETERS — CANONICAL SOURCE OF TRUTH
+# =============================================================================
+#
+# This file is the single source of truth for FLOP's *protocol* parameters
+# (emission, staking, subsidy, agent limits, consensus timing). Implementations
+# in Rust (runtime + consensus), the TypeScript SDK, and the simulator MUST
+# match the values here.
+#
+# Propagation is ENFORCED by `scripts/check_params.py` in the authoring
+# repository (run in CI and via the lefthook pre-commit hook): for every
+# `enforced` parameter, each listed implementation site must contain the
+# `expect` snippet. The implementation files are not part of the public mirror,
+# so there the script reports them missing. If you change a value:
+#   1. edit `value` here,
+#   2. update each implementation's `expect` snippet AND the code it points to,
+#   3. run `uv run --script scripts/check_params.py` until green.
+#
+# Scope: PROTOCOL parameters only. The simulator's *modeling* parameters (Bass
+# diffusion, feedback-loop coefficients, microsim distributions) remain in
+# `ai-agent-simulator/params.yaml`; that file's protocol values are kept in sync
+# via the enforcement below. See `docs/PARAMETERS.md` for the full model.
+#
+# Relationship to the yellowpaper: the yellowpaper is the narrative/economic
+# spec; THIS file is the machine-checkable numeric contract derived from it.
+# =============================================================================
+
+meta:
+  version: 1
+  decimals: 18              # 1 FLOP = 10^18 base units
+  block_time_seconds: 1
+  blocks_per_day: 86_400
+  halving_interval_days: 730
+
+# -----------------------------------------------------------------------------
+# ENFORCED PARAMETERS — verified against implementations by check_params.py.
+# Each `expect` is a literal substring that must be present in `file`.
+# `count` (optional) requires that many occurrences.
+# -----------------------------------------------------------------------------
+parameters:
+
+  # ---- Genesis ----
+  - name: genesis_supply
+    value: 4_400_000_000
+    unit: FLOP
+    decision: D-0440
+    rust: FLOP_TOTAL_SUPPLY
+    lean: HalvingBoundary.genesisSupply
+    quint: GENESIS_MICRO
+    description: >
+      Genesis (pre-emission) total supply, pinned normatively by R9.7 (§9.3). Components (D-0440,
+      tokenomics workbook rev 2026-08-27; ECON-010 sec. 2.1): miner airdrop 1,200,000,000 + validator airdrop 1,200,000,000 +
+      agent airdrop 1,200,000,000 + ecosystem reserve 800,000,000 = exactly 4,400,000,000. Each
+      component is pinned by its own enforced param below, so the four cannot drift apart from
+      this total. There are no genesis auctions, and Team is NOT genesis-allocated — Labs and
+      Foundation receive a per-block subsidy instead (D-0421). D-0440 resized the pool 3,500,000,000
+      → 4,400,000,000 to absorb the validator bond raise (validator_min_stake 305,505 → 1,200,000):
+      the bond IS the validator cohort, so at the old pool the four components summed to
+      3,600,000,000 and the residual reserve went NEGATIVE. Allocation history is in
+      whitepaper/decisions/v0.4.md (D-0421, D-0435, D-0438, D-0440).
+    implementations:
+      - { file: ai-agent-simulator/params.yaml, expect: "total: 4400000000" }
+      - { file: pallets/runtime/zkverify/src/genesis_config_presets/helper.rs, expect: "FLOP_TOTAL_SUPPLY: Balance = 4_400_000_000 * VFY" }
+      - { file: README.md, expect: "4,400,000,000 FLOP" }   # narrative: Key Parameters table
+      - { file: formal-specs/lean/FlopSpecs/Genesis.lean, expect: "def genesisSupply : ℕ := 4400000000 * baseUnit" }  # FG-20: Lean const bound to source-of-truth
+
+  - name: genesis_miner_airdrop
+    value: 1_200_000_000
+    unit: FLOP
+    decision: D-0438
+    description: >
+      Miner-airdrop component of the genesis supply (27.27%). One of the three D-0421 airdrops, as
+      re-balanced by D-0435 and re-scaled by D-0438 (ECON-009 sec. 2.1). D-0440 held the absolute
+      grant at 1,200,000,000 while resizing the pool, so only its share moved 34.29% → 27.27%
+      (ECON-010 sec. 2.1). Home: §9.3. The workbook
+      presents it as
+      testnet block reward 559,872,000 + capped testnet fee pool 640,128,000; the fee cap is
+      back-solved so the pool lands on exactly 1,200,000,000, so treat the round pool as the
+      ratified quantity, not as an output of the testnet model. This is the actual testnet→mainnet
+      conversion pool (assignPool in testnet-conversion.ts), so it must not silently diverge from
+      the split; the total (genesis_supply) is enforced above, this pins the component too.
+    implementations:
+      - { file: ai-agent-simulator/src/model/parameters.ts, expect: "minerAirdrop: 1_200_000_000" }
+      - { file: ai-agent-simulator/params.yaml, expect: "miner_airdrop: 1200000000" }
+
+  - name: genesis_validator_airdrop
+    value: 1_200_000_000
+    unit: FLOP
+    decision: D-0440
+    description: >
+      Validator-airdrop component of the genesis supply (27.27%). Home: §9.3. D-0435 (tokenomics
+      workbook rev 2026-08-20; ECON-008 sec. 2.3) cut the validator grant to the bond and nothing else:
+      the aggregate bond, granted free and bonded at launch, with no airdrop beyond it. That
+      identity is unchanged — the grant IS validator_min_stake × validator_active_set_cap — so
+      D-0440's bond raise 305,505 → 1,200,000 carries the cohort 305,505,000 → 1,200,000,000
+      (tokenomics workbook rev 2026-08-27; ECON-010 sec. 2.1). This is what forced the pool resize:
+      at the old 3,500,000,000 the four components summed to 3,600,000,000 and genesis_reserve, the
+      residual leg, went to MINUS 100,000,000. Consumed directly as a conversion pool by assignPool
+      in testnet-conversion.ts (per-cohort pools, not one miner pool), so it is pinned here too:
+      otherwise the validator pool could drift from the ratified split while check_params.py still
+      passed. This CLOSES ECON-009 gap G2 (issue #1353): the bonded stake is the only slashing
+      collateral in the system, and it now grows with the float instead of falling behind it —
+      12.30% → 8.73% under D-0438, back to 27.27% here.
+    implementations:
+      - { file: ai-agent-simulator/src/model/parameters.ts, expect: "validatorAirdrop: 1_200_000_000" }
+      - { file: ai-agent-simulator/params.yaml, expect: "validator_airdrop: 1200000000" }
+
+  - name: genesis_agent_airdrop
+    value: 1_200_000_000
+    unit: FLOP
+    decision: D-0438
+    description: >
+      Agent-airdrop component of the genesis supply (27.27%). Home: §9.3. D-0440 held the absolute
+      grant at 1,200,000,000 while resizing the pool, so only its share moved 34.29% → 27.27%
+      (ECON-010 sec. 2.1); gap G1 below is unaffected, the pool size being unchanged. D-0438 (tokenomics
+      workbook rev 2026-08-22; ECON-009 sec. 2.1) doubled it from the 596,030,400 that ECON-007
+      sec. 3.5 adopted, to a
+      round 1,200,000,000 = agent spend cap 600,000,000 + testnet prize pool 600,000,000. Consumed
+      directly as a conversion pool by assignPool in testnet-conversion.ts, so it is pinned here
+      alongside the miner and validator components. Note the spend-to-unlock schedule that governs
+      this pool is NOT yet feasible against the workbook's own demand curve at the doubled size
+      (ECON-009 gap G1, issue #1354); no code reads spend_to_unlock.agent_ratio_n today.
+    implementations:
+      - { file: ai-agent-simulator/src/model/parameters.ts, expect: "agentAirdrop: 1_200_000_000" }
+      - { file: ai-agent-simulator/params.yaml, expect: "agent_airdrop: 1200000000" }
+
+  - name: genesis_reserve
+    value: 800_000_000
+    unit: FLOP
+    decision: D-0440
+    description: >
+      Ecosystem/incentives reserve component of the genesis supply (18.18%) — KOL, referral and
+      growth incentives. Home: §9.3. NOT an airdrop, so D-0421's "three airdrops only" stays
+      intact. Promoted to an enforced param by D-0435 (tokenomics workbook rev 2026-08-20;
+      ECON-008 sec. 2.3): it
+      previously existed only in the simulator, so nothing stopped the four genesis components
+      from drifting away from genesis_supply. It is the residual leg — D-0438 fixed the miner,
+      validator and agent cohorts and this absorbs the rest of the pool, as it absorbed what the
+      D-0435 validator-grant cut freed. D-0440 fixed all three cohorts at 1,200,000,000 and sized
+      the pool so this residual lands on a round 800,000,000 (was 794,495,000; ECON-010 sec. 2.1) —
+      at the pre-resize 3,500,000,000 pool the same residual would have been MINUS 100,000,000.
+      Release cadence per the workbook's Airdrop Schedule sec. 3 is 20% at Season 0 (160,000,000) then
+      eight half-year seasons of 80,000,000 to +48mo; D-0438's four annual tranches of 158,899,000
+      are superseded. Controller and release rules are still undefined
+      (ECON-008 sec. 7 C7, ECON-009 gap G3) and it has no runtime presence yet.
+    implementations:
+      - { file: ai-agent-simulator/src/model/parameters.ts, expect: "FLOP_GENESIS_RESERVE = 800_000_000" }
+      - { file: ai-agent-simulator/params.yaml, expect: "reserve_airdrop: 800000000" }
+
+  - name: validator_min_stake
+    value: 1_200_000
+    unit: FLOP
+    decision: D-0440
+    rust: ValidatorInitialMinimumStake
+    description: >
+      Baseline floor; compounds 9%/yr (MinimumValidatorStake). COUPLED to V_booked (realized effective value), NOT to reward — D-0413 (C5). Effective floor enforced at registration + committee admission = max(baseline, k·V_booked), ratcheted (never below baseline, composes with C6 thermostat). baseline = the CoCVoC required-stake requirement: ~1,163,309 FLOP at 96 FLOP/block (Lean Security.lean::CoCVoC.stake_at_current_params; the legacy 305,505 FAILS the deterrence margin — legacy_stake_insufficient_at_r96). THRESHOLD-ROBUST: in the reward-capture requiredStake the corruption fraction θ CANCELS, so 1/3 (the AlephBFT safety threshold, Consensus.quorum_inter_gt_third) vs the earlier '51%' framing barely moves the ~1.16M (51% is a Nakamoto number, not a BFT one). CAVEAT: this reward-pegged base FALLS with each halving (reward_floor_shrinks_across_halving) — it prices reward-capture, not value-at-risk; the DURABLE floor is the value-coupled k·V_booked below, not this baseline. RATIFIED AT 1,200,000 BY D-0440 (tokenomics workbook rev 2026-08-27; ECON-010): the superseded 305,505 predated both the 96-FLOP decision and the V_booked retarget, and Lean already proved it inadequate — legacy_stake_insufficient_at_r96 machine-checks that it FAILS the 1.22x margin at R=96, while scaled_stake_sufficient_at_r96 proves 1,200,000 HOLDS it. The shipped floor is now the value the spec proves sufficient, closing ECON-009 C1 / issue #1353. Because the aggregate bond IS the validator genesis cohort (genesis_validator_airdrop), this raise carried that cohort 305,505,000 -> 1,200,000,000 and forced the genesis_supply resize to 4,400,000,000. Runtime wiring LANDED (pallet_validators::ValueCoupledStakeFloor / effective_minimum_stake / set_value_coupled_floor, #86); k + retarget cadence calibration is governance/ENG-31. Stake-side coupling is non-inflationary.
+    implementations:
+      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "ValidatorInitialMinimumStake: Balance = 1_200_000 * VFY" }
+      - { file: ai-agent-simulator/params.yaml, expect: "validator_min_stake: 1200000" }
+      - { file: ai-agent-simulator/src/model/parameters.ts, expect: "validatorMinStake: 1_200_000" }
+      - { file: ai-agent-simulator/julia/params_sensitivity.yaml, expect: "validator_min_stake: 1200000" }
+      - { file: formal-specs/staking/staking-verification-minimal.qnt, expect: "STAKE_REQUIRED: int = 1200000" }
+
+  - name: airdrop_vesting_duration_blocks
+    value: 7_776_000
+    unit: blocks
+    decision: SPEC-022
+    description: 90-day linear airdrop vesting duration at 1-second block time.
+    implementations:
+      - { file: pallets/pallets/airdrop-vesting/src/lib.rs, expect: "VESTING_DURATION_BLOCKS: u32 = 7_776_000" }
+      - { file: pallets/runtime/zkverify/src/lib.rs,        expect: "AirdropVestingDurationBlocks: u32 = 7_776_000" }
+      - { file: pallets/pallets/airdrop-vesting/README.md,  expect: "VestingDurationBlocks = ConstU32<7_776_000>" }
+      - { file: docs/tokenomics/SPEC-022-performance-vesting.md, expect: "| `VestingDurationBlocks` | **7,776,000** |" }
+
+  # ---- Emission & Rewards ----
+  - name: initial_block_reward
+    value: 96
+    unit: FLOP
+    decision: D-008
+    rust: RewardInitialPerBlock
+    lean: Emission.initialReward
+    quint: P_EMISSION_CAP
+    description: Block reward at genesis (Era 0). Halves every halving interval.
+    implementations:
+      - { file: pallets/runtime/zkverify/src/lib.rs,                       expect: "RewardInitialPerBlock: Balance = 96 * VFY" }
+      - { file: ai-agent-simulator/src/model/parameters.ts,               expect: "initialReward: 96," }
+      - { file: ai-agent-simulator/params.yaml,                           expect: "initial_reward: 96" }
+      # Narrative docs — drifted to the old 25 FLOP after D-008; enforced so they can't again.
+      - { file: README.md,                                  expect: "Block Reward (Era 0) | 96 FLOP/block" }
+      - { file: docs/plans/PROTOCOL_IMPLEMENTATION.md,       expect: "**Initial Block Reward** | 96 FLOP" }
+      - { file: docs/plans/WHITEPAPER_IMPLEMENTATION.md,     expect: "INITIAL_REWARD = 96 FLOP" }
+      - { file: docs/tokenomics/SPEC-018-halving-schedule.md, expect: "(spec: 96 FLOP)" }
+      - { file: docs/tokenomics/TOKENOMICS_SPECIFICATION.md, expect: "**Initial Block Reward** | 96 FLOP/block" }
+      # Governance anti-inflation bound = the genesis reward (no headroom cap); keep Quint + Lean aligned to 96 (#508).
+      - { file: formal-specs/governance/governance.qnt,      expect: "P_EMISSION_CAP:    int = 96" }
+      - { file: formal-specs/lean/FlopSpecs/Governance.lean, expect: "p.emission ≤ 96" }
+
+  - name: halving_interval_blocks
+    value: 63_072_000
+    unit: blocks
+    description: Blocks between halvings (~730 days at 1s/block).
+    implementations:
+      - { file: pallets/runtime/zkverify/src/lib.rs,         expect: "RewardHalvingIntervalBlocks: u64 = 63_072_000" }
+      - { file: ai-agent-simulator/src/model/parameters.ts, expect: "halvingIntervalBlocks: 63_072_000" }
+      - { file: ai-agent-simulator/params.yaml,             expect: "halving_interval_blocks: 63072000" }
+
+  - name: max_halvings
+    value: 5
+    unit: count
+    decision: D-0436
+    rust: RewardMaxHalvings
+    lean: Emission.maxHalvings
+    quint: MAX_HALVINGS
+    description: >
+      Halvings before the reward floors permanently. Floor = initial >> max_halvings, so the
+      ladder is 96 -> 48 -> 24 -> 12 -> 6 -> 3 and era 5 onward pays the 3 FLOP floor forever.
+      D-0436 cut it from 6, superseding the sixth halving D-0421 added: the perpetual tail
+      DOUBLES (floor_annual_emission 47,304,000 -> 94,608,000 FLOP/yr). This is a DELIBERATE,
+      RECORDED DIVERGENCE from the tokenomics workbook (rev 2026-08-20, Tokenomics section 1),
+      which still says "Number of halvings: 6" - see ECON-008 and D-0436.
+    implementations:
+      - { file: pallets/runtime/zkverify/src/lib.rs,         expect: "RewardMaxHalvings: u32 = 5" }
+      - { file: ai-agent-simulator/src/model/parameters.ts, expect: "maxHalvings: 5" }
+      - { file: ai-agent-simulator/params.yaml,             expect: "max_halvings: 5" }
+      - { file: formal-specs/lean/FlopSpecs/Tokenomics.lean, expect: "def maxHalvings : ℕ := 5" }
+
+  - name: floor_reward
+    value: 3
+    unit: FLOP
+    decision: D-0436
+    lean: Emission.floorReward
+    quint: FLOOR_MICRO
+    description: >
+      Perpetual per-block reward after max_halvings (96 >> 5 = 3). DERIVED from
+      initial_block_reward and max_halvings, never set independently. D-0436 raised it from 1.5
+      by removing the sixth halving.
+    implementations:
+      - { file: ai-agent-simulator/src/model/parameters.ts, expect: "floorReward: 3" }
+      - { file: ai-agent-simulator/params.yaml,             expect: "floor_reward: 3" }
+
+  - name: miner_share_ppt
+    value: 750
+    unit: parts-per-thousand
+    decision: D-0435
+    rust: MINER_SHARE_PPT
+    lean: SettlementInt.BlockRewards.minerPpt
+    description: >
+      Miner share of each block reward (75%; yellowpaper §9). D-0435 (tokenomics workbook
+      rev 2026-08-20;
+      ECON-008 §2.1) cut it from 900 ppt: the miner leg is the RESIDUAL, and the new agent
+      (100 ppt) and staker (50 ppt) legs are carved OUT of it, not added on top. The validator
+      leg stays at 100 ppt, so YP §9.1 R9.5 ("the validator pool MUST NOT be increased") still
+      holds. Supersedes D-0408's 90/10 split.
+    implementations:
+      - { file: pallets/pallets/block-rewards/src/lib.rs,    expect: "MINER_SHARE_PPT: u128 = 750" }
+      - { file: ai-agent-simulator/src/model/parameters.ts, expect: "minerShare: 0.75" }
+      - { file: ai-agent-simulator/params.yaml,             expect: "miner_share: 0.75" }
+      - { file: formal-specs/lean/FlopSpecs/Computable.lean, expect: "def minerPpt : Nat := 750" }   # proven money-path model + DRT oracle
+      - { file: README.md,                                  expect: "75% Miners / 10% Validators / 10% Agents / 5% Stakers" }   # narrative: Key Parameters table
+
+  - name: validator_share_ppt
+    value: 100
+    unit: parts-per-thousand
+    rust: VALIDATOR_SHARE_PPT
+    lean: SettlementInt.BlockRewards.validatorPpt
+    description: Validator share of each block reward (10%).
+    implementations:
+      - { file: pallets/pallets/block-rewards/src/lib.rs,    expect: "VALIDATOR_SHARE_PPT: u128 = 100" }
+      - { file: formal-specs/lean/FlopSpecs/Computable.lean, expect: "def validatorPpt : Nat := 100" }   # proven money-path model + DRT oracle
+      - { file: ai-agent-simulator/src/model/parameters.ts, expect: "validatorShare: 0.1" }
+      - { file: ai-agent-simulator/params.yaml,             expect: "validator_share: 0.10" }
+
+  - name: agent_share_ppt
+    value: 100
+    unit: parts-per-thousand
+    decision: D-0435
+    rust: AGENT_SHARE_PPT
+    lean: SettlementInt.BlockRewards.agentPpt
+    description: >
+      Agent/broker rebate share of each block reward (10%; yellowpaper §9). New in D-0435
+      (tokenomics workbook rev 2026-08-20; ECON-008 §2.1, §3 F2) and carved OUT of the miner
+      residual, not added on top — miner_share_ppt fell 900 → 750 to fund this leg and
+      staker_share_ppt together. The
+      DISTRIBUTION policy is not ratified: the pallet mints the leg to a sovereign PalletId
+      account and emits an event, pending the F2 design decision. The macro simulator mints the
+      leg every block and parks it in its own stock, outside circulating supply, mirroring the
+      runtime.
+    implementations:
+      - { file: pallets/pallets/block-rewards/src/lib.rs,    expect: "AGENT_SHARE_PPT: u128 = 100" }
+      - { file: ai-agent-simulator/src/model/parameters.ts, expect: "agentShare: 0.1" }
+      - { file: ai-agent-simulator/params.yaml,             expect: "agent_share: 0.10" }
+      - { file: formal-specs/lean/FlopSpecs/Computable.lean, expect: "def agentPpt : Nat := 100" }   # proven money-path model + DRT oracle
+
+  - name: staker_share_ppt
+    value: 50
+    unit: parts-per-thousand
+    decision: D-0435
+    rust: STAKER_SHARE_PPT
+    lean: SettlementInt.BlockRewards.stakerPpt
+    description: >
+      Community-staker share of each block reward (5%; yellowpaper §9) — all FLOP stakers other
+      than miners and validators. Decided 2026-08-04, ratified in D-0435 (tokenomics workbook
+      rev 2026-08-20; ECON-008 §2.1, §3 F1) and carved OUT of the miner residual, not added on top. The
+      DISTRIBUTION policy is not ratified: the pallet mints the leg to a sovereign PalletId
+      account and emits an event, pending the F1 design decision. The macro simulator mints the
+      leg every block and parks it in its own stock, outside circulating supply, mirroring the
+      runtime.
+    implementations:
+      - { file: pallets/pallets/block-rewards/src/lib.rs,    expect: "STAKER_SHARE_PPT: u128 = 50" }
+      - { file: ai-agent-simulator/src/model/parameters.ts, expect: "stakerShare: 0.05" }
+      - { file: ai-agent-simulator/params.yaml,             expect: "staker_share: 0.05" }
+      - { file: formal-specs/lean/FlopSpecs/Computable.lean, expect: "def stakerPpt : Nat := 50" }   # proven money-path model + DRT oracle
+
+  - name: finality_committee_premium_weight_ppm
+    value: 1_100_000
+    unit: ppm
+    rust: FINALITY_COMMITTEE_PREMIUM_WEIGHT_PPM
+    description: Finality-committee validator reward weight inside the validator 10% pool. Same-stake committee validators receive 1.1x the base validator weight; no new mint or agent surcharge.
+    implementations:
+      - { file: pallets/pallets/validators/src/lib.rs, expect: "FINALITY_COMMITTEE_PREMIUM_WEIGHT_PPM: u128 = 1_100_000" }
+
+  # ---- Developer Subsidy (separate from block reward) ----
+  - name: subsidy_per_block_per_recipient
+    value: 8
+    unit: FLOP
+    decision: D-0436
+    description: >
+      ERA-0 per-block subsidy to EACH of FLOP Labs and FLOP Foundation (16 FLOP/block combined;
+      yellowpaper §9), on top of the 96 FLOP block reward. D-0435 (tokenomics workbook
+      rev 2026-08-20; ECON-008 §2.2) raised it from 5 and made it HALVE with the block reward,
+      on the same 63,072,000-block
+      halving boundaries; D-0436 then ran it for ALL FIVE halvings instead of three, so it
+      terminates exactly where the reward floors. Per recipient by era: 8 (years 1-2), 4, 2, 1,
+      0.5 (years 9-10), then exactly 0 from era 5. Combined per block: 16, 8, 4, 2, 1, then 0.
+      Era 4's 0.5 FLOP is fractional in FLOP but EXACT in base units (5 × 10^17 of 10^18), so the
+      integer shift never truncates. Total over the schedule = 63,072,000 × (16+8+4+2+1) =
+      1,955,232,000 FLOP. Supersedes the 2026-06-24 flat-5, era-0-only decision and D-0435's
+      three-era cap.
+    implementations:
+      - { file: pallets/pallets/flop-subsidy/src/lib.rs, expect: "SUBSIDY_INITIAL_PER_BLOCK: u128 = 8_000_000_000_000_000_000" }
+      - { file: ai-agent-simulator/params.yaml,          expect: "labs_rate: 8" }
+      - { file: ai-agent-simulator/params.yaml,          expect: "foundation_rate: 8" }
+
+  - name: subsidy_duration_blocks
+    value: 315_360_000
+    unit: blocks
+    decision: D-0436
+    description: >
+      Subsidy minting duration (~3650 days = 10 years = 5 subsidy halving eras), after which it
+      sunsets automatically. D-0435 extended it from 63,072,000 (~730 days) to 189,216,000 in
+      lockstep with making the rate halve; D-0436 extended it again to 5 × halving_interval_blocks
+      so the subsidy tracks the reward's halving phase and TERMINATES exactly where the reward
+      floors (era 5). Unlike the reward it has no floor: era >= 5 pays exactly 0.
+    implementations:
+      - { file: pallets/pallets/flop-subsidy/src/lib.rs, expect: "SUBSIDY_DURATION_BLOCKS: u64 = 315_360_000" }
+      - { file: ai-agent-simulator/params.yaml,          expect: "end_block: 315360000" }
+
+  # ---- Staking & Delegation ----
+  - name: min_miner_self_stake
+    value: 10_000
+    unit: FLOP
+    description: Minimum self-stake to register as a miner (anti-Sybil).
+    implementations:
+      # Live consumer: runtime binds MinMinerSelfStake trait const to this value, folded as
+      # the base of required_self_stake (capacity-proportional floor). ENG-33 wiring for SybilCost bond floor.
+      # Note: pallet-miner-staking also has a dead MIN_MINER_SELF_STAKE const (lib.rs:90, 10 FLOP, no consumer)
+      # that is NOT tracked here to avoid false-confidence — it is 1000× below this enforced value.
+      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "MinMinerSelfStake: Balance = 10_000 * VFY" }
+
+  - name: miner_commission_cap_percent
+    value: 20
+    unit: percent
+    description: Maximum commission a miner may charge delegators.
+    implementations:
+      - { file: pallets/pallets/miner-staking/src/lib.rs, expect: "MAX_COMMISSION_RATE: Perbill = Perbill::from_percent(20)" }
+
+  - name: miner_unbonding_blocks
+    value: 604_800
+    unit: blocks
+    description: Miner unbonding period (~7 days at 1s/block).
+    implementations:
+      - { file: pallets/pallets/miner-staking/src/lib.rs, expect: "UNBONDING_PERIOD_BLOCKS: u32 = 604_800" }
+
+  - name: miner_capacity_stake_per_gflop
+    value: "VFY / 100"
+    unit: "(= 0.01 FLOP per GFLOP/s)"
+    description: "Capacity-proportional miner self-stake = min_miner_self_stake + B_p * this (LINEAR, NO CAP — a cap would make the largest miners' fraud +EV; D-0418, ENG-8). 0.01 FLOP per GFLOP/s of CALIBRATED B_p (VFY/100, where VFY = 1 FLOP). CALIBRATED: 0.01 confirmed vs fraud-profit-over-the-7d-dispute-window (whitepaper/research/miner-capacity-stake-calibration.md). LIVE end-to-end: Capacity bound to hw-calibration B_p (daily G_n /86_400 -> G_n/s); PoUI proof crediting gated on is_capacity_bonded (fail-closed). Fraud-deterrence, NOT consensus security (miners cast no consensus vote; takeover needs validator stake — D-0413)."
+    implementations:
+      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "pub const CapacityStakePerGflop: Balance = VFY / 100;" }
+
+  - name: miner_stake_revocation_latency_blocks
+    value: 604_800
+    unit: blocks
+    description: "Revocation/dispute latency window used in miner stake exposure: required self-stake covers cap × this window × stake_rate."
+    implementations:
+      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "MinerStakeRevocationLatencyBlocks: u32 = 604_800" }
+
+  - name: miner_stake_surge_multiplier_ppm
+    value: 1_250_000
+    unit: ppm
+    description: "Provisional burst-cap stake multiplier. 1_250_000 ppm = 1.25x exposure stake while a cap is still burst/audit-ratcheted."
+    implementations:
+      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "MinerStakeSurgeMultiplierPpm: u32 = 1_250_000" }
+
+  - name: calibration_min_verified_jobs
+    value: 64
+    unit: jobs
+    description: "D-0433 minimum independently verified jobs in the quick serving-entry burst. The separate utilization equation still binds the claimed cap to total verified work."
+    implementations:
+      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "CalibrationMinVerifiedJobs: u32 = 64" }
+
+  - name: calibration_min_burst_blocks
+    value: 600
+    unit: blocks
+    description: "D-0433 minimum chain-timed serving-entry burst (10 minutes at 1s blocks)."
+    implementations:
+      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "CalibrationMinBurstBlocks: u32 = 600" }
+
+  - name: calibration_min_utilization_ppm
+    value: 500_000
+    unit: ppm
+    description: "Sustained utilization threshold for burst acceptance. Verified expected GN must cover cap × elapsed × this ppm."
+    implementations:
+      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "CalibrationMinUtilizationPpm: u32 = 500_000" }
+
+  - name: calibration_provisional_discount_ppm
+    value: 900_000
+    unit: ppm
+    description: "HARD-tier provisional discount applied to attested SKU ceilings before min(empirical_burst_cap, discounted_sku_ceiling)."
+    implementations:
+      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "CalibrationProvisionalDiscountPpm: u32 = 900_000" }
+
+  - name: calibration_lease_blocks
+    value: 604_800
+    unit: blocks
+    description: "D-0433 renewable calibration-cap lease (7 days at 1s blocks). At expiry every cap consumer fails closed until fresh verified canaries renew it."
+    implementations:
+      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "CalibrationLeaseBlocks: u32 = 604_800" }
+
+  - name: calibration_renewal_min_verified_jobs
+    value: 8
+    unit: jobs
+    description: "D-0433 minimum fresh one-shot Ghost canaries for quick restart/offline/periodic cap renewal. Renewal cannot increase the accepted cap."
+    implementations:
+      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "CalibrationRenewalMinVerifiedJobs: u32 = 8" }
+
+  - name: calibration_renewal_max_age_blocks
+    value: 600
+    unit: blocks
+    description: "Maximum miner-triggered renewal window (10 minutes at 1s blocks). Only canaries issued at or after its start qualify, preventing stockpiled credentials from proving a reboot or offline recovery."
+    implementations:
+      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "CalibrationRenewalMaxAgeBlocks: u32 = 600" }
+
+  - name: calibration_min_recalibration_interval_blocks
+    value: 600
+    unit: blocks
+    description: "Minimum interval between accepted initial calibrations (10 minutes at 1s blocks), preventing rapid cap replacement and strategic retry loops. Lease renewals cannot increase the cap and are not subject to this cooldown."
+    implementations:
+      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "CalibrationMinRecalibrationIntervalBlocks: u32 = 600" }
+
+  - name: calibration_max_gpu_inventory_entries
+    value: 16
+    unit: distinct SKUs
+    description: "Maximum distinct attested GPU SKUs on one miner host. Device multiplicity is represented by a u16 count per SKU."
+    implementations:
+      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "CalibrationMaxGpuInventoryEntries: u32 = 16" }
+
+  - name: miner_capacity_stake_sim_per_10_gflop
+    value: 0.1
+    unit: "FLOP per 10 GFLOP/s"
+    description: "Simulator mirror of miner_capacity_stake_per_gflop (D-0418). The protocol const is VFY/100 = 0.01 FLOP per GFLOP/s; the sim encodes it per-10-GFLOP, so 0.01/GFLOP == 0.1 per-10-GFLOP. Enforced across BOTH sim param files so the rejected v2-draft value (1.0 = 0.1/GFLOP, 10x too high) cannot drift back (the Julia sensitivity flow reads params_sensitivity.yaml)."
+    implementations:
+      - { file: ai-agent-simulator/params.yaml,                  expect: "miner_stake_per_10_gflop: 0.1" }
+      - { file: ai-agent-simulator/julia/params_sensitivity.yaml, expect: "miner_stake_per_10_gflop: 0.1" }
+
+  # ---- Compute-channel timing bounds ----
+  - name: timing_max_clock_skew_ms
+    value: 250
+    unit: ms
+    description: >
+      Maximum clock skew (in ms) tolerated between miner and agent wall clocks when
+      classifying timing as Eligible vs Ambiguous. Used by evaluate_receipt_timing
+      in both the Rust and TS SDKs. Changing either implementation independently
+      silently shifts the Eligible/Ambiguous boundary; enforce parity here.
+    implementations:
+      - { file: sdk/rust-compute-channel/src/protocol.rs, expect: "max_clock_skew_ms: 250" }
+      - { file: sdk/typescript/src/compute-channel/protocol.ts, expect: "maxClockSkewMs ?? 250n" }
+
+  - name: timing_network_pad_ms
+    value: 100
+    unit: ms
+    description: >
+      Network round-trip padding (in ms) added to the clock-skew allowance when
+      evaluating receipt timing. Together with timing_max_clock_skew_ms forms the
+      skew_pad_ms threshold in evaluate_receipt_timing. Must stay in sync between
+      Rust and TS to avoid a scoring split.
+    implementations:
+      - { file: sdk/rust-compute-channel/src/protocol.rs, expect: "network_pad_ms: 100" }
+      - { file: sdk/typescript/src/compute-channel/protocol.ts, expect: "networkPadMs ?? 100n" }
+
+  # ---- Sessions / capacity reservations (A1 anti-spam) ----
+  - name: max_active_reservations_base
+    value: 4
+    unit: count
+    description: Base number of concurrent active capacity reservations per agent identity. Combined with escrow_per_reservation_slot for non-flat scaling (effective = base + floor(escrow / slot)); fail-closed at open/force_open (ENG-16, yellowpaper §12.2).
+    implementations:
+      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "pub const MaxActiveReservationsBase: u32 = 4;" }
+      - { file: pallets/pallets/compute-channel/src/lib.rs, expect: "type MaxActiveReservationsBase: Get<u32>;" }
+      - { file: ai-agent-simulator/src/model/session-channel.ts, expect: "export const MAX_ACTIVE_RESERVATIONS_BASE = 4;" }
+
+  - name: escrow_per_reservation_slot
+    value: 50
+    unit: FLOP
+    description: Escrow (in FLOP) that grants +1 additional active reservation slot beyond base. Scales per-identity cap with bonded capital at reserve time (not flat constant); 50 FLOP per extra slot.
+    implementations:
+      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "pub const EscrowPerReservationSlot: Balance = 50 * VFY;" }
+      - { file: pallets/pallets/compute-channel/src/lib.rs, expect: "type EscrowPerReservationSlot: Get<BalanceOf<Self>>;" }
+      - { file: ai-agent-simulator/src/model/session-channel.ts, expect: "export const ESCROW_PER_RESERVATION_SLOT = 50;" }
+
+  - name: min_certificate_premium_ppm
+    value: 1_500_000
+    unit: ppm
+    description: Minimum price multiple (1_500_000 = 1.5x) over the model's per-GFLOP rate for certificate-backed premium settlement (#535). certificate_settle requires escrow >= price_per_gflop * aggregate_gn * multiple, so premium-class proven work cannot pay standard-rate escrow. Floor derived in batch-work-certificates-spike section 3. #628 α-tier takes max(this, bond_multiple(α)).
+    implementations:
+      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "pub const MinCertificatePremiumPpm: u32 = 1_500_000;" }
+      - { file: pallets/pallets/compute-channel/src/lib.rs, expect: "type MinCertificatePremiumPpm: Get<u32>;" }
+
+  - name: sampled_audit_alpha_ppm
+    value: 50_000
+    unit: ppm
+    description: Default α for sampled-audit certificate mode (#628 / certificate format section 9.5; yellowpaper §3.5). 50_000 = 5% of turns selected post-epoch via VRF beacon; 1_000_000 = full audit. Drives α-tiered premium floor via premium_ppm_for_alpha.
+    implementations:
+      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "pub const SampledAuditAlphaPpm: u32 = 50_000;" }
+      - { file: pallets/pallets/compute-channel/src/lib.rs, expect: "type SampledAuditAlphaPpm: Get<u32>;" }
+
+  - name: sampled_audit_checkpoint_turns
+    value: 16
+    unit: turns
+    description: KV-checkpoint interval C for sampled-audit replay (#628). Audited turns re-prefill from nearest checkpoint; replay amplification ≤ C (spike section 2.5.2; yellowpaper §3.5).
+    implementations:
+      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "pub const SampledAuditCheckpointTurns: u32 = 16;" }
+      - { file: pallets/pallets/compute-channel/src/lib.rs, expect: "type SampledAuditCheckpointTurns: Get<u32>;" }
+
+  - name: audit_quantum_gn
+    value: 100_000_000
+    unit: G_n
+    description: >
+      #764 blast-radius control: the session-host / checker forces at least one audit ticket
+      every this many G_n of served work (value quantum Q). Bounds expected undetected cheated
+      value to (1−α)·Q, independent of session length — sampling is proportional to VALUE served,
+      not turn count (TRIZ P1 Segmentation + P19 Periodic action). Formal twin:
+      FlopSpecs/ToplocSession.lean (nQuanta, quantum_blast_expected, blast_radius_capstone).
+      Placeholder magnitude (0.1× the 1B PouiMaxGnWeightPerSubmission cap); calibrate with bond
+      sizing so σB ≥ the profit of one quantum.
+    implementations:
+      - { file: sdk/rust-compute-channel/src/sampled_audit.rs, expect: "DEFAULT_AUDIT_QUANTUM_GN: u128 = 100_000_000" }
+      - { file: whitepaper/research/session-lifecycle-runbook.md, expect: "`audit_quantum_gn` | **100_000_000**" }
+
+  - name: high_value_gn_threshold
+    value: 10_000_000
+    unit: G_n
+    description: >
+      #764 asymmetry: any single turn with G_n ≥ this is force-audited (effective α=1 for its
+      leaf), so a sparse high-G_n turn cannot ride Bernoulli-α. MUST stay ≤ audit_quantum_gn so
+      no unaudited turn alone fills a quantum (TRIZ P4 Asymmetry). Formal twin:
+      FlopSpecs/ToplocSession.lean (asymmetricTurnMiss, high_value_force_refines). Placeholder
+      magnitude (0.1× audit_quantum_gn).
+    implementations:
+      - { file: sdk/rust-compute-channel/src/sampled_audit.rs, expect: "DEFAULT_HIGH_VALUE_GN_THRESHOLD: u128 = 10_000_000" }
+      - { file: whitepaper/research/session-lifecycle-runbook.md, expect: "`high_value_gn_threshold` | **10_000_000**" }
+
+  # ---- Finality-stall safe mode (compute-channel) ----
+  # Runtime-visible finality-lag thresholds (best - finalized, 1s blocks) that gate
+  # finality-dependent channel opens. Ordering warn < freeze < stall is asserted by
+  # pallet_compute_channel's integrity_test; tracked here so the ratified magnitudes
+  # can't drift silently in the runtime. Spec: docs/plans/FINALITY_STALL_STANCE.md.
+  # Only the production runtime consts are enforced; the mock's test values (3/5/10)
+  # are deliberately NOT tracked (they are not protocol values).
+  - name: finality_lag_warn
+    value: 30
+    unit: blocks
+    description: >
+      Finality lag above which the detector reports Lagging (alert only; finality-clocked
+      deadlines pause naturally). At/below this = Normal. FINALITY_STALL_STANCE.md.
+    implementations:
+      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "pub const FinalityLagWarn: BlockNumber = 30;" }
+
+  - name: finality_freeze_threshold
+    value: 120
+    unit: blocks
+    description: >
+      Finality lag at/above which the channel enters Stalled: new finality-dependent opens
+      are rejected fail-closed (ensure_finality_open_allowed); additive top-up/cancel paths
+      stay open. FINALITY_STALL_STANCE.md.
+    implementations:
+      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "pub const FinalityFreezeThreshold: BlockNumber = 120;" }
+      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "type FinalityFreezeThreshold = FinalityFreezeThreshold;" }
+
+  - name: max_finality_stall
+    value: 3600
+    unit: blocks
+    description: >
+      Finality lag at/above which the chain is EscapeEligible (safe mode): restore AlephBFT
+      finality or ratify a checkpoint recovery through the hard-fork runbook. ~1h at 1s
+      blocks. FINALITY_STALL_STANCE.md.
+    implementations:
+      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "pub const MaxFinalityStall: BlockNumber = 3_600;" }
+      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "type MaxFinalityStall = MaxFinalityStall;" }
+
+  - name: htlc_timelock_symmetry_safety_margin_percent
+    value: 20
+    unit: percent
+    description: >
+      Minimum foreign-chain HTLC safety margin as a percentage of the foreign duration,
+      after converting it to one-second FLOP blocks. The runtime also requires the larger
+      finality-recovery margin (max_finality_stall + current lag). yellowpaper §10.1 (R10.2).
+    implementations:
+      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "pub const HasTimelockSymmetrySafetyMarginPercent: u32 = 20;" }
+
+  - name: btc_block_time_flop_blocks
+    value: 600
+    unit: blocks
+    description: >
+      Average Bitcoin block interval expressed in one-second FLOP blocks. HTLC symmetry
+      converts BTC block deadlines with this factor before comparing the two chains.
+      yellowpaper §10.1 (R10.2).
+    implementations:
+      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "pub const HasBtcBlockTimeInFlopBlocks: u32 = 600;" }
+
+  # ---- PoUI simulator-mode safety flag (#297 CRIT-02 / RT-C02) ----
+  # The simulator credit path (submit_stark_batch credits G_n with NO TEE verification)
+  # is a devnet/E2E-only opt-in. AllowSimulatorMode is true ONLY in `volta` (devnet)
+  # builds — the same feature that compiles pallet-flop-poui's `simulator` path — and
+  # false in every production build, so it can never be on by accident. pallet_flop_poui's
+  # integrity_test asserts this flag equals the `simulator` build feature (panics at
+  # startup otherwise). Tracked here so a silent revert to `= true` cannot land.
+  - name: poui_allow_simulator_mode
+    value: 'cfg!(feature = "volta")'
+    unit: flag
+    description: >
+      #297: AllowSimulatorMode gates the TEE-free simulator credit path; derived from the
+      `volta` devnet feature so production runtimes fail closed. Enforced by
+      pallet_flop_poui::integrity_test (flag must equal the `simulator` build feature).
+    implementations:
+      - { file: pallets/runtime/zkverify/src/lib.rs, expect: 'pub const PouiAllowSimulatorMode: bool = cfg!(feature = "volta");' }
+
+  # ---- PoUI submission rate limit ----
+  - name: poui_submission_window_blocks
+    value: 86_400
+    unit: blocks
+    rust: PouiEpochDurationBlocks
+    description: >
+      Block-aligned PoUI submission rate-limit window (1 day at 1 s blocks). The pallet resets
+      per-miner submission counts when now / PouiEpochDurationBlocks advances; this window is
+      unrelated to the BABE epoch. yellowpaper §1.2.
+    implementations:
+      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "PouiEpochDurationBlocks: u32 = 86_400" }
+
+  - name: poui_max_submissions_epoch
+    value: 10
+    unit: count
+    rust: PouiMaxSubmissionsPerEpoch
+    description: >
+      Maximum submissions per miner during each block-aligned poui_submission_window_blocks
+      window. The compatibility _epoch suffix does not refer to the BABE epoch. yellowpaper §1.2.
+    implementations:
+      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "PouiMaxSubmissionsPerEpoch: u32 = 10" }
+
+  # ---- F2 supply-side governor (default OFF; governance-settable) ----
+  # Network-survival dampers. Both sub-mechanisms ship DISABLED so the baseline
+  # trajectory is unchanged; arm only on early-warning trip-wires. Currently
+  # modeled in the simulator (sim evidence for these defaults) — NOT yet in the
+  # Rust runtime (F2 follow-on: emission-pallet hook + governance origin).
+  # Spec: whitepaper/research/f2-exodus-threat-model.md; decision: D-0410.
+  - name: governor_default_enabled
+    value: "false"
+    unit: bool
+    description: Master default for both governor dampers — OFF at genesis (insurance, governance-armed).
+    implementations:
+      - { file: ai-agent-simulator/src/model/parameters.ts, expect: "enabled: false", count: 2 }
+      - { file: ai-agent-simulator/params.yaml,             expect: "enabled: false", count: 2 }
+
+  - name: governor_emission_damping_util_floor
+    value: 0.3
+    unit: fraction
+    description: Utilization below which the retention reward-boost engages (utilization-indexed, never price-indexed — anti-Terra).
+    implementations:
+      - { file: ai-agent-simulator/src/model/parameters.ts, expect: "utilFloor: 0.3" }
+      - { file: ai-agent-simulator/params.yaml,             expect: "util_floor: 0.3" }
+
+  - name: governor_emission_damping_max_boost
+    value: 1.5
+    unit: multiplier
+    description: Hard cap on the miner-reward multiplier when the governor is armed (+50% max).
+    implementations:
+      - { file: ai-agent-simulator/src/model/parameters.ts, expect: "maxBoost: 1.5" }
+      - { file: ai-agent-simulator/params.yaml,             expect: "max_boost: 1.5" }
+
+  # Dynamic burn schedule — era tiers: 10% (era 0-1) → 15% (era 2-3) → 25% (era 4+).
+  # Enforced so the burn fractions AND their era boundaries can't drift between the
+  # TS default (parameters.ts) and the sim yaml (miner-validator-economics §5.3).
+  - name: governor_dynamic_burn_tier1
+    value: 0.1
+    unit: fraction
+    description: Fee-burn fraction for eras 0–1 (era_max 1) when dynamic burn is armed.
+    implementations:
+      - { file: ai-agent-simulator/src/model/parameters.ts, expect: "eraMax: 1, fraction: 0.1" }
+      - { file: ai-agent-simulator/params.yaml,             expect: "era_max: 1, fraction: 0.10" }
+
+  - name: governor_dynamic_burn_tier2
+    value: 0.15
+    unit: fraction
+    description: Fee-burn fraction for eras 2–3 (era_max 3) when dynamic burn is armed.
+    implementations:
+      - { file: ai-agent-simulator/src/model/parameters.ts, expect: "eraMax: 3, fraction: 0.15" }
+      - { file: ai-agent-simulator/params.yaml,             expect: "era_max: 3, fraction: 0.15" }
+
+  - name: governor_dynamic_burn_tier3
+    value: 0.25
+    unit: fraction
+    description: Fee-burn fraction for eras 4+ (era_max 99 sentinel) when dynamic burn is armed.
+    implementations:
+      - { file: ai-agent-simulator/src/model/parameters.ts, expect: "eraMax: 99, fraction: 0.25" }
+      - { file: ai-agent-simulator/params.yaml,             expect: "era_max: 99, fraction: 0.25" }
+
+  # ---- Governance ----
+  - name: governance_root_track_approval
+    value: 67
+    unit: percent
+    decision: D-015
+    rust: APP_ROOT
+    quint: P_APPROVAL_FLOOR
+    description: >
+      Flat approval threshold (Byzantine 2/3) for the root / protocol-upgrade governance curve,
+      encoded as APP_ROOT and used by the production protocol_upgrade track (GOV-A, yellowpaper §14.2).
+    implementations:
+      - { file: pallets/runtime/zkverify/src/governance/tracks.rs, expect: "percent(67), percent(67)" }
+
+  - name: protocol_upgrade_support_floor
+    value: 15
+    unit: percent
+    decision: D-0415
+    description: >
+      Turnout-floor (min_support) for the production protocol_upgrade (Root) track — 50% ceiling
+      decaying to a 15% floor (the quorum SPEC-024 lacked). GOV-A; value [RATIFY].
+    implementations:
+      - { file: pallets/runtime/zkverify/src/governance/tracks.rs, expect: "percent(15), percent(50)" }
+
+  # ---- Consensus / finality committee ----
+  - name: babe_primary_probability_denominator
+    value: 50
+    unit: ratio-denominator
+    rust: PRIMARY_PROBABILITY
+    description: >
+      BABE primary-slot probability c = 1/N, where a validator's per-slot win chance is
+      p = 1 - (1 - c)^theta (theta = stake fraction). This is the fork-rate dial: AllowedSlots is
+      PrimaryAndSecondaryVRFSlots, which already guarantees exactly one secondary author per slot,
+      so every primary winner is an ADDITIONAL author — i.e. a fork. At the previous 1/4 with 5
+      equal-stake authorities ~20% of slots forked (~12/min at 1 s blocks; devnet measured 4.7
+      reorgs/min/node), which was the common root of the 2026-07-25 stalls: deep reorgs, finality
+      landing off a node's best branch, block-request churn, reputation bans, validator isolation.
+      1/50 gives ~1.6% — a ~12x reduction. Costs nothing in randomness: pallet_babe deposits epoch
+      randomness from any VRF-carrying pre-digest and SecondaryVRFSlots blocks carry one, so the
+      beacon seeding the PoUI committee sampler is fed by every block regardless of c.
+    implementations:
+      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "PRIMARY_PROBABILITY: (u64, u64) = (1, 50)" }
+      # The relay-node test runtime carries its own copy (vendored from Polkadot, whose 1/4 is
+      # derived for 6 s slots). Enforced here so tests cannot silently drift back to a fork rate
+      # production no longer has.
+      - {
+          file: pallets/relay-node/test/runtime/constants/src/lib.rs,
+          expect: "PRIMARY_PROBABILITY: (u64, u64) = (1, 50)",
+        }
+
+  - name: aleph_max_data_branch_len
+    value: 30
+    unit: blocks
+    rust: MAX_DATA_BRANCH_LEN
+    description: >
+      Maximum blocks in one AlephBFT-ordered chain proposal — the finality throughput ceiling
+      (finality rate ~= this / ordering latency; measured 1.66 blocks/s at the previous value of 7,
+      implying ~4.2 s to order a proposal). WIRE-BREAKING: ChainProposal::validate rejects longer
+      proposals as TooLong, so validators disagreeing on this value peer successfully and then fail
+      to reach consensus. Any change MUST bump aleph_gossip_protocol_version below in the same
+      commit — that is why the two are pinned adjacently here.
+    implementations:
+      - { file: pallets/finality-aleph/src/lib.rs, expect: "MAX_DATA_BRANCH_LEN: usize = 30" }
+
+  - name: aleph_max_round
+    value: 65535
+    unit: round
+    rust: MAX_ROUND
+    description: >
+      Maximum AlephBFT round accepted in one session. Round::MAX removes the former round-7000
+      durable-backup restart ceiling while preserving the protocol type's hard bound. This is
+      wire-breaking and therefore paired with aleph_gossip_protocol_version 5.
+    implementations:
+      - { file: pallets/finality-aleph/src/session.rs, expect: "MAX_ROUND: Round = Round::MAX" }
+      - { file: pallets/finality-aleph/src/session.rs, expect: "assert_eq!(MAX_ROUND, 65_535)" }
+
+  - name: aleph_gossip_protocol_version
+    value: 5
+    unit: version
+    description: >
+      Notification-protocol version for AlephBFT unit gossip (/flop/aleph/N). Bumped on every
+      wire-breaking change so mixed binaries refuse to peer rather than peering and silently
+      failing consensus. v3 required RMC-backed justifications; v4 raised aleph_max_data_branch_len
+      7 -> 30; v5 removes the durable-backup round-7000 ceiling. Tracked here so a wire change fails
+      check_params.py instead of passing CI and partitioning the committee at deploy time.
+    implementations:
+      - { file: pallets/relay-node/service/src/aleph_support.rs, expect: "/flop/aleph/5" }
+      - { file: infra/devnet/README.md, expect: "/flop/aleph/5" }
+
+  - name: finality_committee_size
+    value: 100
+    unit: count
+    rust: AlephMaxCommittee
+    description: >
+      AlephBFT finalizing committee size: randomly sampled stake-weighted without replacement
+      from the PoUI-gated active set off a BABE-VRF seed (#448/#848). Sampling is performed by
+      sample_committee_weighted; formal sampling-risk values are mirrored in
+      CommitteeSampling.Tunables, with the BFT fault-seat threshold derived from
+      Consensus.FinalCtx.faulty_minority. Distinct from the active set, which is separately capped at
+      validator_active_set_cap (D-0437). yellowpaper §15.4.
+    implementations:
+      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "AlephMaxCommittee: u32 = 100" }
+
+  - name: validator_attestation_threshold
+    value: 666_666_666
+    unit: perbill-parts
+    decision: D-0414
+    rust: PouiDefaultValidatorAttestationThreshold
+    description: >
+      BFT attestation quorum (Perbill parts 666_666_666 = 2/3), root-governable; gates the direct PoUI
+      proof path + Ghost Tasks. yellowpaper §3.6/§13.3.
+    implementations:
+      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "PouiDefaultValidatorAttestationThreshold: Perbill = Perbill::from_parts(666_666_666)" }
+
+  - name: attest_max_verifier_set_members
+    value: 100
+    unit: count
+    rust: AttestMaxVerifierSetMembers
+    description: >
+      Maximum governed verifier keys stored for one attestation profile. Kept at the Aleph committee
+      cap so validator-backed profiles can include the full finality committee without unbounded storage.
+    implementations:
+      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "AttestMaxVerifierSetMembers: u32 = 100" }
+
+  - name: attest_max_claim_signatures
+    value: 100
+    unit: count
+    rust: AttestMaxClaimSignatures
+    description: >
+      Maximum signatures accepted in one shared attestation claim; matches the verifier-set bound so
+      claims cannot exceed the largest governed active set.
+    implementations:
+      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "AttestMaxClaimSignatures: u32 = 100" }
+
+  - name: poui_tee_v1_profile_id
+    value: "H256([4u8; 32])"
+    unit: profile-id
+    rust: POUI_TEE_V1_PROFILE_ID
+    description: >
+      Governed shared-attestation profile id for PoUI TEE v1 claims. New pending PoUI proofs pin
+      this id through `PouiTeeV1Profile` and reject claims for unknown or stale profile versions.
+    implementations:
+      - { file: pallets/pallets/flop-poui/src/lib.rs, expect: "POUI_TEE_V1_PROFILE_ID: H256 = H256([4u8; 32])" }
+
+  - name: poui_tee_v1_profile_version
+    value: 1
+    unit: profile-version
+    rust: PouiTeeV1Profile
+    description: >
+      Initial profile version for PoUI TEE v1 claims. Consumers pin this version at proof
+      submission and fail closed if governance updates the live profile before claim resolution.
+    implementations:
+      - file: pallets/runtime/zkverify/src/lib.rs
+        expect: |
+          pub const PouiTeeV1Profile: hp_poui::AttestProfileRef = hp_poui::AttestProfileRef {
+                  profile_id: pallet_flop_poui::POUI_TEE_V1_PROFILE_ID,
+                  version: 1,
+              };
+
+  # ---- Validator security policy ----
+  - name: validator_rotation_interval_blocks
+    value: 2_592_000
+    unit: blocks
+    decision: D-0416
+    rust: RotationIntervalBlocks
+    description: "Validator-set rotation cadence (~30 d at 1s); automatic on_initialize + manual rotate. yellowpaper §15.5."
+    implementations:
+      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "RotationIntervalBlocks: u64 = 2_592_000" }
+
+  - name: validators_to_eject
+    value: 50
+    unit: count
+    rust: ValidatorsToEject
+    description: "Per-rotation eject count (bottom by stake, subject to a work-recency and performance floor). yellowpaper §15.5 target; live ranking is by work-recency/performance (stake ordering PARTIAL, Appendix H)."
+    implementations:
+      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "ValidatorsToEject: u32 = 50" }
+
+  - name: validators_to_promote
+    value: 50
+    unit: count
+    rust: ValidatorsToPromote
+    description: "Per-rotation promote count from the queue (stake >= current minimum). yellowpaper §15.5."
+    implementations:
+      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "ValidatorsToPromote: u32 = 50" }
+
+  - name: ejection_cooldown_blocks
+    value: 604_800
+    unit: blocks
+    rust: EjectionCooldownBlocks
+    description: "Cooldown (~7 d) before an ejected validator may rejoin (stake topped to current minimum). yellowpaper §15.5."
+    implementations:
+      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "EjectionCooldownBlocks: u64 = 604_800" }
+
+  - name: validator_unbonding_blocks
+    value: 1_814_400
+    unit: blocks
+    decision: D-0419
+    rust: ValidatorUnbondingPeriodBlocks
+    description: "Validator stake unbonding lockup (~21 d); bounds withdraw-after-misbehavior. yellowpaper §13. Distinct from miner_unbonding_blocks."
+    implementations:
+      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "ValidatorUnbondingPeriodBlocks: u32 = 1_814_400" }
+
+  - name: validator_extended_downtime_slash_percent
+    value: 5
+    unit: percent
+    decision: D-0409
+    rust: ValidatorExtendedDowntimeSlash
+    description: "Slash fraction for extended validator downtime (followed by removal). yellowpaper §13.2."
+    implementations:
+      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "ValidatorExtendedDowntimeSlash: Perbill = Perbill::from_percent(5)" }
+
+  - name: validator_growth_numerator
+    value: 109
+    unit: ratio
+    decision: D-0413
+    rust: ValidatorGrowthNumerator
+    description: "Numerator of the annual compounding factor on the validator minimum-stake floor (109/100 = +9%/yr). yellowpaper §11/§15.2."
+    implementations:
+      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "ValidatorGrowthNumerator: u64 = 109" }
+
+  - name: validator_growth_denominator
+    value: 100
+    unit: ratio
+    decision: D-0413
+    rust: ValidatorGrowthDenominator
+    description: "Denominator paired with validator_growth_numerator (109/100 = +9%/yr). yellowpaper §11/§15.2."
+    implementations:
+      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "ValidatorGrowthDenominator: u64 = 100" }
+
+  # ---- Metering tripwire ----
+  - name: throughput_tripwire_gflops_per_sec
+    value: 2_000_000
+    unit: GFLOPS/s
+    decision: D-0405
+    rust: PouiGnThroughputCeilingGflopsPerSec
+    description: >
+      Reject (never clamp) any claim whose implied gn*1000/latency_ms exceeds this; reject-only, governable,
+      default-on. yellowpaper §4.2.
+    implementations:
+      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "PouiGnThroughputCeilingGflopsPerSec: u64 = 2_000_000" }
+
+  - name: soft_tier_spot_check_rate_ppm
+    value: 25_000
+    unit: ppm
+    description: "SOFT-tier channel spot-check exposure surfaced with the calibration snapshot event for quality-audit pricing."
+    implementations:
+      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "SoftTierSpotCheckRatePpm: u32 = 25_000" }
+      - { file: ai-agent-simulator/src/model/session-channel.ts, expect: "export const SOFT_TIER_SPOT_CHECK_RATE_PPM = 25_000;" }
+
+  # ---- Compute-channel settlement ----
+  - name: refund_penalty_phi_percent
+    value: 20
+    unit: percent
+    decision: D-0422
+    rust: ChannelRefundPenalty
+    description: "Static D-0422 penalty fraction phi on unused escrow for ambiguous early close; penalty routes 100% to burn/Foundation, never miner."
+    implementations:
+      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "ChannelRefundPenalty: Perbill = Perbill::from_percent(20)" }
+      - { file: ai-agent-simulator/src/model/session-channel.ts, expect: "export const CHANNEL_REFUND_PENALTY_PHI_PERCENT = 20;" }
+
+  - name: channel_max_settlement_turns
+    value: 1024
+    unit: count
+    rust: ChannelMaxSettlementTurns
+    description: "Hard cap on VerifiedTurns per settle/force_settle bundle, and the ceiling on an SLA's max_turns at open. Bounds input size for O(n) enclave-signature verifications and the O(n^2) duplicate scan; charged-weight adequacy requires benchmarks (E.46). yellowpaper §12.1."
+    implementations:
+      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "pub const ChannelMaxSettlementTurns: u32 = 1024;" }
+      - { file: pallets/pallets/compute-channel/src/lib.rs, expect: "type MaxSettlementTurns: Get<u32>;" }
+
+  - name: channel_max_merkle_path_len
+    value: 64
+    unit: count
+    rust: ChannelMaxMerklePathLen
+    description: "Max Merkle authentication-path length per VerifiedTurn (proves membership in a tree of up to 2^64 leaves). Bounds per-turn hashing in verify_turn_proof; charged-weight adequacy requires benchmarks (E.46). yellowpaper §12.1."
+    implementations:
+      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "pub const ChannelMaxMerklePathLen: u32 = 64;" }
+      - { file: pallets/pallets/compute-channel/src/lib.rs, expect: "type MaxMerklePathLen: Get<u32>;" }
+
+  - name: channel_base_per_turn
+    value: 1
+    unit: "base unit (10^-18 FLOP)"
+    rust: ChannelBasePerTurn
+    description: >
+      Per-turn flat fee of the two-part tariff (#719 option A): turn_pay = BasePerTurn + G_n
+      (rate=1 in channel pay units). Dust turns (G_n=0/1) stay protocol-valid but self-fund
+      fixed costs (leaf + DA + audit-lottery ticket). Integrity enforces BasePerTurn ≥
+      channel_c_turn_fixed (same unenforced class as fee-design MinBaseFee ≥ marginal_cost).
+      Placeholder magnitude (1 base unit); raise after #705 calibration.
+    implementations:
+      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "pub const ChannelBasePerTurn: Balance = 1;" }
+      - { file: pallets/pallets/compute-channel/src/lib.rs, expect: "type BasePerTurn: Get<BalanceOf<Self>>;" }
+      - { file: ai-agent-simulator/src/model/session-channel.ts, expect: "export const CHANNEL_BASE_PER_TURN = 1;" }
+      # TS SDK mirror: force_settle receipts bind payable = BasePerTurn·turns + ΣG_n, so the
+      # off-chain default must track ChannelBasePerTurn or every SDK force_settle fails verify_receipt.
+      - { file: sdk/typescript/src/compute-channel/session.ts, expect: "const DEFAULT_BASE_PER_TURN = 1n;" }
+
+  - name: channel_c_turn_fixed
+    value: 1
+    unit: "base unit (10^-18 FLOP)"
+    rust: ChannelCTurnFixed
+    description: >
+      Fixed per-turn cost floor that BasePerTurn must cover (#719). integrity_test asserts
+      BasePerTurn ≥ CTurnFixed so dust turns are not net-negative for miner/network.
+    implementations:
+      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "pub const ChannelCTurnFixed: Balance = 1;" }
+      - { file: pallets/pallets/compute-channel/src/lib.rs, expect: "type CTurnFixed: Get<BalanceOf<Self>>;" }
+      - { file: ai-agent-simulator/src/model/session-channel.ts, expect: "export const CHANNEL_C_TURN_FIXED = 1;" }
+
+  - name: channel_dispute_window_blocks
+    value: 604_800
+    unit: blocks
+    decision: D-0403
+    rust: ChannelDisputeWindow
+    description: "Session dispute/challenge window (7 d); integrity_test enforces <= DaEphemeralRetention (14 d). yellowpaper §12.1."
+    implementations:
+      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "ChannelDisputeWindow: BlockNumber = 604_800" }
+
+  - name: channel_dispute_response_window_blocks
+    value: 7_200
+    unit: blocks
+    decision: D-0403
+    rust: ChannelDisputeResponseWindow
+    description: "Time to respond to an open dispute (2 h); non-response defaults to a fraud verdict. yellowpaper §12.1."
+    implementations:
+      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "ChannelDisputeResponseWindow: BlockNumber = 7_200" }
+
+  - name: channel_toploc_escalation_window_blocks
+    value: 7_200
+    unit: blocks
+    decision: D-0431
+    rust: ChannelToplocEscalationWindow
+    description: "#754: validators' window (2 h) to resolve a middle-band TOPLOC escalation (stronger report → slash, or quorum clear) before it times out inconclusive (full agent refund, no miner pay, no slash). Settlement is frozen throughout."
+    implementations:
+      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "ChannelToplocEscalationWindow: BlockNumber = 7_200" }
+
+  - name: channel_challenger_bond
+    value: 100
+    unit: FLOP
+    rust: ChannelChallengerBond
+    description: "Bond a challenger posts to open a session dispute (anti-griefing). yellowpaper §12.1."
+    implementations:
+      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "ChannelChallengerBond: Balance = 100 * VFY" }
+      - { file: ai-agent-simulator/src/model/session-channel.ts, expect: "export const CHANNEL_CHALLENGER_BOND = 100;" }
+
+  - name: slash_fraud_percent
+    value: 100
+    unit: percent
+    decision: D-0409
+    description: "Full-burn fault class: Collusion / EvidenceForgery / TEE-attestation failure / correlated equivocation / double-spend → 100% slash + eject + blacklist. yellowpaper §13.2. D-0409/D-0420. The compute-channel dispute_fraud path delegates here (Slasher::slash_fraud); the simulator mirrors it as a fraction (1.0). Promoted from reference now that a code site (simulator) mirrors it."
+    implementations:
+      - { file: pallets/pallets/miner-slashing/src/lib.rs, expect: "Perbill::from_percent(100)" }
+      - { file: ai-agent-simulator/src/model/session-channel.ts, expect: "export const CHANNEL_FRAUD_SLASH_FRACTION = 1.0;" }
+
+  - name: channel_audit_forfeit_slash_ppm
+    value: 1_000_000
+    unit: ppm
+    decision: D-0403
+    rust: ChannelAuditForfeitSlashPpm
+    description: >
+      #844 publish-or-forfeit: audit-data liveness-forfeit slash floor, in ppm of the
+      withheld settlement window's value. A value window finalized with no published audit
+      blob (transcript_ref == None) pays the miner nothing (agent fully refunded) AND
+      slashes ≥ window_value · this / 1e6. Must be ≥ 1_000_000 (≥ window value) so silence
+      never beats being audited (zk-audit-settlement-design outcome matrix); enforced in
+      compute-channel integrity_test. Stays BELOW the fraud slash (slash_fraud_percent =
+      100% of stake + blacklist): slash_audit_forfeit caps the burn at 99% of self-stake
+      and never blacklists — a liveness failure, not proven fraud. Distinct from the ENG-7
+      DA-loss void, which pays the co-signed receipt (a published blob later lost by DA).
+    implementations:
+      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "ChannelAuditForfeitSlashPpm: u32 = 1_000_000" }
+      - { file: pallets/pallets/compute-channel/src/lib.rs, expect: "type AuditForfeitSlashPpm: Get<u32>;" }
+
+  - name: audit_fee_split_ppm
+    value: 10_000
+    unit: ppm
+    decision: D-0403
+    rust: ChannelAuditFeeSplitPpm
+    description: >
+      #846: ratified 1% (10_000 ppm) of the miner's settlement payment (the session-fee
+      leg; yellowpaper §12.1) carved into the audit pool that pays validators for audit work. Conservation-
+      preserving — the earmark stays in the pallet's sovereign account (never burned) and
+      is tracked as TotalAuditEarmarked − TotalAuditPaid; the miner receives the 99%
+      remainder. Must be < 1_000_000 (a fee, not confiscation); enforced in compute-channel
+      integrity_test. NB: zk-audit-settlement-design sketched 90/10 — the ratified figure
+      is 1% (verification-flows.md §7/§9). Claims draw audit_fee_per_turn per verdict.
+    implementations:
+      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "ChannelAuditFeeSplitPpm: u32 = 10_000" }
+      - { file: pallets/pallets/compute-channel/src/lib.rs, expect: "type AuditFeeSplitPpm: Get<u32>;" }
+
+  - name: audit_fee_per_turn
+    value: 1
+    unit: FLOP
+    decision: D-0403
+    rust: ChannelAuditFeePerTurn
+    description: >
+      #846: flat fee a VRF-assigned validator claims per audit verdict from the audit pool
+      (claim_audit_fee), gated on submitted evidence and pool solvency (no unpaid-duty
+      path). 1 FLOP placeholder; governance may recalibrate against measured audit cost.
+      Surplus stays in the pool for the standard validator distribution (follow-up sweep).
+    implementations:
+      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "ChannelAuditFeePerTurn: Balance = VFY; // 1 FLOP" }
+      - { file: pallets/pallets/compute-channel/src/lib.rs, expect: "type AuditFeePerTurn: Get<BalanceOf<Self>>;" }
+
+  - name: channel_ack_window_blocks
+    value: 600
+    unit: blocks
+    rust: ChannelAckWindow
+    description: "Window for a named miner to force_ack a permissionless force_open before expire refunds escrow. yellowpaper §12.1, Appendix C.3."
+    implementations:
+      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "ChannelAckWindow: BlockNumber = 600" }
+
+  - name: min_force_open_escrow_for_failed_ack
+    value: 0.05
+    unit: FLOP
+    decision: D-0423
+    rust: MinForceOpenEscrowForFailedAck
+    description: >
+      Minimum force_open escrow that makes an expired, unacked request increment the named miner's
+      FailedAcks counter. Below this dust floor, expire_force_open still refunds the agent in full
+      but does not count against miner reputation. Recompute as T = round_up(max(ExistentialDeposit,
+      k * F_open)), where F_open is the min-fee force_open cost and k defaults to 20x; keep T at or
+      below the smallest session escrow miners are expected to service. Current rough sizing:
+      F_open ~= 0.002 FLOP, ExistentialDeposit = 0.01 FLOP, 20 * F_open ~= 0.04 FLOP, rounded to
+      0.05 FLOP.
+    implementations:
+      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "pub const MinForceOpenEscrowForFailedAck: Balance = VFY / 20; // 0.05 FLOP" }
+      - { file: pallets/pallets/compute-channel/src/lib.rs, expect: "type MinForceOpenEscrowForFailedAck: Get<BalanceOf<Self>>;" }
+
+  # ---- Derived TOPLOC band (governance-set per model/precision; #685, #705) ----
+  # κ is fitted by scripts/research/toploc_band_calibration.py (pooled-honest-null);
+  # committed thresholds are derived from κ + unit roundoff, not free empirical widen.
+  # These rows pin field names + DRT/Lean reference anchors so wiring cannot drift.
+  - name: toploc_band_constants_fields
+    value: kappa_profile_hash
+    unit: structural
+    description: >
+      Per-(model, precision) derived TOPLOC band committed constants consumed by
+      band_verdict / report_toploc_mismatch: kappa_profile_hash, band_tau_accept,
+      band_tau_slash, challenge_k, challenge_window_w. Governance-updatable storage
+      ToplocModelBandConstants (new map; no migration of existing types).
+      Calibration artifact (issue #705) emits the same field names for governance set.
+    implementations:
+      - { file: pallets/primitives/hp-poui/src/toploc.rs, expect: "pub kappa_profile_hash: H256," }
+      - { file: pallets/primitives/hp-poui/src/toploc.rs, expect: "pub band_tau_accept: u64," }
+      - { file: pallets/primitives/hp-poui/src/toploc.rs, expect: "pub band_tau_slash: u64," }
+      - { file: pallets/primitives/hp-poui/src/toploc.rs, expect: "pub challenge_k: u32," }
+      - { file: pallets/primitives/hp-poui/src/toploc.rs, expect: "pub challenge_window_w: u64," }
+      - { file: pallets/pallets/compute-channel/src/lib.rs, expect: "pub type ToplocModelBandConstants" }
+      - { file: pallets/pallets/compute-channel/src/lib.rs, expect: "pub fn set_toploc_model_band_constants" }
+      - { file: docs/verification/artifacts/toploc-band-llama-3.1-8b-bf16.json, expect: "\"kappa_profile_hash\"" }
+      - { file: docs/verification/artifacts/toploc-band-llama-3.1-8b-bf16.json, expect: "\"band_tau_accept\"" }
+      - { file: docs/verification/artifacts/toploc-band-llama-3.1-8b-bf16.json, expect: "\"band_tau_slash\"" }
+      - { file: docs/verification/artifacts/toploc-band-llama-3.1-8b-bf16.json, expect: "\"challenge_k\"" }
+      - { file: docs/verification/artifacts/toploc-band-llama-3.1-8b-bf16.json, expect: "\"challenge_window_w\"" }
+
+  - name: toploc_band_tau_accept_bf16_milli
+    value: 2900
+    unit: milli_exponent_error
+    lean: ToplocBandInt.tauAcceptBf16
+    description: >
+      Derived bf16 accept threshold τ_accept≈2.9 exponent errors in milli units (×1000).
+      DRT/Lean oracle anchor + ENG-29 calibration artifact (#705) — production thresholds
+      are governance-set per model from the calibration harness output.
+    implementations:
+      - { file: pallets/primitives/hp-poui/src/toploc.rs, expect: "TOPLOC_BAND_TAU_ACCEPT_BF16: u64 = 2900" }
+      - { file: formal-specs/lean/FlopSpecs/Computable.lean, expect: "def tauAcceptBf16 : Nat := 2900" }
+      - { file: docs/verification/artifacts/toploc-band-llama-3.1-8b-bf16.json, expect: "\"band_tau_accept\": 2900" }
+
+  - name: toploc_band_tau_slash_bf16_milli
+    value: 185600
+    unit: milli_exponent_error
+    lean: ToplocBandInt.tauSlashBf16
+    description: >
+      Derived bf16 slash threshold τ_slash≈185.6 exponent errors in milli units (×1000).
+      DRT/Lean oracle anchor + ENG-29 calibration artifact (#705) — production thresholds
+      are governance-set per model from the calibration harness output.
+    implementations:
+      - { file: pallets/primitives/hp-poui/src/toploc.rs, expect: "TOPLOC_BAND_TAU_SLASH_BF16: u64 = 185_600" }
+      - { file: formal-specs/lean/FlopSpecs/Computable.lean, expect: "def tauSlashBf16 : Nat := 185600" }
+      - { file: docs/verification/artifacts/toploc-band-llama-3.1-8b-bf16.json, expect: "\"band_tau_slash\": 185600" }
+
+  - name: toploc_band_eng29_threshold_milli
+    value: 38000
+    unit: milli_exponent_error
+    lean: ToplocBandInt.eng29Threshold
+    description: >
+      ENG-29 empirically-deployed exponent-error threshold (38) in milli units.
+      DRT pin: lands in Escalate under bf16 derived constants (Lean eng29_escalates).
+    implementations:
+      - { file: pallets/primitives/hp-poui/src/toploc.rs, expect: "TOPLOC_BAND_ENG29_THRESHOLD: u64 = 38_000" }
+      - { file: formal-specs/lean/FlopSpecs/Computable.lean, expect: "def eng29Threshold : Nat := 38000" }
+
+  - name: toploc_band_kappa_within_llama31_8b_bf16
+    value: 4.5
+    unit: dimensionless
+    description: >
+      Fitted/selected within-layer κ for Llama-3.1-8B bf16 (ENG-29). Literature default
+      1.5·2.0·1.5 selected by the #705 harness because it dominates measured honest mean
+      0.6535 with derived mean ≈0.721 (non-vacuous). Encoded in kappa_profile_hash.
+    implementations:
+      - { file: scripts/research/toploc_band_lib.py, expect: "DEFAULT_KAPPA_WITHIN = 1.5 * 2.0 * 1.5  # 4.5" }
+      - { file: docs/verification/artifacts/toploc-band-llama-3.1-8b-bf16.json, expect: "\"kappa_within\": 4.5" }
+
+  # ---- Model registry (decode-policy sets) ----
+  - name: max_decode_policies_per_model
+    value: 32
+    unit: count
+    rust: MAX_DECODE_POLICIES_PER_MODEL
+    description: >
+      Maximum decode-policy hashes pinnable in a model's optional allowed set
+      (BoundedDecodePolicySet = BoundedVec<H256, ConstU32<MAX_DECODE_POLICIES_PER_MODEL>>).
+      Bounds per-model AllowedDecodePolicies storage; PoUI + compute-channel enforce
+      submitted decode_policy_hash membership fail-closed when a set is pinned.
+    implementations:
+      - { file: pallets/pallets/model-registry/src/types.rs, expect: "MAX_DECODE_POLICIES_PER_MODEL: u32 = 32" }
+
+  # ---- Metering cert tokens-per-byte band (#871) ----
+  # Wired into the model-registry field + compute-channel settle path (#891); the runtime sites
+  # are now enforced by this checker alongside the SPEC + Lean/KAT anchors.
+  - name: tokens_per_byte_band_ppm_llama3
+    value: 500000
+    unit: ppm
+    lean: MeteringCertInt.tokensPerByteBandPpmLlama3
+    description: >
+      Certified upper bound on honest tokens-per-byte for the Llama-3 tokenizer (ppm; 500000 =
+      0.5 tokens/byte) — the per-(model, tokenizer) model-registry field that caps the metering
+      cert padding constraint (e): n_tokens ≤ ⌈bytes · band/1e6⌉ (#871, spec
+      whitepaper/research/metering-cert-spec.md §4). Byte-level BPE has a hard 1.0 tokens/byte
+      (1e6 ppm) ceiling, so any calibrated value ≤ 1e6 is sound; a tighter value shrinks the
+      inflation bound. Illustrative default — production thresholds are governance-set from the
+      calibration harness, exactly like toploc_band_* (#705).
+    implementations:
+      - { file: formal-specs/lean/FlopSpecs/Computable.lean, expect: "def tokensPerByteBandPpmLlama3 : Nat := 500000" }
+      - { file: whitepaper/research/metering-cert-spec.md, expect: "tokens_per_byte_band_ppm_llama3" }
+      - { file: pallets/pallets/model-registry/src/types.rs, expect: "pub tokens_per_byte_band_ppm: u32," }
+      - { file: pallets/pallets/compute-channel/src/lib.rs, expect: "tokens_per_byte_band_ppm" }
+
+  # ---- Metering cert circuit version + guest image-id registry (#929) ----
+  # The RISC0 batch metering guest commits a per-session journal (V3 circuit_version); the runtime
+  # verifier is inert until governance pins the audited guest image id (safety zone). See
+  # verifiers/zk-audit-guest and pallets/pallets/metering-verifier.
+  - name: metering_cert_circuit_version
+    value: 3
+    unit: version
+    description: >
+      Governance-pinned circuit layout the metering cert proves against (V3 transcript leaf, #929).
+      The batch RISC0 guest replays the per-turn statement, folds the V3 leaves into final_root, and
+      commits a session journal carrying this circuit_version; the on-chain MeteringCertVerifier binds
+      a submitted receipt to the pinned guest image id (GuestImageId storage — inert/fail-closed until
+      set) and the settlement. Bumping this is a guest+image-id rotation, not a silent change.
+    implementations:
+      - { file: whitepaper/research/metering-cert-spec.md, expect: "circuit_version" }
+      - { file: sdk/rust-compute-channel/src/transcript.rs, expect: "circuit_version: 3," }
+      - { file: pallets/pallets/metering-verifier/src/lib.rs, expect: "pub circuit_version: u16," }
+      - { file: pallets/pallets/metering-verifier/src/lib.rs, expect: "GuestImageId" }
+
+  - name: metering_cert_guest_image_id
+    value: OptionQuery
+    unit: storage-default
+    description: >
+      Governance-pinned RISC0 guest image id for the metering cert (safety zone, #945). The value
+      pinned on devnet is the digest of the reproducibly-built guest ELF — build it with
+      verifiers/zk-audit-guest/build-guest.sh (pinned toolchain) and record the id + ELF sha256 +
+      commit in verifiers/zk-audit-guest/BUILD.md when pinned. FAIL-CLOSED by construction:
+      GuestImageId is StorageValue<_, H256, OptionQuery> with NO default, so required()==false and
+      verify_metering returns false until governance calls set_guest_image_id. Keeping it OptionQuery
+      (never a defaulted ValueQuery) is the invariant that prevents a silent open state; rotation =
+      new guest build → new image id → set_guest_image_id → old certs invalid.
+    implementations:
+      - { file: pallets/pallets/metering-verifier/src/lib.rs, expect: "GuestImageId<T> = StorageValue<_, H256, OptionQuery>" }
+      - { file: pallets/pallets/metering-verifier/src/lib.rs, expect: "pub fn set_guest_image_id" }
+      - { file: verifiers/zk-audit-guest/build-guest.sh, expect: "cargo risczero build" }
+      - { file: verifiers/zk-audit-guest/BUILD.md, expect: "set_guest_image_id" }
+
+  # ---- Transaction fees (live values) ----
+  - name: tx_fee_burn_percent_live
+    value: 10
+    unit: percent
+    rust: BurnFees
+    description: >
+      LIVE burn fraction of the base+length+weight tx fee (10%). Unburned 90% goes to the block author:
+      protocol accounting treats 800 ppt as miner-proxy and 100 ppt as validator share (both paid to the
+      author until per-miner G_n fee attribution). Closes #517 interim wiring. yellowpaper §9.1/§9/App D.
+    implementations:
+      - { file: pallets/runtime/zkverify/src/payout_conf.rs, expect: "BurnFees: Percent = Percent::from_percent(10)" }
+
+  - name: tx_fee_author_share_percent_live
+    value: 100
+    unit: percent
+    rust: AllFeesToAuthor
+    description: >
+      LIVE share of the UNBURNED remainder paid to the block author (= 90% of the whole fee after 10% burn).
+      Tips 100% to author. yellowpaper §9.
+    implementations:
+      - { file: pallets/runtime/zkverify/src/payout_conf.rs, expect: "AllFeesToAuthor: Percent = Percent::from_percent(100)" }
+
+  - name: tx_weight_to_fee
+    value: 5000000
+    unit: "base units/weight (1 base unit = 10^-18 FLOP)"
+    rust: TransactionPicosecondFee
+    description: "WeightToFee ConstantMultiplier; per-weight component of the base fee (effective floor: MinimumMultiplier = 1.0). yellowpaper §9.1."
+    implementations:
+      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "TransactionPicosecondFee: Balance = 5000000" }
+
+  - name: tx_length_to_fee
+    value: 5000000
+    unit: "base units/byte (1 base unit = 10^-18 FLOP)"
+    rust: TransactionByteFee
+    description: "LengthToFee ConstantMultiplier; per-byte component of the base fee. yellowpaper §9.1."
+    implementations:
+      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "TransactionByteFee: Balance = 5000000" }
+
+  - name: tx_target_block_fullness_percent
+    value: 75
+    unit: percent
+    rust: TargetBlockFullness
+    description: "Congestion target for the TargetedFeeAdjustment multiplier (raises the fee above the base floor as blocks fill). yellowpaper §9.1."
+    implementations:
+      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "TargetBlockFullness: Perquintill = Perquintill::from_percent(75)" }
+
+  - name: tx_operational_fee_multiplier
+    value: 5
+    unit: ratio
+    rust: OperationalFeeMultiplier
+    description: "Surcharge multiple applied to operational-class dispatches. pallet_transaction_payment config."
+    implementations:
+      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "type OperationalFeeMultiplier = ConstU8<5>;" }
+
+  # ---- Data availability ----
+  - name: da_ephemeral_retention_blocks
+    value: 1_209_600
+    unit: blocks
+    decision: D-0412
+    rust: DaEphemeralRetention
+    description: "Retention W (14 d) for Ephemeral DA blobs (quotes/proofs/transcripts/I-O); bounds the session challenge window. yellowpaper §5.3."
+    implementations:
+      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "DaEphemeralRetention: BlockNumber = 1_209_600" }
+
+  - name: da_shard_count
+    value: 6
+    unit: count
+    decision: D-0402
+    rust: DaReplicationFactor
+    description: "DA erasure-coding shard count R = 6, Reed-Solomon rate 1/2 (k = 3+3, any 3 reconstruct). yellowpaper §5.3. GOVERNABLE without a runtime upgrade via pallet_da_registry::set_replication_factor (root), floored at the RS reconstruction threshold k (MIN_REPLICATION_FACTOR = 3) so R < k (unreconstructable) is unreachable; effective value in storage ReplicationFactorValue (getter replication_factor), read off-chain at api.query.daRegistry.replicationFactorValue. The const below is the genesis default and does NOT track overrides."
+    implementations:
+      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "DaReplicationFactor: u32 = 6" }
+
+  - name: da_min_replication_factor
+    value: 3
+    unit: count
+    decision: D-0402
+    rust: MIN_REPLICATION_FACTOR
+    lean: k
+    description: "DA Reed-Solomon reconstruction threshold k = 3 (any k of R shards reconstruct); hard floor for the governable da_shard_count so R < k (unreconstructable) is unreachable. yellowpaper §5.3. Mirrors pallet_da_registry MIN_REPLICATION_FACTOR and the Lean DataAvailability floor."
+    implementations:
+      - { file: pallets/pallets/da-registry/src/lib.rs, expect: "MIN_REPLICATION_FACTOR: u32 = 3" }
+      - { file: formal-specs/lean/FlopSpecs/DataAvailability.lean, expect: "def k : Int := 3" }
+
+  - name: da_lease_deposit_per_byte
+    value: 200
+    unit: "FLOP per 10^9 bytes (= 2e-7 FLOP/byte)"
+    decision: D-0412
+    rust: DaDepositPerByte
+    description: "D-0412 refundable anti-spam deposit for leased DA (model weights): deposit = bytes × DepositPerByte, held on the publisher (never validator revenue), returned in full on prune/withdrawal. Term-independent (top-ups free). Genesis default 200 FLOP/GB = 2e-7 FLOP/byte (DaDepositPerByte = 200·VFY/1e9, runtime/zkverify), calibrated as on-chain-state cost (0.001 FLOP/byte) × RS replication (2×) ÷ full-node count (~200) × prunability discount (~1/50). GOVERNABLE without a runtime upgrade via pallet_da_registry::set_deposit_per_byte (root). Effective value is materialized in storage DepositPerByteValue (getter deposit_per_byte), readable off-chain at api.query.daRegistry.depositPerByteValue — the api.consts.daRegistry.depositPerByte metadata entry reflects only this genesis default and does NOT track overrides. Site: pallets/pallets/da-registry/src/lib.rs. NOT a fee — DA is a validator duty funded by the validator reward share."
+    implementations:
+      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "pub const DaDepositPerByte: u128 = 200 * VFY / 1_000_000_000;" }
+
+  # ---- Agent wallet / session keys ----
+  - name: agent_identity_min_stake
+    value: 10
+    unit: FLOP
+    rust: AgentIdentityMinStake
+    description: "Refundable minimum stake locked to register an agent identity: capital exposure, not an irrecoverable identity cost. yellowpaper §12.3."
+    implementations:
+      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "AgentIdentityMinStake: u128 = 10 * VFY" }
+
+  - name: circuit_breaker_window
+    value: 60
+    unit: blocks
+    rust: SessionKeysCircuitBreakerPeriod
+    description: "Fixed agent session-key circuit-breaker window (60 blocks): either the transaction-count or spend limb trips independently, latches until window end, and then auto-resets. yellowpaper §6.2."
+    implementations:
+      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "SessionKeysCircuitBreakerPeriod: u32 = 60" }
+
+  - name: circuit_breaker_tx_count
+    value: 100
+    unit: count
+    rust: SessionKeysCircuitBreakerMaxTxs
+    description: "Agent session-key circuit-breaker transaction-count limb: trips at 100 txs within the window, independently of circuit_breaker_flop_cap. yellowpaper §6.2."
+    implementations:
+      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "SessionKeysCircuitBreakerMaxTxs: u32 = 100" }
+
+  - name: circuit_breaker_flop_cap
+    value: 250
+    unit: FLOP
+    rust: SessionKeysCircuitBreakerMaxSpend
+    description: "Agent session-key circuit-breaker max spend per window (60 blk / 100 tx / 250 FLOP triple). yellowpaper §6.2."
+    implementations:
+      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "SessionKeysCircuitBreakerMaxSpend: u128 = 250 * VFY" }
+
+# -----------------------------------------------------------------------------
+# REFERENCE-ONLY — documented canonical values, single-site or not yet wired for
+# cross-language enforcement. (`enforce: false` — checker records but skips.)
+# -----------------------------------------------------------------------------
+reference:
+  # Governance — protocol_upgrade track (planned, yellowpaper §14.2; values [RATIFY]) + live break-glass
+  - { name: protocol_upgrade_approval,           value: 67,        unit: percent, note: "Production protocol_upgrade (Root) track approval (flat BFT 2/3); live as APP_ROOT in tracks.rs (enforced above as governance_root_track_approval + protocol_upgrade_support_floor). GOV-A, yellowpaper §14.2, D-0415." }
+  - { name: protocol_upgrade_decision_period,    value: 28,        unit: days, note: "[RATIFY] deliberation window for the protocol_upgrade track. yellowpaper §14.2." }
+  - { name: protocol_upgrade_enactment_timelock, value: 1_209_600, unit: blocks, note: "14 d at 1s — Scheduler min_enactment_period (upgrade timelock). yellowpaper §14.1." }
+  - { name: fip_decision_deposit,                value: "RATIFY",  unit: FLOP, note: "[RATIFY] decision-deposit spam barrier for protocol_upgrade referenda (FLOP-denominated; magnitude TBD). yellowpaper §14.2." }
+  - { name: emergency_override_timelock,         value: 259_200,   unit: blocks, note: "72 h at 1s — pallet_emergency_override break-glass timelock (root-only). SPEC-015 / D-015; runtime idx 99." }
+  - { name: emergency_override_cooldown,         value: 604_800,   unit: blocks, note: "7 d at 1s — minimum gap between emergency overrides. SPEC-015 / D-015." }
+  - { name: governance_vote_locking_period,      value: 604_800,   unit: blocks, note: "7 d conviction VoteLockingPeriod (pallet_conviction_voting, live). governance/mod.rs." }
+  - { name: sudo_pallet_index,                   value: 50,        unit: index, note: "pallet_sudo — bootstrap Root through devnet/testnet; REMOVED/neutered at the mainnet-genesis handoff (GOV-B). yellowpaper §14.1." }
+  - { name: subsidy_total_per_block,     value: 16,         unit: FLOP, note: "8 Labs + 8 Foundation in halving era 0 (years 1-2), on top of the 96 FLOP reward (yellowpaper §9); halves with the reward (16 -> 8 -> 4 -> 2 -> 1 combined) and is exactly 0 from era 5, where the reward floors. D-0436 (ECON-008 §2.2, amending D-0435's three-era cap); total over the schedule 63,072,000 × (16+8+4+2+1) = 1,955,232,000 FLOP. Pinned by pallet-flop-subsidy's total_minted_over_schedule_is_1_955_232_000_flop." }
+  # RENAMED under D-0436 (was emission_at_end_of_era7): the VALUE 2·R₀·H is unchanged, but with
+  # max_halvings = 5 the cumulative series reaches it one era EARLIER, so the old label was wrong.
+  - { name: emission_at_end_of_era6,       value: 12_109_824_000, unit: FLOP, decision: D-0436, note: "2·R₀·H = 12,109,824,000, reached exactly at end of era 6 (~year 14) under max_halvings=5 — one era earlier than the superseded maxHalvings=6 put it (hence the rename from emission_at_end_of_era7). NOT a cap: the perpetual 3 FLOP/block floor adds 189,216,000 FLOP every era thereafter. Lean Emission.claimed_cap_hit_numeric / claimed_cap_exceeded." }
+  - { name: emission_through_halving_eras, value: 11_920_608_000, unit: FLOP, decision: D-0436, note: "R₀·H·63/32 = 63,072,000 × (96+48+24+12+6+3) = cumulative emission through the halving phase (end of era 5, ~year 12) under max_halvings=5. Was 12,015,216,000 (R₀·H·127/64, end of era 6) under the superseded maxHalvings=6. Lean Emission.cum_through_halvings_numeric." }
+  - { name: floor_annual_emission,         value: 94_608_000, unit: FLOP, decision: D-0436, note: "perpetual floor tail: 3 FLOP/block × 31,536,000 blocks/yr (= 189,216,000 FLOP/era). D-0436 DOUBLED this from 47,304,000 by dropping the sixth halving — the single largest consequence of the change. Lean Emission.floor_annual_emission; tail inflation rate still decays per tail_inflation_antitone." }
+  - { name: max_delegators_per_miner,    value: 10_000,     unit: count, site: "pallets/pallets/miner-staking/src/lib.rs (MAX_DELEGATORS_PER_MINER)" }
+  - { name: agent_daily_cap_autonomous,  value: 500,        unit: FLOP, site: "ai-agent-simulator/params.yaml" }
+  - { name: agent_per_tx_limit,          value: 100,        unit: FLOP, site: "ai-agent-simulator/params.yaml" }
+  # ---- Designed-not-built degraded-state limits ----
+  - { name: attestation_outage_pause_cap_blocks, value: 14_400, unit: blocks, note: "Designed-not-built 4 h cap on per-channel pauses of attestation-dependent clocks under R13.0e / O1; no runtime or pallet implementation site. yellowpaper §13.0." }
+  - name: da_endpoint_deposit
+    value: "VFY"
+    unit: "(= 1 FLOP)"
+    note: "Refundable anti-spam deposit held while a validator's DA serving endpoint announcement exists in DaRegistry::Endpoints. 1 VFY = 1 FLOP. Held under HoldReason::EndpointDeposit; released in full on clear_endpoint. Calibrated as a trivial spam barrier (any active validator holds far more in stake). Runtime: DaEndpointDeposit = VFY."
+    implementations:
+      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "DaEndpointDeposit: Balance = VFY" }
+  - name: da_max_endpoint_bytes
+    value: 256
+    unit: bytes
+    note: "Maximum UTF-8 byte length of a validator DA serving endpoint URL stored in DaRegistry::Endpoints (e.g. 'http://host:7000'). Governs BoundedVec<u8, MaxEndpointBytes> in pallet storage."
+    implementations:
+      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "DaMaxEndpointBytes: u32 = 256" }
+  # ---- Validator active-set cap (ratified spec target, NOT wired — D-0437 / YP E.41) ----
+  - name: validator_active_set_cap
+    value: 1_000
+    unit: count
+    decision: D-0437
+    note: >
+      Ratified ceiling on the validator ACTIVE set (D-0437). REFERENCE-ONLY on purpose: nothing in the
+      runtime enforces it, so there is no implementation site for check_params.py to gate and listing it
+      as enforced would report a green drift check over a value no code holds. Normative intent
+      (yellowpaper §15.5 R15.5b): registration admits to ValidatorQueue and rotation promotes into the
+      active set only while a slot is free, so the cap bounds ActiveValidators, never registration.
+      Distinct from finality_committee_size (100), which is sampled FROM this set. What the runtime
+      actually does today: the storage bound is ConstU32<10_000>, do_rotate applies no slot limit, and
+      the BABE authority bound (MaxAuthorities = MAX_ACTIVE_VALIDATORS = 200) sits BELOW this cap while
+      ValidatorSessionManager::new_session passes the whole active set through untruncated. Promote to
+      `parameters:` with an implementations entry and a decode-compat test for the storage bound when
+      yellowpaper E.41 (#1393) closes. yellowpaper §15.5.
+
+  - { name: validator_stake_value_coupled_floor, value: "dynamic", unit: FLOP, note: "D-0413 (C5): governance-retargeted value-coupled stake floor k·V_booked (storage ValueCoupledStakeFloor, default 0 = baseline-identical). Set via set_value_coupled_floor (root, slow cadence, capped at 1% issuance); enforced as effective_minimum_stake = max(MinimumValidatorStake, this). Site: pallets/pallets/validators/src/lib.rs. Coupling rate k ≥ m·κ/(θ·N·σ·δ): at the AlephBFT safety threshold θ=1/3 (NOT 51% — θ does NOT cancel here, unlike the reward-capture base) the floor is k ≥ ~1.2e-3 (Lean value_coupling_threshold_at_bft_safety); the earlier-blessed k=1e-3 is INSUFFICIENT at θ=1/3 (value_coupling_k1e3_insufficient_at_bft_safety). κ is the extractable-fraction ASSUMPTION — see security_kappa_extractable. Lean: Security.lean::CoCVoC.value_coupled_security / deterrence_at_bft_safety_value_coupled / deterrence_decomposed_kappa." }
+  - { name: security_kappa_extractable,  value: 0.2,        unit: dimensionless, note: "ASSUMPTION — NOT a theorem; a governance/DEC-5 risk input. κ = fraction of realized value V_booked a successful AlephBFT safety break extracts; the lever the value-coupled stake floor rests on (k ≥ m·κ/(θ·N·σ·δ), linear in κ — k_threshold_scales_with_kappa). DECOMPOSED (Lean Security.lean::CoCVoC.kappaTotal = κ_ds + κ_cc): κ_ds (double-spend / reversible-settlement) = settleRate·window/V is DERIVABLE and NEGLIGIBLE (~1e-3 at 1e6 FLOP/s, 10 s window, 1e10 valuation — kappaDoubleSpend_small_example), so this 0.2 is essentially κ_cc (confidence-collapse: value destroyed when safety visibly breaks), which is IRREDUCIBLY an assumption in [0,1] — no protocol theorem can derive it. A conservative κ_cc→1 needs ~5× the coupling rate. NOT drift-checked (no shipped constant); recorded here so the 0.2 is a LABELED, owned assumption rather than a hidden Lean constant. Lean: deterrence_decomposed_kappa, kappaDoubleSpend, kappaDoubleSpend_small_example." }
+  # ---- Governance-transition guard magnitudes (PR #133) ----
+  # SINGLE-SITE anti-shock rails — deliberately NOT cross-language-mirrored protocol params
+  # (not added to `parameters` with multi-site `expect` snippets because each lives at exactly one
+  # site and they are NOT numerically equal across sites — they are independent guard magnitudes, not
+  # one shared constant). Listed here for ledger visibility; ratify the magnitudes, not a propagation.
+  - { name: da_deposit_max_step_factor,  value: 100, unit: ratio, note: "pallet_da_registry MAX_DEPOSIT_STEP_FACTOR: a single set_deposit_per_byte call may move the deposit ≤100× in either direction (anti-shock; the hard floor is >0). Single site: pallets/pallets/da-registry/src/lib.rs." }
+  - { name: governance_param_max_step_pct, value: 50, unit: percent, note: "governance.qnt MAX_STEP_PCT: the FORMAL-MODEL proportional per-enactment bound (100·|Δ| ≤ pct·|old|) proven invariant in Security.lean::GovernanceTransition. Model-side rail; the runtime instantiates the same proportional FORM per-param (e.g. da_deposit_max_step_factor) with its own magnitude. Single site: formal-specs/governance/governance.qnt." }
+
+  # ---- DA (documented; single-site design/const, yellowpaper §5.3) ----
+  - { name: da_serve_or_slash_percent, value: 1, unit: percent, note: "Serve-or-slash Liveness bound: a validator failing a DA audit is slashed ≤1% (bounded, not fraud). yellowpaper §5.3. D-0402/D-0412." }
+
+  # ---- Slashing fractions by fault class (documented; yellowpaper §11/§13.2) ----
+  - { name: slash_liveness_percent, value: 1, unit: percent, note: "Liveness fault slash (jail > 300 blk). yellowpaper §13.2. D-0409." }
+  - { name: slash_equivocation_lone_percent, value: 50, unit: percent, note: "Lone equivocation slash (correlated Eth2-style curve; +50% returned after 180 d, ≥1/3 correlated → 100%). yellowpaper §13.2. D-0420." }
+  # slash_fraud_percent (100%) promoted to `parameters:` (enforced) — it now has code mirror sites.
+
+  # ---- Agent wallet / session keys / vesting (documented; yellowpaper §6.2/§8) ----
+  - { name: session_key_expiry_days, value: 10, unit: days, note: "Target-cadence conversion of the 864,000-block session-key limit (yellowpaper §6.2): approximately 10 d at uninterrupted 1 s blocks, not a wall-clock upper bound; checked against the runtime and blocks_per_day. Owner can revoke anytime. pallet_session_keys / pallet_agent_wallet." }
+  - { name: blackout_revoke_blocks, value: 86_400, unit: blocks, note: "Performance-vesting blackout: capacity < 10% for 86,400 continuous blocks (~1 d) revokes the grant (1.0× slash). yellowpaper §8." }
+  - { name: performance_score_weights, value: "40/30/20/10", unit: percent, note: "Composite validator performance score: 40% uptime + 30% block_rate + 20% accuracy + 10% latency (parts-per-10,000); the rotation-floor input. yellowpaper §15.4/§15.5." }

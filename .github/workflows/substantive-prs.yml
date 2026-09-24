@@ -1,7 +1,7 @@
 # The spec is generated from FLOP's engineering repository, where the parameter- and citation-drift
-# gates live. Editorial PRs (typos, links, formatting) can be merged here and carried upstream;
-# anything that changes meaning cannot be, so it is closed with a pointer to the issue templates
-# rather than left to rot in the queue.
+# gates live. Pull requests are not open for general contribution (CONTRIBUTING.md). If one arrives
+# anyway, a small editorial fix is acknowledged and carried upstream; anything that changes meaning
+# is closed with a pointer to the issue templates rather than left to rot in the queue.
 name: Triage pull requests
 
 on:
@@ -50,11 +50,11 @@ jobs:
                   '',
                   '`yellowpaper.md` is built from FLOP\'s engineering repository, so a merge here is',
                   'overwritten by the next publish. If this is an editorial fix (typo, link,',
-                  'formatting) we will carry it upstream and credit you in `ERRATA.md`; no further',
+                  'formatting) we will carry it upstream and record the credit on this PR; no further',
                   'action is needed from you.',
                   '',
                   'If it changes a requirement, a parameter, or an argument, please open a',
-                  '[Challenge or Ambiguity issue](../../issues/new/choose) instead — that is where it',
+                  '[Challenge or Ambiguity issue](../issues/new/choose) instead — that is where it',
                   'can be acted on, since a spec change needs a decision record and a gate run that',
                   'this repository cannot produce.',
                 ].join('\n')
@@ -68,8 +68,8 @@ jobs:
                   'publish.',
                   '',
                   'Please re-open the substance as a [Challenge or Ambiguity',
-                  'issue](../../issues/new/choose), quoting the version and section. It gets a real',
-                  'response there, and accepted findings are credited in `ERRATA.md` and in the',
+                  'issue](../issues/new/choose), quoting the version and section. It gets a real',
+                  'response there, and accepted findings are credited in the issue and in the',
                   'decision record.',
                   '',
                   'See [CONTRIBUTING.md](../blob/main/CONTRIBUTING.md) for why the split exists.',

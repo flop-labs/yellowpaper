@@ -233,6 +233,8 @@ class TurnRecord:
 
 
 def _check_record(record: TurnRecord) -> None:
+    if not isinstance(record.leaf_version, TranscriptLeafVersion):
+        raise ValueError("unsupported leaf version")
     ids_nonzero = record.h_ids is not None and any(record.h_ids)
     toploc_nonzero = record.toploc_commitment_hash is not None and any(
         record.toploc_commitment_hash
@@ -273,7 +275,10 @@ def encode_transcript_blob(channel_id: Hash, turns: list[TurnRecord]) -> bytes:
 
 
 def decode_transcript_blob(data: bytes) -> tuple[Hash, list[TurnRecord]]:
-    """Decode FCC4 with exact consumption; legacy blobs require migration tooling."""
+    """Decode FCC4 exactly; agent acks are parsed but not signature-verified.
+
+    Verify each ack under the channel's agent key before trusting its fields.
+    """
     offset = 0
 
     def take(length: int) -> bytes:
