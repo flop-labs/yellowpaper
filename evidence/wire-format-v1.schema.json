@@ -2,65 +2,716 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://flop.network/spec/wire-format-v1.schema.json",
   "title": "FLOP Appendix F wire-format vectors",
+  "description": "Structural contract only: required fields, wire widths and integer ranges, case identities and coverage. After JSON Schema validation, validate_document in evidence/generate-wire-format-vectors.py enforces uniqueness by ID/value/bytes/version and coverage (appendix, family). Hashes, signatures and consumer semantics remain the responsibility of executable consumer checks.",
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "$schema",
     "profile",
     "status",
     "generation",
     "codec",
     "decode_policy_v1",
     "direct_rail_v1",
+    "h_ids_v1",
     "compute_channel_v1",
     "data_ref_v1",
     "negative_cases",
     "coverage"
   ],
   "properties": {
-    "$schema": { "const": "wire-format-v1.schema.json" },
-    "profile": { "const": "flop-wire-v1" },
-    "status": { "const": "public-canonical" },
-    "generation": { "$ref": "#/$defs/object" },
-    "codec": { "$ref": "#/$defs/object" },
-    "decode_policy_v1": { "$ref": "#/$defs/vector" },
-    "direct_rail_v1": { "$ref": "#/$defs/vector" },
-    "compute_channel_v1": { "$ref": "#/$defs/vector" },
-    "data_ref_v1": { "$ref": "#/$defs/vector" },
+    "$schema": {"const": "wire-format-v1.schema.json"},
+    "profile": {"const": "flop-wire-v1"},
+    "status": {"const": "public-canonical"},
+    "generation": {"$ref": "#/$defs/generation"},
+    "codec": {"$ref": "#/$defs/codec"},
+    "decode_policy_v1": {"$ref": "#/$defs/decode_policy"},
+    "direct_rail_v1": {"$ref": "#/$defs/direct_rail"},
+    "h_ids_v1": {"$ref": "#/$defs/h_ids_family"},
+    "compute_channel_v1": {"$ref": "#/$defs/compute_channel"},
+    "data_ref_v1": {"$ref": "#/$defs/data_ref"},
     "negative_cases": {
       "type": "array",
-      "minItems": 12,
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": ["id", "bytes_hex", "expected", "site"],
-        "properties": {
-          "id": { "type": "string" },
-          "bytes_hex": { "type": "string", "pattern": "^[0-9a-f]*$" },
-          "mutation": { "type": "string" },
-          "expected": { "type": "string" },
-          "site": { "type": "string" }
+      "minItems": 15,
+      "items": {"$ref": "#/$defs/negative_case"},
+      "allOf": [
+        {
+          "contains": {"type": "object", "required": ["id"], "properties": {"id": {"const": "unknown_leaf_enum"}}}
+        },
+        {
+          "contains": {"type": "object", "required": ["id"], "properties": {"id": {"const": "unknown_retention_enum"}}}
+        },
+        {
+          "contains": {"type": "object", "required": ["id"], "properties": {"id": {"const": "truncated_fcc4"}}}
+        },
+        {"contains": {"type": "object", "required": ["id"], "properties": {"id": {"const": "trailing_fcc4"}}}},
+        {
+          "contains": {"type": "object", "required": ["id"], "properties": {"id": {"const": "unknown_fcc_version"}}}
+        },
+        {
+          "contains": {
+            "type": "object",
+            "required": ["id"],
+            "properties": {"id": {"const": "invalid_agent_ack_signature"}}
+          }
+        },
+        {
+          "contains": {"type": "object", "required": ["id"], "properties": {"id": {"const": "duplicate_turn_index"}}}
+        },
+        {
+          "contains": {"type": "object", "required": ["id"], "properties": {"id": {"const": "wrong_path_orientation"}}}
+        },
+        {
+          "contains": {"type": "object", "required": ["id"], "properties": {"id": {"const": "wrong_genesis_network"}}}
+        },
+        {"contains": {"type": "object", "required": ["id"], "properties": {"id": {"const": "wrong_session"}}}},
+        {
+          "contains": {"type": "object", "required": ["id"], "properties": {"id": {"const": "wrong_leaf_version"}}}
+        },
+        {
+          "contains": {"type": "object", "required": ["id"], "properties": {"id": {"const": "invalid_receipt_signature"}}}
+        },
+        {
+          "contains": {
+            "type": "object",
+            "required": ["id"],
+            "properties": {"id": {"const": "invalid_validator_signature"}}
+          }
+        },
+        {
+          "contains": {
+            "type": "object",
+            "required": ["id"],
+            "properties": {"id": {"const": "legacy_leaf_current_channel"}}
+          }
+        },
+        {
+          "contains": {
+            "type": "object",
+            "required": ["id"],
+            "properties": {"id": {"const": "legacy_receipt_current_channel"}}
+          }
         }
-      }
+      ]
     },
     "coverage": {
       "type": "array",
-      "minItems": 6,
-      "items": {
-        "type": "object",
-        "required": ["appendix", "family", "consumer"],
-        "properties": {
-          "appendix": { "type": "string" },
-          "family": { "type": "string" },
-          "consumer": { "type": "string" }
+      "minItems": 7,
+      "items": {"$ref": "#/$defs/coverage_entry"},
+      "allOf": [
+        {
+          "contains": {
+            "type": "object",
+            "required": ["appendix", "family"],
+            "properties": {
+              "appendix": {"const": "F.1"},
+              "family": {"const": "decode_policy_v1/compute_channel_v1.channel_id"}
+            }
+          }
+        },
+        {
+          "contains": {
+            "type": "object",
+            "required": ["appendix", "family"],
+            "properties": {"appendix": {"const": "F.2/G.2"}, "family": {"const": "direct_rail_v1"}}
+          }
+        },
+        {
+          "contains": {
+            "type": "object",
+            "required": ["appendix", "family"],
+            "properties": {"appendix": {"const": "F.3/G.1 settle"}, "family": {"const": "compute_channel_v1"}}
+          }
+        },
+        {
+          "contains": {
+            "type": "object",
+            "required": ["appendix", "family"],
+            "properties": {"appendix": {"const": "F.3"}, "family": {"const": "h_ids_v1"}}
+          }
+        },
+        {
+          "contains": {
+            "type": "object",
+            "required": ["appendix", "family"],
+            "properties": {"appendix": {"const": "F.3/G.1 dispute"}, "family": {"const": "compute_channel_v1"}}
+          }
+        },
+        {
+          "contains": {
+            "type": "object",
+            "required": ["appendix", "family"],
+            "properties": {"appendix": {"const": "F.4/G.3"}, "family": {"const": "data_ref_v1"}}
+          }
+        },
+        {
+          "contains": {
+            "type": "object",
+            "required": ["appendix", "family"],
+            "properties": {"appendix": {"const": "F.5/G.1"}, "family": {"const": "compute_channel_v1.leaf_versions.V3"}}
+          }
         }
-      }
+      ]
     }
   },
   "$defs": {
-    "object": { "type": "object" },
-    "vector": {
+    "text": {"type": "string", "minLength": 1},
+    "bytes_hex": {"type": "string", "pattern": "^(?:[0-9a-f]{2})*$(?![\\s\\S])"},
+    "nonempty_bytes_hex": {"type": "string", "pattern": "^(?:[0-9a-f]{2})+$(?![\\s\\S])"},
+    "hex32": {"type": "string", "pattern": "^[0-9a-f]{64}$(?![\\s\\S])"},
+    "hex64": {"type": "string", "pattern": "^[0-9a-f]{128}$(?![\\s\\S])"},
+    "u8": {"type": "integer", "minimum": 0, "maximum": 255},
+    "u32": {"type": "integer", "minimum": 0, "maximum": 4294967295},
+    "decimal_u64": {
+      "type": "string",
+      "description": "Canonical unsigned decimal in 0..18446744073709551615.",
+      "maxLength": 20,
+      "pattern": "^(?:0|[1-9][0-9]{0,18}|1(?:[0-7][0-9]{18}|8(?:[0-3][0-9]{17}|4(?:[0-3][0-9]{16}|4(?:[0-5][0-9]{15}|6(?:[0-6][0-9]{14}|7(?:[0-3][0-9]{13}|4(?:[0-3][0-9]{12}|40(?:[0-6][0-9]{10}|7(?:[0-2][0-9]{9}|3(?:[0-6][0-9]{8}|70(?:[0-8][0-9]{6}|9(?:[0-4][0-9]{5}|5(?:[0-4][0-9]{4}|5(?:0[0-9]{3}|1(?:[0-5][0-9]{2}|6(?:0[0-9]{1}|1[0-5])))))))))))))))))$(?![\\s\\S])"
+    },
+    "decimal_u128": {
+      "type": "string",
+      "description": "Canonical unsigned decimal in 0..340282366920938463463374607431768211455.",
+      "maxLength": 39,
+      "pattern": "^(?:0|[1-9][0-9]{0,37}|(?:[1-2][0-9]{38}|3(?:[0-3][0-9]{37}|40(?:[0-1][0-9]{35}|2(?:[0-7][0-9]{34}|8(?:[0-1][0-9]{33}|2(?:[0-2][0-9]{32}|3(?:[0-5][0-9]{31}|6(?:[0-5][0-9]{30}|6(?:[0-8][0-9]{29}|9(?:[0-1][0-9]{28}|20(?:[0-8][0-9]{26}|9(?:[0-2][0-9]{25}|3(?:[0-7][0-9]{24}|8(?:[0-3][0-9]{23}|4(?:[0-5][0-9]{22}|6(?:[0-2][0-9]{21}|3(?:[0-3][0-9]{20}|4(?:[0-5][0-9]{19}|6(?:[0-2][0-9]{18}|3(?:[0-2][0-9]{17}|3(?:[0-6][0-9]{16}|7(?:[0-3][0-9]{15}|4(?:[0-5][0-9]{14}|60(?:[0-6][0-9]{12}|7(?:[0-3][0-9]{11}|4(?:[0-2][0-9]{10}|3(?:0[0-9]{9}|1(?:[0-6][0-9]{8}|7(?:[0-5][0-9]{7}|6(?:[0-7][0-9]{6}|8(?:[0-1][0-9]{5}|2(?:0[0-9]{4}|1(?:0[0-9]{3}|1(?:[0-3][0-9]{2}|4(?:[0-4][0-9]{1}|5[0-5]))))))))))))))))))))))))))))))))))))$(?![\\s\\S])"
+    },
+    "generation": {
       "type": "object",
-      "minProperties": 2
+      "additionalProperties": false,
+      "required": ["vectors", "public_vectors", "signature"],
+      "properties": {
+        "vectors": {"$ref": "#/$defs/text"},
+        "public_vectors": {"$ref": "#/$defs/text"},
+        "signature": {"$ref": "#/$defs/text"}
+      }
+    },
+    "codec": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fixed_integers", "scale_bool", "scale_compact_u32", "malformed_compact"],
+      "properties": {
+        "fixed_integers": {"const": "unsigned little-endian; reject overflow; no rounding"},
+        "scale_bool": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["false", "true", "other"],
+          "properties": {"false": {"const": "00"}, "true": {"const": "01"}, "other": {"const": "reject"}}
+        },
+        "scale_compact_u32": {
+          "type": "array",
+          "minItems": 8,
+          "items": {"$ref": "#/$defs/compact_case"},
+          "allOf": [
+            {"contains": {"type": "object", "required": ["value"], "properties": {"value": {"const": 0}}}},
+            {"contains": {"type": "object", "required": ["value"], "properties": {"value": {"const": 63}}}},
+            {"contains": {"type": "object", "required": ["value"], "properties": {"value": {"const": 64}}}},
+            {"contains": {"type": "object", "required": ["value"], "properties": {"value": {"const": 16383}}}},
+            {"contains": {"type": "object", "required": ["value"], "properties": {"value": {"const": 16384}}}},
+            {
+              "contains": {"type": "object", "required": ["value"], "properties": {"value": {"const": 1073741823}}}
+            },
+            {
+              "contains": {"type": "object", "required": ["value"], "properties": {"value": {"const": 1073741824}}}
+            },
+            {
+              "contains": {"type": "object", "required": ["value"], "properties": {"value": {"const": 4294967295}}}
+            }
+          ]
+        },
+        "malformed_compact": {
+          "type": "array",
+          "minItems": 6,
+          "items": {"$ref": "#/$defs/malformed_compact_case"},
+          "allOf": [
+            {
+              "contains": {"type": "object", "required": ["reason"], "properties": {"reason": {"const": "truncated"}}}
+            },
+            {
+              "contains": {
+                "type": "object",
+                "required": ["reason"],
+                "properties": {"reason": {"const": "truncated mode 1"}}
+              }
+            },
+            {
+              "contains": {
+                "type": "object",
+                "required": ["reason"],
+                "properties": {"reason": {"const": "truncated mode 2"}}
+              }
+            },
+            {
+              "contains": {"type": "object", "required": ["reason"], "properties": {"reason": {"const": "overlong zero"}}}
+            },
+            {
+              "contains": {
+                "type": "object",
+                "required": ["reason"],
+                "properties": {"reason": {"const": "overlong big mode"}}
+              }
+            },
+            {
+              "contains": {"type": "object", "required": ["reason"], "properties": {"reason": {"const": "exceeds u32"}}}
+            }
+          ]
+        }
+      }
+    },
+    "compact_case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["value", "bytes_hex", "expected"],
+      "properties": {
+        "value": {"$ref": "#/$defs/u32"},
+        "bytes_hex": {"type": "string", "pattern": "^([0-9a-f]{2}|[0-9a-f]{4}|[0-9a-f]{8}|[0-9a-f]{10})$(?![\\s\\S])"},
+        "expected": {"const": "accept"}
+      }
+    },
+    "malformed_compact_case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["bytes_hex", "expected", "reason"],
+      "properties": {
+        "bytes_hex": {"$ref": "#/$defs/bytes_hex"},
+        "expected": {"const": "reject"},
+        "reason": {"$ref": "#/$defs/text"}
+      }
+    },
+    "decode_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["input", "scale_bytes_hex", "hash_preimage_hex", "sha256_hex", "expected"],
+      "properties": {
+        "input": {"const": "hp_poui::DecodePolicy::default()"},
+        "scale_bytes_hex": {"type": "string", "pattern": "^[0-9a-f]{252}$(?![\\s\\S])"},
+        "hash_preimage_hex": {"type": "string", "pattern": "^[0-9a-f]{304}$(?![\\s\\S])"},
+        "sha256_hex": {"$ref": "#/$defs/hex32"},
+        "expected": {"const": "accept"}
+      }
+    },
+    "task_hash_inputs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "genesis_hash_hex",
+        "agent_account_id32_hex",
+        "nonce",
+        "model_hash_hex",
+        "payload_hash_hex",
+        "commit_hash_hex"
+      ],
+      "properties": {
+        "genesis_hash_hex": {"$ref": "#/$defs/hex32"},
+        "agent_account_id32_hex": {"$ref": "#/$defs/hex32"},
+        "nonce": {"$ref": "#/$defs/decimal_u64"},
+        "model_hash_hex": {"$ref": "#/$defs/hex32"},
+        "payload_hash_hex": {"$ref": "#/$defs/hex32"},
+        "commit_hash_hex": {"$ref": "#/$defs/hex32"}
+      }
+    },
+    "task_hash": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["inputs", "preimage_hex", "hash_hex", "runtime_boundary"],
+      "properties": {
+        "inputs": {"$ref": "#/$defs/task_hash_inputs"},
+        "preimage_hex": {"type": "string", "pattern": "^[0-9a-f]{366}$(?![\\s\\S])"},
+        "hash_hex": {"$ref": "#/$defs/hex32"},
+        "runtime_boundary": {"$ref": "#/$defs/text"}
+      }
+    },
+    "tee_type": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "scale_tag"],
+      "properties": {"name": {"$ref": "#/$defs/text"}, "scale_tag": {"$ref": "#/$defs/u8"}},
+      "oneOf": [
+        {"properties": {"name": {"const": "IntelTdx"}, "scale_tag": {"const": 0}}},
+        {"properties": {"name": {"const": "NvidiaHopperCc"}, "scale_tag": {"const": 1}}},
+        {"properties": {"name": {"const": "NvidiaRubinCc"}, "scale_tag": {"const": 2}}},
+        {"properties": {"name": {"const": "Simulator"}, "scale_tag": {"const": 3}}}
+      ]
+    },
+    "direct_rail_inputs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "task_hash_hex",
+        "gn_weight",
+        "latency_ms",
+        "model_hash_hex",
+        "output_hash_hex",
+        "decode_policy_hash_hex",
+        "tee_type",
+        "quote_verified",
+        "event_log_verified",
+        "hardware_id_hash_hex"
+      ],
+      "properties": {
+        "task_hash_hex": {"$ref": "#/$defs/hex32"},
+        "gn_weight": {"$ref": "#/$defs/decimal_u64"},
+        "latency_ms": {"$ref": "#/$defs/decimal_u64"},
+        "model_hash_hex": {"$ref": "#/$defs/hex32"},
+        "output_hash_hex": {"$ref": "#/$defs/hex32"},
+        "decode_policy_hash_hex": {"$ref": "#/$defs/hex32"},
+        "tee_type": {"$ref": "#/$defs/tee_type"},
+        "quote_verified": {"type": "boolean"},
+        "event_log_verified": {"type": "boolean"},
+        "hardware_id_hash_hex": {"$ref": "#/$defs/hex32"}
+      }
+    },
+    "direct_rail": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "task_hash",
+        "inputs",
+        "report_data_preimage_hex",
+        "report_data_hex",
+        "validator_attestation_signable_hex",
+        "validator_id_hex",
+        "validator_signature_hex",
+        "validator_attestation_scale_hex",
+        "expected"
+      ],
+      "properties": {
+        "task_hash": {"$ref": "#/$defs/task_hash"},
+        "inputs": {"$ref": "#/$defs/direct_rail_inputs"},
+        "report_data_preimage_hex": {"type": "string", "pattern": "^[0-9a-f]{290}$(?![\\s\\S])"},
+        "report_data_hex": {"$ref": "#/$defs/hex64"},
+        "validator_attestation_signable_hex": {"type": "string", "pattern": "^[0-9a-f]{358}$(?![\\s\\S])"},
+        "validator_id_hex": {"$ref": "#/$defs/hex32"},
+        "validator_signature_hex": {"$ref": "#/$defs/hex64"},
+        "validator_attestation_scale_hex": {"type": "string", "pattern": "^[0-9a-f]{550}$(?![\\s\\S])"},
+        "expected": {"const": "accept when pending tuple, active signer and quorum also pass"}
+      }
+    },
+    "h_ids_family": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["encoding", "vectors"],
+      "properties": {
+        "encoding": {"$ref": "#/$defs/text"},
+        "vectors": {
+          "type": "array",
+          "minItems": 2,
+          "items": {"$ref": "#/$defs/h_ids_case"},
+          "allOf": [
+            {
+              "contains": {"type": "object", "required": ["id"], "properties": {"id": {"const": "endianness"}}}
+            },
+            {
+              "contains": {"type": "object", "required": ["id"], "properties": {"id": {"const": "leaf_fixture"}}}
+            }
+          ]
+        }
+      }
+    },
+    "h_ids_case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "prompt_ids", "generated_ids", "preimage_hex", "hash_hex"],
+      "properties": {
+        "id": {"$ref": "#/$defs/text"},
+        "prompt_ids": {"type": "array", "maxItems": 4294967295, "items": {"$ref": "#/$defs/u32"}},
+        "generated_ids": {"type": "array", "maxItems": 4294967295, "items": {"$ref": "#/$defs/u32"}},
+        "preimage_hex": {"type": "string", "pattern": "^(?:[0-9a-f]{8}){2,}$(?![\\s\\S])"},
+        "hash_hex": {"$ref": "#/$defs/hex32"}
+      }
+    },
+    "domains": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["channel_id_ascii", "receipt_ascii", "deployment", "session", "protocol", "leaf", "merkle_node"],
+      "properties": {
+        "channel_id_ascii": {"const": "FLOP/COMPUTE_CHANNEL/ID"},
+        "receipt_ascii": {"const": "FLOP/COMPUTE_CHANNEL/RECEIPT"},
+        "deployment": {"$ref": "#/$defs/text"},
+        "session": {"$ref": "#/$defs/text"},
+        "protocol": {"$ref": "#/$defs/text"},
+        "leaf": {"$ref": "#/$defs/text"},
+        "merkle_node": {"$ref": "#/$defs/text"}
+      }
+    },
+    "channel_id_inputs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["genesis_hash_hex", "agent_account_id32_hex", "miner_account_id32_hex", "nonce"],
+      "properties": {
+        "genesis_hash_hex": {"$ref": "#/$defs/hex32"},
+        "agent_account_id32_hex": {"$ref": "#/$defs/hex32"},
+        "miner_account_id32_hex": {"$ref": "#/$defs/hex32"},
+        "nonce": {"$ref": "#/$defs/decimal_u64"}
+      }
+    },
+    "channel_id": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["inputs", "preimage_hex", "hash_hex"],
+      "properties": {
+        "inputs": {"$ref": "#/$defs/channel_id_inputs"},
+        "preimage_hex": {"type": "string", "pattern": "^[0-9a-f]{256}$(?![\\s\\S])"},
+        "hash_hex": {"$ref": "#/$defs/hex32"}
+      }
+    },
+    "leaf_inputs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "channel_id_hex",
+        "turn_index",
+        "h_in_hex",
+        "h_out_hex",
+        "g_n",
+        "decode_policy_hash_hex",
+        "h_ids_hex",
+        "toploc_commitment_hash_hex",
+        "miner_recv_ms",
+        "miner_done_ms",
+        "latency_ms"
+      ],
+      "properties": {
+        "channel_id_hex": {"$ref": "#/$defs/hex32"},
+        "turn_index": {"$ref": "#/$defs/u32"},
+        "h_in_hex": {"$ref": "#/$defs/hex32"},
+        "h_out_hex": {"$ref": "#/$defs/hex32"},
+        "g_n": {"$ref": "#/$defs/decimal_u128"},
+        "decode_policy_hash_hex": {"$ref": "#/$defs/hex32"},
+        "h_ids_hex": {"$ref": "#/$defs/hex32"},
+        "toploc_commitment_hash_hex": {"$ref": "#/$defs/hex32"},
+        "miner_recv_ms": {"$ref": "#/$defs/decimal_u64"},
+        "miner_done_ms": {"$ref": "#/$defs/decimal_u64"},
+        "latency_ms": {"$ref": "#/$defs/decimal_u64"}
+      }
+    },
+    "leaf_version": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "scale_tag", "preimage_hex", "hash_hex", "expected"],
+      "properties": {
+        "version": {"$ref": "#/$defs/text"},
+        "scale_tag": {"$ref": "#/$defs/u8"},
+        "preimage_hex": {"$ref": "#/$defs/nonempty_bytes_hex"},
+        "hash_hex": {"$ref": "#/$defs/hex32"},
+        "expected": {"const": "accept only under selected version and channel cutoff"}
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "version": {"const": "V0"},
+            "scale_tag": {"const": 0},
+            "preimage_hex": {"type": "string", "pattern": "^[0-9a-f]{232}$(?![\\s\\S])"}
+          }
+        },
+        {
+          "properties": {
+            "version": {"const": "V1"},
+            "scale_tag": {"const": 1},
+            "preimage_hex": {"type": "string", "pattern": "^[0-9a-f]{280}$(?![\\s\\S])"}
+          }
+        },
+        {
+          "properties": {
+            "version": {"const": "V2"},
+            "scale_tag": {"const": 2},
+            "preimage_hex": {"type": "string", "pattern": "^[0-9a-f]{344}$(?![\\s\\S])"}
+          }
+        },
+        {
+          "properties": {
+            "version": {"const": "V3"},
+            "scale_tag": {"const": 3},
+            "preimage_hex": {"type": "string", "pattern": "^[0-9a-f]{472}$(?![\\s\\S])"}
+          }
+        }
+      ]
+    },
+    "merkle_sibling": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sibling_hex", "sibling_is_left"],
+      "properties": {"sibling_hex": {"$ref": "#/$defs/hex32"}, "sibling_is_left": {"type": "boolean"}}
+    },
+    "merkle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["leaf_order", "odd_node_behavior", "node_preimage", "root_hex", "path_for_index_2"],
+      "properties": {
+        "leaf_order": {"const": ["V1", "V2", "V3"]},
+        "odd_node_behavior": {"const": "duplicate last"},
+        "node_preimage": {"$ref": "#/$defs/text"},
+        "root_hex": {"$ref": "#/$defs/hex32"},
+        "path_for_index_2": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/merkle_sibling"}}
+      }
+    },
+    "leaf_signature": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["leaf_hash_hex", "public_key_hex", "signature_hex", "expected"],
+      "properties": {
+        "leaf_hash_hex": {"$ref": "#/$defs/hex32"},
+        "public_key_hex": {"$ref": "#/$defs/hex32"},
+        "signature_hex": {"$ref": "#/$defs/hex64"},
+        "expected": {"const": "accept"}
+      }
+    },
+    "transcript_with_ack": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ack_preimage_hex",
+        "agent_public_key_hex",
+        "agent_recv_ms",
+        "agent_send_ms",
+        "agent_signature_hex",
+        "blob_hex",
+        "expected"
+      ],
+      "properties": {
+        "ack_preimage_hex": {"type": "string", "pattern": "^[0-9a-f]{168}$(?![\\s\\S])"},
+        "agent_public_key_hex": {"$ref": "#/$defs/hex32"},
+        "agent_recv_ms": {"$ref": "#/$defs/decimal_u64"},
+        "agent_send_ms": {"$ref": "#/$defs/decimal_u64"},
+        "agent_signature_hex": {"$ref": "#/$defs/hex64"},
+        "blob_hex": {"$ref": "#/$defs/nonempty_bytes_hex", "minLength": 80},
+        "expected": {"const": "accept"}
+      }
+    },
+    "receipt_inputs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["channel_id_hex", "final_root_hex", "aggregate_gn", "payable"],
+      "properties": {
+        "channel_id_hex": {"$ref": "#/$defs/hex32"},
+        "final_root_hex": {"$ref": "#/$defs/hex32"},
+        "aggregate_gn": {"$ref": "#/$defs/decimal_u128"},
+        "payable": {"$ref": "#/$defs/decimal_u128"}
+      }
+    },
+    "receipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["inputs", "preimage_hex", "public_key_hex", "signature_hex", "expected"],
+      "properties": {
+        "inputs": {"$ref": "#/$defs/receipt_inputs"},
+        "preimage_hex": {"type": "string", "pattern": "^[0-9a-f]{250}$(?![\\s\\S])"},
+        "public_key_hex": {"$ref": "#/$defs/hex32"},
+        "signature_hex": {"$ref": "#/$defs/hex64"},
+        "expected": {"const": "accept"}
+      }
+    },
+    "compute_channel": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "domains",
+        "channel_id",
+        "leaf_inputs",
+        "leaf_versions",
+        "merkle",
+        "v3_leaf_signature",
+        "verified_turn_v3_scale_hex",
+        "fcc4_transcript_blob_hex",
+        "fcc4_transcript_with_ack",
+        "receipt"
+      ],
+      "properties": {
+        "domains": {"$ref": "#/$defs/domains"},
+        "channel_id": {"$ref": "#/$defs/channel_id"},
+        "leaf_inputs": {"$ref": "#/$defs/leaf_inputs"},
+        "leaf_versions": {
+          "type": "array",
+          "minItems": 4,
+          "items": {"$ref": "#/$defs/leaf_version"},
+          "allOf": [
+            {
+              "contains": {"type": "object", "required": ["version"], "properties": {"version": {"const": "V0"}}}
+            },
+            {
+              "contains": {"type": "object", "required": ["version"], "properties": {"version": {"const": "V1"}}}
+            },
+            {
+              "contains": {"type": "object", "required": ["version"], "properties": {"version": {"const": "V2"}}}
+            },
+            {
+              "contains": {"type": "object", "required": ["version"], "properties": {"version": {"const": "V3"}}}
+            }
+          ]
+        },
+        "merkle": {"$ref": "#/$defs/merkle"},
+        "v3_leaf_signature": {"$ref": "#/$defs/leaf_signature"},
+        "verified_turn_v3_scale_hex": {"$ref": "#/$defs/nonempty_bytes_hex", "minLength": 540},
+        "fcc4_transcript_blob_hex": {"$ref": "#/$defs/nonempty_bytes_hex", "minLength": 80},
+        "fcc4_transcript_with_ack": {"$ref": "#/$defs/transcript_with_ack"},
+        "receipt": {"$ref": "#/$defs/receipt"}
+      }
+    },
+    "data_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["input", "scale_bytes_hex", "expected"],
+      "properties": {
+        "input": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["commitment_hex", "provider_id", "retention"],
+          "properties": {
+            "commitment_hex": {"$ref": "#/$defs/hex32"},
+            "provider_id": {"$ref": "#/$defs/u8"},
+            "retention": {"enum": ["Ephemeral", "Leased"]}
+          }
+        },
+        "scale_bytes_hex": {"type": "string", "pattern": "^[0-9a-f]{68}$(?![\\s\\S])"},
+        "expected": {"const": "accept when registered, live and pinned as required by consumer"}
+      }
+    },
+    "negative_case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "bytes_hex", "expected", "site"],
+      "properties": {
+        "id": {"$ref": "#/$defs/text"},
+        "bytes_hex": {"$ref": "#/$defs/bytes_hex"},
+        "mutation": {"$ref": "#/$defs/text"},
+        "expected": {
+          "enum": [
+            "reject",
+            "reject DuplicateVerifiedTurn",
+            "reject LeafNotInRoot",
+            "different channel_id",
+            "reject LeafFieldsInconsistent",
+            "reject BadReceiptSignature",
+            "reject BadValidatorSignature",
+            "reject UnsupportedLeafVersion"
+          ]
+        },
+        "site": {"$ref": "#/$defs/text"}
+      }
+    },
+    "coverage_entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["appendix", "family", "consumer"],
+      "properties": {
+        "appendix": {"$ref": "#/$defs/text"},
+        "family": {"$ref": "#/$defs/text"},
+        "consumer": {"$ref": "#/$defs/text"}
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "appendix": {"const": "F.1"},
+            "family": {"const": "decode_policy_v1/compute_channel_v1.channel_id"}
+          }
+        },
+        {"properties": {"appendix": {"const": "F.2/G.2"}, "family": {"const": "direct_rail_v1"}}},
+        {"properties": {"appendix": {"const": "F.3/G.1 settle"}, "family": {"const": "compute_channel_v1"}}},
+        {"properties": {"appendix": {"const": "F.3"}, "family": {"const": "h_ids_v1"}}},
+        {"properties": {"appendix": {"const": "F.3/G.1 dispute"}, "family": {"const": "compute_channel_v1"}}},
+        {"properties": {"appendix": {"const": "F.4/G.3"}, "family": {"const": "data_ref_v1"}}},
+        {
+          "properties": {"appendix": {"const": "F.5/G.1"}, "family": {"const": "compute_channel_v1.leaf_versions.V3"}}
+        }
+      ]
     }
   }
 }

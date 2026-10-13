@@ -6,7 +6,73 @@ After publication, use Semantic Versioning and Keep a Changelog, preserving rele
 
 ## [Unreleased]
 
+### Changed
+
+- Ratify slot/tranche position rent (D-0524, R5.4e/f, E.54, F.7, G.4): replacements retain
+  historical earned rent, failed or forfeited deltas refund the payer, and new tariffs use separate
+  funded tranches. Supersede independent provider ceilings; add seven executable balance vectors.
+
+- Dispose implemented HTLC pair directions as target-only for initial publication (E.48, #1498).
+  Preserve cross-leg late-claim, finality-stall and failed-payout counterexamples, qualify the local
+  formal models, and add focused pallet/contract expiry-ordering tests and a reproducible pair gate.
+
+- Specify the Agent airdrop unlock as spend-to-unlock (R8.7, R8.8; D-0522). An Agent grant unlocks
+  nothing at its start and has no end block; it unlocks one FLOP per three FLOP of its locked
+  principal in the gross `payable` of settled sessions, once every fraud dispute raised in the window has
+  resolved, and its locked compute spend is capped at three quarters of principal. Channel escrow
+  drawn from locked principal goes to the `payable` first and is refunded first, back to the grant as frozen
+  principal. E.38 no longer holds the Agent horizon.
+
+- Make current-profile channel settlements payment-only (R11.2b, task 1494). Receipt claims no
+  longer feed public work rewards or performance vesting, including unilateral/DA-void payout.
+  Historical recovery and future audited credit remain open; the distinct decision ID awaits approval.
+
+- Tighten the Appendix F vector schema to require canonical fields, byte widths, integer ranges,
+  case identities, and coverage. Wide integers use decimal strings so JSON consumers preserve
+  their exact values; the public generator also checks duplicate identities.
+
+- Replace §8.2's Miner and Validator airdrop unlock (R8.7, R8.8; D-0517). A Miner grant is a quarter
+  liquid at its start and unlocks the rest one FLOP per FLOP it receives as miner from settled
+  sessions once their dispute window passes, with no end block; block rewards earn no credit, and the performance adjustment
+  is retired. A Validator grant stays frozen until the first halving, then grants release one per day
+  without unbonding; none releases until E.38 fixes the order. Only Agent grants may still spend
+  locked principal on compute; a miner may bond its locked principal as its own self-stake.
+- Make block rewards and the subsidy liquid on issue (R9.13; D-0518). The miner and validator legs and
+  the Labs/Foundation subsidy are never auto-compounded, force-staked or vested, and agent-leg payouts
+  are liquid once E.40 ratifies; validator earnings no longer auto-compound into locked stake, and E.39
+  is closed.
+
+- Ratify §8.2's grant-landing (R8.6) and claim and locked-spend (R8.8) rules as D-0515. D-0514
+  had covered only R8.3–R8.5 and R8.7; the requirement text is unchanged.
+
+- Repoint Appendix E blockers to live trackers and refresh Appendix H implementation grades for
+  fee distribution, metering overflow, session-key invariants, and collusion monitoring.
+
 ### Added
+
+- Ratified D-0519 (owner, 2026-10-04): paid-storage service lanes close at a fixed boundary with
+  a funding-pinned claim deadline on the finalized prefix. Only the lane's provider redeems, with
+  strict sequence, counter and amount checks, including after reassignment. Otherwise-valid
+  post-close signatures remain payable within the unspent budget until the deadline; finalization
+  refunds only the remainder above it. Unknown finality rejects both operations. R5.4g, R5.4j,
+  E.54, F.7 and G.4 carry the rule. E.54 constrains sequential entitlement-maturity and funded-request
+  timing to fit that fixed deadline and requires an actual redeem-valid dispatch opportunity under
+  permitted finality behavior before affected work can be enabled. Timing arithmetic alone does not
+  establish it; the numerical window and production activation remain unratified.
+
+- Era-T conversion and airdrop vesting (§8.2, R8.3–R8.8; D-0514). Conversion draws only on the
+  fixed genesis cohort pools. Agents are scored on settled compute-channel spend and miners on
+  verified effective-FLOP; balance, stake, job count and active days carry no weight. Snapshot and
+  evidence of record are fixed before genesis lock. Grants land as frozen genesis balances with
+  linear vesting and finalized-head claims. The miner performance adjustment fails closed: without
+  both performance inputs a Miner grant unlocks nothing before its end block. E.38 keeps score caps,
+  the validator activity basis, the agent horizon and the remainder disposition open.
+
+- Development-network exception to the paid-storage activation gate (D-0512, R5.4q): a valueless
+  devnet may run the §5.4 extension ahead of E.54 only from a runtime built with a non-default,
+  development-only flag, under an explicitly unratified profile with placeholder values kept out of
+  the canonical parameters, with unaudited rent releases marked as such, and with no result citable
+  as E.54/E.47 evidence. R5.4k now names R5.4q as its only exception; every other network is unchanged.
 
 - Paid encrypted agent memory/data storage specification (D-0506): fixed-term validator storage
   revenue, metered retrieval vouchers, scoped authority, versioned memory heads, and bounded

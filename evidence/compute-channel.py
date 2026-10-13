@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import IntEnum
 from hashlib import blake2b
+from typing import Any
 
 Hash = bytes
 CHANNEL_ID_DOMAIN_V1 = b"FLOP/COMPUTE_CHANNEL/ID"
@@ -143,8 +144,8 @@ def leaf_preimage(
     return value
 
 
-def transcript_leaf(version: TranscriptLeafVersion, **fields: object) -> Hash:
-    return blake2_256(leaf_preimage(version, **fields))  # type: ignore[arg-type]
+def transcript_leaf(version: TranscriptLeafVersion, **fields: Any) -> Hash:
+    return blake2_256(leaf_preimage(version, **fields))
 
 
 def receipt_message_v1(

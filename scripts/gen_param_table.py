@@ -242,7 +242,7 @@ def _cross_language_table(params: list[dict]) -> list[str]:
         "different identifier per language by convention; values agree where a language pins the real "
         "(non-demo) figure. Enforced rows are value-gated against the Rust site by `check_params.py`.",
         "",
-        "| Parameter | Rust (runtime) | Lean (formal-specs/lean) | Quint (formal-specs) |",
+        "| Parameter | Rust (runtime) | Lean (lean-proofs) | Quint (formal-specs) |",
         "|-----------|----------------|--------------------------|----------------------|",
     ]
     for p in rows:

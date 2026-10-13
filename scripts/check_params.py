@@ -19,6 +19,7 @@ can never silently diverge.
 
 from __future__ import annotations
 
+import re
 import sys
 from pathlib import Path
 
@@ -29,6 +30,65 @@ except ImportError:
 
 REPO = Path(__file__).resolve().parent.parent
 CANON = REPO / "params" / "flop-protocol-params.yaml"
+
+
+def deployment_errors(params: list[dict]) -> list[str]:
+    """Require an explicit deployment scope and change mechanism for every entry."""
+    failures = []
+    for p in params:
+        name = p["name"]
+        mutability = p.get("mutability")
+        if mutability not in {
+            "runtime-upgrade-only",
+            "governance-settable",
+            "source-only",
+            "genesis-only",
+        }:
+            failures.append(f"[{name}] missing or invalid mutability")
+        if mutability == "governance-settable" and not p.get("governance_setter"):
+            failures.append(f"[{name}] governance-settable requires governance_setter")
+        chain = p.get("on_chain", {})
+        for field in ("constants", "storage"):
+            paths = chain.get(field, [])
+            if not isinstance(paths, list) or any(
+                not isinstance(path, str) or not re.fullmatch(r"\w+\.\w+", path) for path in paths
+            ):
+                failures.append(f"[{name}] on_chain.{field} must list Pallet.Item paths")
+        if chain.get("source_only"):
+            if chain.get("constants") or chain.get("storage"):
+                failures.append(f"[{name}] source-only cannot also have on-chain mappings")
+        elif not chain.get("constants") and not chain.get("storage"):
+            failures.append(
+                f"[{name}] requires on-chain mappings or an explicit source_only reason"
+            )
+        # Canonical ahead of the deployed chain: the reason must say what deploys it.
+        # Canonical ahead of the deployed chain until it runs `runtime` (a spec_version).
+        if "pending_upgrade" in chain:
+            pending = chain["pending_upgrade"]
+            if (
+                not isinstance(pending, dict)
+                or type(pending.get("runtime")) is not int
+                or pending["runtime"] <= 0
+                or not isinstance(pending.get("reason"), str)
+                or not pending["reason"].strip()
+            ):
+                failures.append(
+                    f"[{name}] pending_upgrade needs a positive runtime spec_version and a reason"
+                )
+            if chain.get("source_only"):
+                failures.append(f"[{name}] source-only cannot be pending_upgrade")
+        # Governance moved the effective storage value; compiled constants keep `value`.
+        if "governed_value" in chain:
+            if mutability != "governance-settable" or not chain.get("storage"):
+                failures.append(
+                    f"[{name}] governed_value requires governance-settable storage mappings"
+                )
+            provenance = chain.get("governed_by")
+            if not isinstance(provenance, str) or not provenance.strip():
+                failures.append(f"[{name}] governed_value requires governed_by provenance")
+        elif "governed_by" in chain:
+            failures.append(f"[{name}] governed_by without governed_value")
+    return failures
 
 
 def _underscored(value) -> str:
@@ -43,7 +103,7 @@ def main() -> int:
     spec = yaml.safe_load(CANON.read_text())
     params = spec.get("parameters", [])
 
-    failures: list[str] = []
+    failures = deployment_errors(params + spec.get("reference", []))
     checked = 0
 
     for p in params:
@@ -75,7 +135,7 @@ def main() -> int:
             if want is not None:
                 if n != want:
                     failures.append(
-                        f"[{name}] {impl['file']}: expected {want}x " f"`{expect}`, found {n}"
+                        f"[{name}] {impl['file']}: expected {want}x `{expect}`, found {n}"
                     )
             elif n == 0:
                 failures.append(f"[{name}] {impl['file']}: missing `{expect}`")

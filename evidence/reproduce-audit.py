@@ -6,10 +6,12 @@
 from __future__ import annotations
 
 import argparse
+import ast
 import csv
 import hashlib
 import io
 import json
+import re
 from fractions import Fraction
 from pathlib import Path
 
@@ -57,15 +59,15 @@ SOURCE_LEDGER = [
     {
         "path": "pallets/pallets/compute-channel/src/lib.rs",
         "span": ["pub fn open_channel(", "pub fn top_up_escrow("],
-        "sha256": "d8e8167836b0b5894d2468668956762cf72c64f49222733f3e64000420bae4ce",
-        "references": [{"fragment": "Self::check_reservation_cap(&agent, escrow)?;", "line": 2886}],
+        "sha256": "34dbc848f5090fa33075b701c462aab13cf3379c7762addd07bc487027263847",
+        "references": [{"fragment": "Self::check_reservation_cap(&agent, escrow)?;", "line": 1203}],
     },
     {
         "path": "pallets/pallets/compute-channel/src/lib.rs",
         "span": ["pub fn resolve_timeout_dispute(", "pub fn resolve_unrecoverable_transcript("],
-        "sha256": "8405c248d2c37445337b7598a945dead757230df5c2bdbf62266541c0a79b54c",
+        "sha256": "411b28a0265c4e4b1b55b54d5d992d7f0635041c69239da6b3f5b70341a26660",
         "references": [
-            {"fragment": "T::Slasher::slash_fraud(&ch.miner, channel_id)?;", "line": 4015}
+            {"fragment": "T::Slasher::slash_fraud(&ch.miner, channel_id)?;", "line": 2997}
         ],
     },
     {
@@ -73,34 +75,34 @@ SOURCE_LEDGER = [
         "span": ["impl pallet_compute_channel::ChannelSlasher", "pub struct ChannelDaAvailability"],
         "sha256": "a0a03e190685a10defb5e67389eea9d0ffbf610c3ef070db58f1e1033115910e",
         "references": [
-            {"fragment": "slash_proof_forgery_with_amount(", "line": 1567},
-            {"fragment": "Error::<Runtime>::NotSlashable", "line": 1579},
-            {"fragment": "Ok(0)", "line": 1582},
+            {"fragment": "slash_proof_forgery_with_amount(", "line": 1681},
+            {"fragment": "Error::<Runtime>::NotSlashable", "line": 1693},
+            {"fragment": "Ok(0)", "line": 1696},
         ],
     },
     {
         "path": "pallets/pallets/miner-slashing/src/lib.rs",
         "span": ["pub fn slash_proof_forgery_with_amount(", "pub fn slash_audit_forfeit("],
-        "sha256": "4ceddce058635dd23b4672ba772891d7d42d2c859b817f59197b601fabccae77",
+        "sha256": "cae435577c58d4b593b9dae87e5bfc254126ed7d08831021585d261cd42f1acc",
         "references": [
-            {"fragment": "Perbill::from_percent(100)", "line": 503},
-            {"fragment": "true, // permanent blacklist", "line": 505},
+            {"fragment": "Perbill::from_percent(100)", "line": 883},
+            {"fragment": "true, // permanent blacklist", "line": 885},
         ],
     },
     {
         "path": "pallets/pallets/miner-staking/src/lib.rs",
         "span": ["pub fn unbond(", "pub fn claim_unbonded("],
-        "sha256": "e4750cf9015afcc1310d017f049b7cc331ba3297332c16744ee09f1a9a201ebf",
-        "references": [{"fragment": "Self::miner_busy_count(&miner) == 0", "line": 744}],
+        "sha256": "219c92da5b091e609b0b23597d10ecbb682ffa4414417a46e6a82740d43859f1",
+        "references": [{"fragment": "Self::miner_busy_count(&miner) == 0", "line": 869}],
     },
     {
         "path": "pallets/pallets/miner-staking/src/lib.rs",
         "span": ["pub fn slash_sponsor_positions(", "pub fn slash_delegator_positions("],
-        "sha256": "ab955d31a837564a2d0f3935e214ea1cb01cf2b1553e088e69164ec22bbc7998",
+        "sha256": "6f57d4b1559c694c0ce720bc4ecb156d101b82a162158ad4abfabbdf336a07e0",
         "references": [
             {
                 "fragment": "SponsorPositionStatus::Active | SponsorPositionStatus::Unbonding",
-                "line": 1457,
+                "line": 2134,
             }
         ],
     },
@@ -236,6 +238,56 @@ def source_ledger(repo: Path = REPO) -> list[dict[str, object]]:
             }
         )
     return rows
+
+
+# Mirror: yellowpaper_htlc_evidence.py (each reproducer stays a standalone stdlib script).
+LINE_PIN = re.compile(r'("line":\s*)\d+')
+
+
+def without_line_pins(ledger: list[dict[str, object]]) -> list[dict[str, object]]:
+    """The ledger minus reference line numbers: all that code moving above a span leaves intact."""
+    return [
+        {
+            **row,
+            "references": [{k: v for k, v in r.items() if k != "line"} for r in row["references"]],
+        }
+        for row in ledger
+    ]
+
+
+def rewrite_line_pins(script: Path, actual: list[dict[str, object]]) -> None:
+    """Rewrite only the `"line": N` values of <script>'s SOURCE_LEDGER literal to <actual>.
+
+    The caller has checked that nothing but line numbers differs. The rewritten literal must
+    evaluate to <actual> before anything is written.
+    """
+    data = script.read_bytes()
+    value = next(
+        n.value
+        for n in ast.parse(data).body
+        if isinstance(n, ast.Assign | ast.AnnAssign)
+        and ast.unparse(n.targets[0] if isinstance(n, ast.Assign) else n.target) == "SOURCE_LEDGER"
+    )
+    # ast offsets are UTF-8 byte offsets, so splice bytes.
+    starts = [0]
+    for line in data.splitlines(keepends=True):
+        starts.append(starts[-1] + len(line))
+    begin = starts[value.lineno - 1] + value.col_offset
+    end = starts[value.end_lineno - 1] + value.end_col_offset
+    literal = data[begin:end].decode()
+    pins = [ref["line"] for row in actual for ref in row["references"]]
+    found = list(LINE_PIN.finditer(literal))
+    if len(found) != len(pins):
+        raise SystemExit(f"SOURCE_LEDGER has {len(found)} line pins, the sources {len(pins)}")
+    rewritten, at = [], 0
+    for match, pin in zip(found, pins, strict=True):
+        rewritten += [literal[at : match.start()], match.group(1), str(pin)]
+        at = match.end()
+    rewritten.append(literal[at:])
+    new_literal = "".join(rewritten)
+    if ast.literal_eval(new_literal) != actual:
+        raise SystemExit("rewritten SOURCE_LEDGER does not match the sources; not written")
+    script.write_bytes(data[:begin] + new_literal.encode() + data[end:])
 
 
 def build_report() -> dict[str, object]:
@@ -390,12 +442,32 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--check", action="store_true")
     parser.add_argument("--verify-sources", action="store_true")
+    parser.add_argument(
+        "--update-line-pins",
+        action="store_true",
+        help="when only line numbers moved (every span hash matches), rewrite SOURCE_LEDGER's "
+        "line pins in this script, then regenerate the evidence",
+    )
     args = parser.parse_args()
-    if args.verify_sources:
+    if args.update_line_pins and args.check:
+        parser.error("--update-line-pins rewrites files; it cannot be combined with --check")
+    if args.verify_sources or args.update_line_pins:
         if not IN_CORE_CHECKOUT:
-            raise SystemExit("--verify-sources requires a flop-core checkout")
-        if source_ledger(REPO) != SOURCE_LEDGER:
+            flag = "--update-line-pins" if args.update_line_pins else "--verify-sources"
+            raise SystemExit(f"{flag} requires a flop-core checkout")
+        actual = source_ledger(REPO)
+        if without_line_pins(actual) != without_line_pins(SOURCE_LEDGER):
+            # A span's content changed: the claim it backs needs a human review.
             raise SystemExit("source ledger drift")
+        if actual != SOURCE_LEDGER:
+            if not args.update_line_pins:
+                raise SystemExit(
+                    "source ledger drift: line pins moved, span hashes unchanged; "
+                    "run with --update-line-pins"
+                )
+            rewrite_line_pins(HERE, actual)
+            SOURCE_LEDGER[:] = actual  # the report embeds the ledger
+            print("audit-evidence: SOURCE_LEDGER line pins updated; span hashes unchanged")
     report = build_report()
     files = {
         OUT / "yellowpaper-audit-evidence.json": render_json(report),

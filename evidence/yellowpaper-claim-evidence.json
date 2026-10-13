@@ -290,7 +290,7 @@
       }
     ]
   },
-  "embedded_ledger_sha256": "5e74ca4a8741d38ac6c2b851afd6ac739d0358f31ba6fde7891b90e5556c164b",
+  "embedded_ledger_sha256": "45ba795963891c980a9b9645e63f2adff90b911e8ea2dc48fe524b118da4240c",
   "generated_by": "evidence/reproduce.py",
   "schema_version": 2,
   "scope": "Deterministic SCALE fixtures, charged-weight ledger, and claim disposition; no runtime execution, empirical security assurance, or network benchmark.",
@@ -304,8 +304,8 @@
         "call_bytes": 232,
         "charged_call_weight": {
           "class": "Normal",
-          "proof_size": 18940,
-          "ref_time": 663133000,
+          "proof_size": 27132,
+          "ref_time": 825139000,
           "status": "charged estimate; not freshly benchmarked"
         },
         "dimensions": {},
@@ -338,8 +338,8 @@
         "call_bytes": 38,
         "charged_call_weight": {
           "class": "Normal",
-          "proof_size": 12400,
-          "ref_time": 295469000,
+          "proof_size": 16560,
+          "ref_time": 304841000,
           "status": "charged estimate; not freshly benchmarked"
         },
         "dimensions": {},
@@ -355,8 +355,8 @@
         "call_bytes": 2417,
         "charged_call_weight": {
           "class": "Normal",
-          "proof_size": 20260,
-          "ref_time": 367645000,
+          "proof_size": 20328,
+          "ref_time": 412017000,
           "status": "charged estimate; not freshly benchmarked"
         },
         "dimensions": {
@@ -374,8 +374,8 @@
         "call_bytes": 34,
         "charged_call_weight": {
           "class": "Normal",
-          "proof_size": 13120,
-          "ref_time": 613089000,
+          "proof_size": 59378,
+          "ref_time": 1040193000,
           "status": "charged estimate; not freshly benchmarked"
         },
         "dimensions": {},
@@ -392,8 +392,8 @@
       "call_bytes": 34775,
       "charged_call_weight": {
         "class": "Normal",
-        "proof_size": 16360,
-        "ref_time": 5152317000,
+        "proof_size": 61416,
+        "ref_time": 5355156000,
         "status": "charged estimate; not freshly benchmarked"
       },
       "dimensions": {
@@ -442,8 +442,8 @@
         "call_bytes": 484,
         "charged_call_weight": {
           "class": "Normal",
-          "proof_size": 16360,
-          "ref_time": 707317000,
+          "proof_size": 61416,
+          "ref_time": 910156000,
           "status": "charged estimate; not freshly benchmarked"
         },
         "dimensions": {
@@ -464,8 +464,8 @@
         "call_bytes": 484,
         "charged_call_weight": {
           "class": "Normal",
-          "proof_size": 17480,
-          "ref_time": 355892000,
+          "proof_size": 31184,
+          "ref_time": 698648000,
           "status": "charged estimate; not freshly benchmarked"
         },
         "dimensions": {
@@ -486,8 +486,8 @@
         "call_bytes": 748,
         "charged_call_weight": {
           "class": "Normal",
-          "proof_size": 16360,
-          "ref_time": 707317000,
+          "proof_size": 61416,
+          "ref_time": 910156000,
           "status": "charged estimate; not freshly benchmarked"
         },
         "dimensions": {
@@ -508,8 +508,8 @@
         "call_bytes": 748,
         "charged_call_weight": {
           "class": "Normal",
-          "proof_size": 17480,
-          "ref_time": 355892000,
+          "proof_size": 31184,
+          "ref_time": 698648000,
           "status": "charged estimate; not freshly benchmarked"
         },
         "dimensions": {
@@ -530,8 +530,8 @@
         "call_bytes": 1540,
         "charged_call_weight": {
           "class": "Normal",
-          "proof_size": 16360,
-          "ref_time": 707317000,
+          "proof_size": 61416,
+          "ref_time": 910156000,
           "status": "charged estimate; not freshly benchmarked"
         },
         "dimensions": {
@@ -552,8 +552,8 @@
         "call_bytes": 1540,
         "charged_call_weight": {
           "class": "Normal",
-          "proof_size": 17480,
-          "ref_time": 355892000,
+          "proof_size": 31184,
+          "ref_time": 698648000,
           "status": "charged estimate; not freshly benchmarked"
         },
         "dimensions": {
@@ -574,8 +574,8 @@
         "call_bytes": 2597,
         "charged_call_weight": {
           "class": "Normal",
-          "proof_size": 16360,
-          "ref_time": 707317000,
+          "proof_size": 61416,
+          "ref_time": 910156000,
           "status": "charged estimate; not freshly benchmarked"
         },
         "dimensions": {
@@ -596,8 +596,8 @@
         "call_bytes": 2597,
         "charged_call_weight": {
           "class": "Normal",
-          "proof_size": 17480,
-          "ref_time": 355892000,
+          "proof_size": 31184,
+          "ref_time": 698648000,
           "status": "charged estimate; not freshly benchmarked"
         },
         "dimensions": {
@@ -618,8 +618,8 @@
         "call_bytes": 4534,
         "charged_call_weight": {
           "class": "Normal",
-          "proof_size": 16360,
-          "ref_time": 1232317000,
+          "proof_size": 61416,
+          "ref_time": 1435156000,
           "status": "charged estimate; not freshly benchmarked"
         },
         "dimensions": {
@@ -640,8 +640,8 @@
         "call_bytes": 4534,
         "charged_call_weight": {
           "class": "Normal",
-          "proof_size": 17480,
-          "ref_time": 880892000,
+          "proof_size": 31184,
+          "ref_time": 1223648000,
           "status": "charged estimate; not freshly benchmarked"
         },
         "dimensions": {
@@ -662,8 +662,8 @@
         "call_bytes": 8758,
         "charged_call_weight": {
           "class": "Normal",
-          "proof_size": 16360,
-          "ref_time": 1232317000,
+          "proof_size": 61416,
+          "ref_time": 1435156000,
           "status": "charged estimate; not freshly benchmarked"
         },
         "dimensions": {
@@ -684,8 +684,8 @@
         "call_bytes": 8758,
         "charged_call_weight": {
           "class": "Normal",
-          "proof_size": 17480,
-          "ref_time": 880892000,
+          "proof_size": 31184,
+          "ref_time": 1223648000,
           "status": "charged estimate; not freshly benchmarked"
         },
         "dimensions": {
@@ -706,8 +706,8 @@
         "call_bytes": 21430,
         "charged_call_weight": {
           "class": "Normal",
-          "proof_size": 16360,
-          "ref_time": 1232317000,
+          "proof_size": 61416,
+          "ref_time": 1435156000,
           "status": "charged estimate; not freshly benchmarked"
         },
         "dimensions": {
@@ -728,8 +728,8 @@
         "call_bytes": 21430,
         "charged_call_weight": {
           "class": "Normal",
-          "proof_size": 17480,
-          "ref_time": 880892000,
+          "proof_size": 31184,
+          "ref_time": 1223648000,
           "status": "charged estimate; not freshly benchmarked"
         },
         "dimensions": {
@@ -750,8 +750,8 @@
         "call_bytes": 38342,
         "charged_call_weight": {
           "class": "Normal",
-          "proof_size": 16360,
-          "ref_time": 1232317000,
+          "proof_size": 61416,
+          "ref_time": 1435156000,
           "status": "charged estimate; not freshly benchmarked"
         },
         "dimensions": {
@@ -772,8 +772,8 @@
         "call_bytes": 38342,
         "charged_call_weight": {
           "class": "Normal",
-          "proof_size": 17480,
-          "ref_time": 880892000,
+          "proof_size": 31184,
+          "ref_time": 1223648000,
           "status": "charged estimate; not freshly benchmarked"
         },
         "dimensions": {
@@ -794,8 +794,8 @@
         "call_bytes": 34775,
         "charged_call_weight": {
           "class": "Normal",
-          "proof_size": 16360,
-          "ref_time": 5152317000,
+          "proof_size": 61416,
+          "ref_time": 5355156000,
           "status": "charged estimate; not freshly benchmarked"
         },
         "dimensions": {
@@ -816,8 +816,8 @@
         "call_bytes": 34775,
         "charged_call_weight": {
           "class": "Normal",
-          "proof_size": 17480,
-          "ref_time": 4800892000,
+          "proof_size": 31184,
+          "ref_time": 5143648000,
           "status": "charged estimate; not freshly benchmarked"
         },
         "dimensions": {
@@ -838,8 +838,8 @@
         "call_bytes": 68567,
         "charged_call_weight": {
           "class": "Normal",
-          "proof_size": 16360,
-          "ref_time": 5152317000,
+          "proof_size": 61416,
+          "ref_time": 5355156000,
           "status": "charged estimate; not freshly benchmarked"
         },
         "dimensions": {
@@ -860,8 +860,8 @@
         "call_bytes": 68567,
         "charged_call_weight": {
           "class": "Normal",
-          "proof_size": 17480,
-          "ref_time": 4800892000,
+          "proof_size": 31184,
+          "ref_time": 5143648000,
           "status": "charged estimate; not freshly benchmarked"
         },
         "dimensions": {
@@ -882,8 +882,8 @@
         "call_bytes": 169943,
         "charged_call_weight": {
           "class": "Normal",
-          "proof_size": 16360,
-          "ref_time": 5152317000,
+          "proof_size": 61416,
+          "ref_time": 5355156000,
           "status": "charged estimate; not freshly benchmarked"
         },
         "dimensions": {
@@ -904,8 +904,8 @@
         "call_bytes": 169943,
         "charged_call_weight": {
           "class": "Normal",
-          "proof_size": 17480,
-          "ref_time": 4800892000,
+          "proof_size": 31184,
+          "ref_time": 5143648000,
           "status": "charged estimate; not freshly benchmarked"
         },
         "dimensions": {
@@ -926,8 +926,8 @@
         "call_bytes": 305239,
         "charged_call_weight": {
           "class": "Normal",
-          "proof_size": 16360,
-          "ref_time": 5152317000,
+          "proof_size": 61416,
+          "ref_time": 5355156000,
           "status": "charged estimate; not freshly benchmarked"
         },
         "dimensions": {
@@ -948,8 +948,8 @@
         "call_bytes": 305239,
         "charged_call_weight": {
           "class": "Normal",
-          "proof_size": 17480,
-          "ref_time": 4800892000,
+          "proof_size": 31184,
+          "ref_time": 5143648000,
           "status": "charged estimate; not freshly benchmarked"
         },
         "dimensions": {
@@ -970,8 +970,8 @@
         "call_bytes": 276695,
         "charged_call_weight": {
           "class": "Normal",
-          "proof_size": 16360,
-          "ref_time": 36512317000,
+          "proof_size": 61416,
+          "ref_time": 36715156000,
           "status": "charged estimate; not freshly benchmarked"
         },
         "dimensions": {
@@ -992,8 +992,8 @@
         "call_bytes": 276695,
         "charged_call_weight": {
           "class": "Normal",
-          "proof_size": 17480,
-          "ref_time": 36160892000,
+          "proof_size": 31184,
+          "ref_time": 36503648000,
           "status": "charged estimate; not freshly benchmarked"
         },
         "dimensions": {
@@ -1014,8 +1014,8 @@
         "call_bytes": 547031,
         "charged_call_weight": {
           "class": "Normal",
-          "proof_size": 16360,
-          "ref_time": 36512317000,
+          "proof_size": 61416,
+          "ref_time": 36715156000,
           "status": "charged estimate; not freshly benchmarked"
         },
         "dimensions": {
@@ -1036,8 +1036,8 @@
         "call_bytes": 547031,
         "charged_call_weight": {
           "class": "Normal",
-          "proof_size": 17480,
-          "ref_time": 36160892000,
+          "proof_size": 31184,
+          "ref_time": 36503648000,
           "status": "charged estimate; not freshly benchmarked"
         },
         "dimensions": {
@@ -1058,8 +1058,8 @@
         "call_bytes": 1358039,
         "charged_call_weight": {
           "class": "Normal",
-          "proof_size": 16360,
-          "ref_time": 36512317000,
+          "proof_size": 61416,
+          "ref_time": 36715156000,
           "status": "charged estimate; not freshly benchmarked"
         },
         "dimensions": {
@@ -1080,8 +1080,8 @@
         "call_bytes": 1358039,
         "charged_call_weight": {
           "class": "Normal",
-          "proof_size": 17480,
-          "ref_time": 36160892000,
+          "proof_size": 31184,
+          "ref_time": 36503648000,
           "status": "charged estimate; not freshly benchmarked"
         },
         "dimensions": {
@@ -1102,8 +1102,8 @@
         "call_bytes": 2440407,
         "charged_call_weight": {
           "class": "Normal",
-          "proof_size": 16360,
-          "ref_time": 36512317000,
+          "proof_size": 61416,
+          "ref_time": 36715156000,
           "status": "charged estimate; not freshly benchmarked"
         },
         "dimensions": {
@@ -1124,8 +1124,8 @@
         "call_bytes": 2440407,
         "charged_call_weight": {
           "class": "Normal",
-          "proof_size": 17480,
-          "ref_time": 36160892000,
+          "proof_size": 31184,
+          "ref_time": 36503648000,
           "status": "charged estimate; not freshly benchmarked"
         },
         "dimensions": {
@@ -1215,7 +1215,7 @@
   },
   "source_inputs": [
     {
-      "path": "formal-specs/lean/FlopSpecs/CommitteeSampling.lean",
+      "path": "lean-proofs/FlopSpecs/CommitteeSampling.lean",
       "required_fragments": [
         "def SelectionTailDominated (selTail : \u2115 \u2192 \u211d) (N : \u2115) (p : \u211d) : Prop :=",
         "\u2200 f, selTail f \u2264 binomialTail N f p"
@@ -1700,52 +1700,72 @@
       "path": "pallets/pallets/flop-poui/src/lib.rs"
     },
     {
+      "base_ref_time": 85000000,
+      "parameter": null,
+      "path": "pallets/pallets/compute-channel/src/weights.rs",
+      "per_unit_ref_time": 0,
+      "proof_size": 67152,
+      "reads": 28,
+      "weight": "certificate_settle",
+      "writes": 7
+    },
+    {
       "base_ref_time": 55440000,
       "parameter": null,
       "path": "pallets/pallets/compute-channel/src/weights.rs",
       "per_unit_ref_time": 0,
-      "proof_size": 13120,
-      "reads": 6,
+      "proof_size": 59378,
+      "reads": 21,
       "weight": "finalize",
-      "writes": 7
+      "writes": 11
     },
     {
       "base_ref_time": 83910000,
       "parameter": "n: u32",
       "path": "pallets/pallets/compute-channel/src/weights.rs",
       "per_unit_ref_time": 35000000,
-      "proof_size": 17480,
-      "reads": 10,
+      "proof_size": 31184,
+      "reads": 16,
       "weight": "force_settle",
-      "writes": 2
+      "writes": 6
     },
     {
       "base_ref_time": 86740000,
       "parameter": null,
       "path": "pallets/pallets/compute-channel/src/weights.rs",
       "per_unit_ref_time": 0,
-      "proof_size": 18940,
-      "reads": 8,
+      "proof_size": 27132,
+      "reads": 10,
       "weight": "open_channel",
-      "writes": 7
+      "writes": 9
     },
     {
       "base_ref_time": 52460000,
       "parameter": null,
       "path": "pallets/pallets/compute-channel/src/weights.rs",
       "per_unit_ref_time": 0,
-      "proof_size": 12400,
-      "reads": 3,
+      "proof_size": 16560,
+      "reads": 4,
       "weight": "open_dispute",
       "writes": 3
     },
     {
-      "base_ref_time": 96520000,
+      "base_ref_time": 80000000,
+      "parameter": "n: u32",
+      "path": "pallets/pallets/compute-channel/src/weights.rs",
+      "per_unit_ref_time": 35000000,
+      "proof_size": 34384,
+      "reads": 14,
+      "weight": "release_forward_bond",
+      "writes": 5
+    },
+    {
+      "base_ref_time": 131520000,
       "parameter": null,
       "path": "pallets/pallets/compute-channel/src/weights.rs",
       "per_unit_ref_time": 0,
-      "proof_size": 20260,
-      "reads": 6,
+      "proof_size": 20328,
+      "reads": 7,
       "weight": "respond_dispute",
       "writes": 3
     },
@@ -1754,10 +1774,10 @@
       "parameter": "n: u32",
       "path": "pallets/pallets/compute-channel/src/weights.rs",
       "per_unit_ref_time": 35000000,
-      "proof_size": 16360,
-      "reads": 10,
+      "proof_size": 61416,
+      "reads": 24,
       "weight": "settle",
-      "writes": 7
+      "writes": 8
     },
     {
       "base_ref_time": 30000000,
@@ -1768,6 +1788,16 @@
       "reads": 2,
       "weight": "submit_toploc_evidence",
       "writes": 1
+    },
+    {
+      "base_ref_time": 45000000,
+      "parameter": null,
+      "path": "pallets/pallets/compute-channel/src/weights.rs",
+      "per_unit_ref_time": 0,
+      "proof_size": 22788,
+      "reads": 10,
+      "weight": "timeout",
+      "writes": 9
     },
     {
       "base_ref_time": 50000000,

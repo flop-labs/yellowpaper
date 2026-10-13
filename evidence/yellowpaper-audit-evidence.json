@@ -489,10 +489,10 @@
       "references": [
         {
           "fragment": "Self::check_reservation_cap(&agent, escrow)?;",
-          "line": 2886
+          "line": 1203
         }
       ],
-      "sha256": "d8e8167836b0b5894d2468668956762cf72c64f49222733f3e64000420bae4ce",
+      "sha256": "34dbc848f5090fa33075b701c462aab13cf3379c7762addd07bc487027263847",
       "span": [
         "pub fn open_channel(",
         "pub fn top_up_escrow("
@@ -503,10 +503,10 @@
       "references": [
         {
           "fragment": "T::Slasher::slash_fraud(&ch.miner, channel_id)?;",
-          "line": 4015
+          "line": 2997
         }
       ],
-      "sha256": "8405c248d2c37445337b7598a945dead757230df5c2bdbf62266541c0a79b54c",
+      "sha256": "411b28a0265c4e4b1b55b54d5d992d7f0635041c69239da6b3f5b70341a26660",
       "span": [
         "pub fn resolve_timeout_dispute(",
         "pub fn resolve_unrecoverable_transcript("
@@ -517,15 +517,15 @@
       "references": [
         {
           "fragment": "slash_proof_forgery_with_amount(",
-          "line": 1567
+          "line": 1681
         },
         {
           "fragment": "Error::<Runtime>::NotSlashable",
-          "line": 1579
+          "line": 1693
         },
         {
           "fragment": "Ok(0)",
-          "line": 1582
+          "line": 1696
         }
       ],
       "sha256": "a0a03e190685a10defb5e67389eea9d0ffbf610c3ef070db58f1e1033115910e",
@@ -539,14 +539,14 @@
       "references": [
         {
           "fragment": "Perbill::from_percent(100)",
-          "line": 503
+          "line": 883
         },
         {
           "fragment": "true, // permanent blacklist",
-          "line": 505
+          "line": 885
         }
       ],
-      "sha256": "4ceddce058635dd23b4672ba772891d7d42d2c859b817f59197b601fabccae77",
+      "sha256": "cae435577c58d4b593b9dae87e5bfc254126ed7d08831021585d261cd42f1acc",
       "span": [
         "pub fn slash_proof_forgery_with_amount(",
         "pub fn slash_audit_forfeit("
@@ -557,10 +557,10 @@
       "references": [
         {
           "fragment": "Self::miner_busy_count(&miner) == 0",
-          "line": 744
+          "line": 869
         }
       ],
-      "sha256": "e4750cf9015afcc1310d017f049b7cc331ba3297332c16744ee09f1a9a201ebf",
+      "sha256": "219c92da5b091e609b0b23597d10ecbb682ffa4414417a46e6a82740d43859f1",
       "span": [
         "pub fn unbond(",
         "pub fn claim_unbonded("
@@ -571,10 +571,10 @@
       "references": [
         {
           "fragment": "SponsorPositionStatus::Active | SponsorPositionStatus::Unbonding",
-          "line": 1457
+          "line": 2134
         }
       ],
-      "sha256": "ab955d31a837564a2d0f3935e214ea1cb01cf2b1553e088e69164ec22bbc7998",
+      "sha256": "6f57d4b1559c694c0ce720bc4ecb156d101b82a162158ad4abfabbdf336a07e0",
       "span": [
         "pub fn slash_sponsor_positions(",
         "pub fn slash_delegator_positions("

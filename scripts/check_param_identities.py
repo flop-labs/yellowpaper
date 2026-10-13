@@ -173,7 +173,7 @@ def main() -> int:
         ),
         (
             "total_issued_end_era6",
-            "formal-specs/lean/FlopSpecs/HalvingBoundary.lean",
+            "lean-proofs/FlopSpecs/HalvingBoundary.lean",
             # Anchored on the theorem name: the file has other `= NNN := by` closures
             # (e.g. subsidyTotal_numeric), and an unanchored pattern silently checks one
             # of those instead.
@@ -189,13 +189,13 @@ def main() -> int:
         ),
         (
             "genesisSupply",
-            "formal-specs/lean/FlopSpecs/Genesis.lean",
+            "lean-proofs/FlopSpecs/Genesis.lean",
             r"def genesisSupply\s*:\s*\S+\s*:=\s*([\d_]+)",
             genesis,
         ),
         (
             "genesisSupply",
-            "formal-specs/lean/FlopSpecs/HalvingBoundary.lean",
+            "lean-proofs/FlopSpecs/HalvingBoundary.lean",
             r"def genesisSupply\s*:\s*\S+\s*:=\s*([\d_]+)",
             genesis,
         ),

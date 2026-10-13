@@ -1,0 +1,838 @@
+{
+  "$schema": "money-path-v1.schema.json",
+  "version": "flop-money-path-v1",
+  "source": {
+    "yellowpaper_commit": "21e19594bbc3f73ba8d44e01fc872cb5ab37c1ae",
+    "yellowpaper_path": "whitepaper/yellowpaper.md"
+  },
+  "vectors": [
+    {
+      "id": "force-empty",
+      "family": "force-finalize",
+      "status": "landed",
+      "decision": {
+        "id": "D-0422",
+        "owner": "https://github.com/flop-labs/flop-core/issues/1905",
+        "requirements": [
+          "R12.1d",
+          "R11.2b"
+        ]
+      },
+      "source_issue": "https://github.com/flop-labs/flop-core/issues/1610",
+      "adapter": "compute-channel",
+      "input": {
+        "balances": {
+          "agent": "999999999000",
+          "miner": "1000000000000",
+          "challenger": "1000000000000",
+          "pallet": "1000"
+        },
+        "storage": {
+          "channel_state": "Open",
+          "escrow": "1000"
+        },
+        "profile": {
+          "audit_fee_split_ppm": 0,
+          "base_per_turn": "1",
+          "rate_g": "1",
+          "phi_percent": 20,
+          "da_status": "Available"
+        }
+      },
+      "extrinsics": [
+        {
+          "call": "force_settle",
+          "origin": "miner",
+          "at_block": 1,
+          "args": {
+            "aggregate_gn": "0",
+            "receipt_payable": "0",
+            "published_transcript": true
+          }
+        },
+        {
+          "call": "finalize",
+          "origin": "challenger",
+          "at_block": 101,
+          "args": {}
+        }
+      ],
+      "expected": {
+        "result": "Ok",
+        "balances": {
+          "agent": "999999999800",
+          "miner": "1000000000000",
+          "challenger": "1000000000000",
+          "pallet": "0"
+        },
+        "issuance_burned": "200",
+        "storage": {
+          "channel_state": "Closed",
+          "settlement_tariff_pay": null,
+          "total_escrow_reserved": "1000",
+          "total_miner_paid": "0",
+          "total_refunded": "800",
+          "total_burned": "200",
+          "total_audit_earmarked": "0",
+          "total_gn_credited": "0"
+        },
+        "events": [
+          {
+            "event": "SettlementPosted",
+            "aggregate_gn": "0",
+            "challenge_end": 101
+          },
+          {
+            "event": "Settled",
+            "miner_paid": "0",
+            "burned": "200",
+            "aggregate_gn": "0",
+            "cooperative": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "force-dust",
+      "family": "force-finalize",
+      "status": "landed",
+      "decision": {
+        "id": "D-0422",
+        "owner": "https://github.com/flop-labs/flop-core/issues/1905",
+        "requirements": [
+          "R12.1d",
+          "R11.2b"
+        ]
+      },
+      "source_issue": "https://github.com/flop-labs/flop-core/issues/1610",
+      "adapter": "compute-channel",
+      "input": {
+        "balances": {
+          "agent": "999999999000",
+          "miner": "1000000000000",
+          "challenger": "1000000000000",
+          "pallet": "1000"
+        },
+        "storage": {
+          "channel_state": "Open",
+          "escrow": "1000"
+        },
+        "profile": {
+          "audit_fee_split_ppm": 0,
+          "base_per_turn": "1",
+          "rate_g": "1",
+          "phi_percent": 20,
+          "da_status": "Available"
+        }
+      },
+      "extrinsics": [
+        {
+          "call": "force_settle",
+          "origin": "miner",
+          "at_block": 1,
+          "args": {
+            "aggregate_gn": "1",
+            "receipt_payable": "2",
+            "published_transcript": true
+          }
+        },
+        {
+          "call": "finalize",
+          "origin": "challenger",
+          "at_block": 101,
+          "args": {}
+        }
+      ],
+      "expected": {
+        "result": "Ok",
+        "balances": {
+          "agent": "999999999799",
+          "miner": "1000000000002",
+          "challenger": "1000000000000",
+          "pallet": "0"
+        },
+        "issuance_burned": "199",
+        "storage": {
+          "channel_state": "Closed",
+          "settlement_tariff_pay": null,
+          "total_escrow_reserved": "1000",
+          "total_miner_paid": "2",
+          "total_refunded": "799",
+          "total_burned": "199",
+          "total_audit_earmarked": "0",
+          "total_gn_credited": "0"
+        },
+        "events": [
+          {
+            "event": "SettlementPosted",
+            "aggregate_gn": "1",
+            "challenge_end": 101
+          },
+          {
+            "event": "Settled",
+            "miner_paid": "2",
+            "burned": "199",
+            "aggregate_gn": "1",
+            "cooperative": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "force-full",
+      "family": "force-finalize",
+      "status": "landed",
+      "decision": {
+        "id": "D-0422",
+        "owner": "https://github.com/flop-labs/flop-core/issues/1905",
+        "requirements": [
+          "R12.1d",
+          "R11.2b"
+        ]
+      },
+      "source_issue": "https://github.com/flop-labs/flop-core/issues/1610",
+      "adapter": "compute-channel",
+      "input": {
+        "balances": {
+          "agent": "999999999000",
+          "miner": "1000000000000",
+          "challenger": "1000000000000",
+          "pallet": "1000"
+        },
+        "storage": {
+          "channel_state": "Open",
+          "escrow": "1000"
+        },
+        "profile": {
+          "audit_fee_split_ppm": 0,
+          "base_per_turn": "1",
+          "rate_g": "1",
+          "phi_percent": 20,
+          "da_status": "Available"
+        }
+      },
+      "extrinsics": [
+        {
+          "call": "force_settle",
+          "origin": "miner",
+          "at_block": 1,
+          "args": {
+            "aggregate_gn": "999",
+            "receipt_payable": "1000",
+            "published_transcript": true
+          }
+        },
+        {
+          "call": "finalize",
+          "origin": "challenger",
+          "at_block": 101,
+          "args": {}
+        }
+      ],
+      "expected": {
+        "result": "Ok",
+        "balances": {
+          "agent": "999999999000",
+          "miner": "1000000001000",
+          "challenger": "1000000000000",
+          "pallet": "0"
+        },
+        "issuance_burned": "0",
+        "storage": {
+          "channel_state": "Closed",
+          "settlement_tariff_pay": null,
+          "total_escrow_reserved": "1000",
+          "total_miner_paid": "1000",
+          "total_refunded": "0",
+          "total_burned": "0",
+          "total_audit_earmarked": "0",
+          "total_gn_credited": "0"
+        },
+        "events": [
+          {
+            "event": "SettlementPosted",
+            "aggregate_gn": "999",
+            "challenge_end": 101
+          },
+          {
+            "event": "Settled",
+            "miner_paid": "1000",
+            "burned": "0",
+            "aggregate_gn": "999",
+            "cooperative": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "force-over-escrow",
+      "family": "force-finalize",
+      "status": "landed",
+      "decision": {
+        "id": "D-0422",
+        "owner": "https://github.com/flop-labs/flop-core/issues/1905",
+        "requirements": [
+          "R12.1d",
+          "R11.2b"
+        ]
+      },
+      "source_issue": "https://github.com/flop-labs/flop-core/issues/1610",
+      "adapter": "compute-channel",
+      "input": {
+        "balances": {
+          "agent": "999999999000",
+          "miner": "1000000000000",
+          "challenger": "1000000000000",
+          "pallet": "1000"
+        },
+        "storage": {
+          "channel_state": "Open",
+          "escrow": "1000"
+        },
+        "profile": {
+          "audit_fee_split_ppm": 0,
+          "base_per_turn": "1",
+          "rate_g": "1",
+          "phi_percent": 20,
+          "da_status": "Available"
+        }
+      },
+      "extrinsics": [
+        {
+          "call": "force_settle",
+          "origin": "miner",
+          "at_block": 1,
+          "args": {
+            "aggregate_gn": "1000",
+            "receipt_payable": "1001",
+            "published_transcript": true
+          }
+        }
+      ],
+      "expected": {
+        "result": "TariffExceedsEscrow",
+        "balances": {
+          "agent": "999999999000",
+          "miner": "1000000000000",
+          "challenger": "1000000000000",
+          "pallet": "1000"
+        },
+        "issuance_burned": "0",
+        "storage": {
+          "channel_state": "Open",
+          "settlement_tariff_pay": null,
+          "total_escrow_reserved": "1000",
+          "total_miner_paid": "0",
+          "total_refunded": "0",
+          "total_burned": "0",
+          "total_audit_earmarked": "0",
+          "total_gn_credited": "0"
+        },
+        "events": []
+      }
+    },
+    {
+      "id": "non-delivery-refund",
+      "family": "non-delivery-timeout",
+      "status": "landed",
+      "decision": {
+        "id": "D-0422",
+        "owner": "https://github.com/flop-labs/flop-core/issues/1905",
+        "requirements": [
+          "R12.1d",
+          "R11.2b"
+        ]
+      },
+      "source_issue": "https://github.com/flop-labs/flop-core/issues/1907",
+      "adapter": "compute-channel",
+      "input": {
+        "balances": {
+          "agent": "999999999000",
+          "miner": "1000000000000",
+          "challenger": "1000000000000",
+          "pallet": "1000"
+        },
+        "storage": {
+          "channel_state": "Open",
+          "escrow": "1000"
+        },
+        "profile": {
+          "audit_fee_split_ppm": 0,
+          "base_per_turn": "1",
+          "rate_g": "1",
+          "phi_percent": 20,
+          "da_status": "Available"
+        }
+      },
+      "extrinsics": [
+        {
+          "call": "timeout",
+          "origin": "challenger",
+          "at_block": 502,
+          "args": {}
+        }
+      ],
+      "expected": {
+        "result": "Ok",
+        "balances": {
+          "agent": "1000000000000",
+          "miner": "1000000000000",
+          "challenger": "1000000000000",
+          "pallet": "0"
+        },
+        "issuance_burned": "0",
+        "storage": {
+          "channel_state": "Closed",
+          "settlement_tariff_pay": null,
+          "total_escrow_reserved": "1000",
+          "total_miner_paid": "0",
+          "total_refunded": "1000",
+          "total_burned": "0",
+          "total_audit_earmarked": "0",
+          "total_gn_credited": "0"
+        },
+        "events": [
+          {
+            "event": "TimedOutRefunded",
+            "refunded": "1000"
+          }
+        ]
+      }
+    },
+    {
+      "id": "htlc-below-lock",
+      "family": "htlc-redeem",
+      "status": "pending",
+      "decision": {
+        "id": null,
+        "owner": "https://github.com/flop-labs/flop-core/issues/1796",
+        "requirements": [
+          "R10.1",
+          "R10.5"
+        ]
+      },
+      "source_issue": "https://github.com/flop-labs/yellowpaper/issues/71",
+      "adapter": null,
+      "input": {
+        "balances": {
+          "locker_reserved": "10000",
+          "redeemer": "0"
+        },
+        "storage": {
+          "htlc_state": "OPEN",
+          "lock": "10000"
+        },
+        "attested_actual_amount": "6200"
+      },
+      "extrinsics": [
+        {
+          "call": "redeem_htlc",
+          "origin": "redeemer",
+          "at_block": 1,
+          "args": {
+            "valid_preimage": true,
+            "attested_actual_amount": "6200"
+          }
+        }
+      ],
+      "alternatives": [
+        "Fixed-amount redemption pays the lock; attested work is not a metered payout.",
+        "Metered redemption pays verified actual amount and returns residual atomically; equal/over-lock boundary policy requires ratification."
+      ]
+    },
+    {
+      "id": "htlc-equal-lock",
+      "family": "htlc-redeem",
+      "status": "pending",
+      "decision": {
+        "id": null,
+        "owner": "https://github.com/flop-labs/flop-core/issues/1796",
+        "requirements": [
+          "R10.1",
+          "R10.5"
+        ]
+      },
+      "source_issue": "https://github.com/flop-labs/yellowpaper/issues/71",
+      "adapter": null,
+      "input": {
+        "balances": {
+          "locker_reserved": "10000",
+          "redeemer": "0"
+        },
+        "storage": {
+          "htlc_state": "OPEN",
+          "lock": "10000"
+        },
+        "attested_actual_amount": "10000"
+      },
+      "extrinsics": [
+        {
+          "call": "redeem_htlc",
+          "origin": "redeemer",
+          "at_block": 1,
+          "args": {
+            "valid_preimage": true,
+            "attested_actual_amount": "10000"
+          }
+        }
+      ],
+      "alternatives": [
+        "Fixed-amount redemption pays the lock; attested work is not a metered payout.",
+        "Metered redemption pays verified actual amount and returns residual atomically; equal/over-lock boundary policy requires ratification."
+      ]
+    },
+    {
+      "id": "htlc-above-lock",
+      "family": "htlc-redeem",
+      "status": "pending",
+      "decision": {
+        "id": null,
+        "owner": "https://github.com/flop-labs/flop-core/issues/1796",
+        "requirements": [
+          "R10.1",
+          "R10.5"
+        ]
+      },
+      "source_issue": "https://github.com/flop-labs/yellowpaper/issues/71",
+      "adapter": null,
+      "input": {
+        "balances": {
+          "locker_reserved": "10000",
+          "redeemer": "0"
+        },
+        "storage": {
+          "htlc_state": "OPEN",
+          "lock": "10000"
+        },
+        "attested_actual_amount": "10001"
+      },
+      "extrinsics": [
+        {
+          "call": "redeem_htlc",
+          "origin": "redeemer",
+          "at_block": 1,
+          "args": {
+            "valid_preimage": true,
+            "attested_actual_amount": "10001"
+          }
+        }
+      ],
+      "alternatives": [
+        "Fixed-amount redemption pays the lock; attested work is not a metered payout.",
+        "Metered redemption pays verified actual amount and returns residual atomically; equal/over-lock boundary policy requires ratification."
+      ]
+    },
+    {
+      "id": "cooperative-1000",
+      "family": "cooperative-settle",
+      "status": "pending",
+      "decision": {
+        "id": null,
+        "owner": "https://github.com/flop-labs/flop-core/issues/1905",
+        "requirements": [
+          "R12.1a"
+        ]
+      },
+      "source_issue": "https://github.com/flop-labs/yellowpaper/issues/79",
+      "adapter": null,
+      "input": {
+        "balances": {
+          "escrow": "1000",
+          "miner": "0",
+          "audit_pool": "0"
+        },
+        "storage": {
+          "channel_state": "Open"
+        },
+        "audit_fee_split_ppm": 10000
+      },
+      "extrinsics": [
+        {
+          "call": "settle",
+          "origin": "miner",
+          "at_block": 1,
+          "args": {
+            "signed_receipt_payable": "1000"
+          }
+        }
+      ],
+      "alternatives": [
+        "Full escrow is net miner entitlement, without a carve.",
+        "Full escrow is gross before an audit-pool carve; payer, rounding and finalize applicability require ratification."
+      ]
+    },
+    {
+      "id": "cooperative-nondivisible",
+      "family": "cooperative-settle",
+      "status": "pending",
+      "decision": {
+        "id": null,
+        "owner": "https://github.com/flop-labs/flop-core/issues/1905",
+        "requirements": [
+          "R12.1a"
+        ]
+      },
+      "source_issue": "https://github.com/flop-labs/yellowpaper/issues/79",
+      "adapter": null,
+      "input": {
+        "balances": {
+          "escrow": "1001",
+          "miner": "0",
+          "audit_pool": "0"
+        },
+        "storage": {
+          "channel_state": "Open"
+        },
+        "audit_fee_split_ppm": 10000
+      },
+      "extrinsics": [
+        {
+          "call": "settle",
+          "origin": "miner",
+          "at_block": 1,
+          "args": {
+            "signed_receipt_payable": "1001"
+          }
+        }
+      ],
+      "alternatives": [
+        "Full escrow is net miner entitlement, without a carve.",
+        "Full escrow is gross before an audit-pool carve; payer, rounding and finalize applicability require ratification."
+      ]
+    },
+    {
+      "id": "cooperative-dust",
+      "family": "cooperative-settle",
+      "status": "pending",
+      "decision": {
+        "id": null,
+        "owner": "https://github.com/flop-labs/flop-core/issues/1905",
+        "requirements": [
+          "R12.1a"
+        ]
+      },
+      "source_issue": "https://github.com/flop-labs/yellowpaper/issues/79",
+      "adapter": null,
+      "input": {
+        "balances": {
+          "escrow": "1",
+          "miner": "0",
+          "audit_pool": "0"
+        },
+        "storage": {
+          "channel_state": "Open"
+        },
+        "audit_fee_split_ppm": 10000
+      },
+      "extrinsics": [
+        {
+          "call": "settle",
+          "origin": "miner",
+          "at_block": 1,
+          "args": {
+            "signed_receipt_payable": "1"
+          }
+        }
+      ],
+      "alternatives": [
+        "Full escrow is net miner entitlement, without a carve.",
+        "Full escrow is gross before an audit-pool carve; payer, rounding and finalize applicability require ratification."
+      ]
+    },
+    {
+      "id": "rent-provider-replacement",
+      "family": "rent-ceil",
+      "status": "pending",
+      "decision": {
+        "id": null,
+        "owner": "https://github.com/flop-labs/flop-core/issues/1965",
+        "requirements": [
+          "R5.4e",
+          "R5.4f"
+        ]
+      },
+      "source_issue": "https://github.com/flop-labs/yellowpaper/issues/80",
+      "adapter": null,
+      "input": {
+        "balances": {
+          "reservation_escrow": "1",
+          "provider_a": "0",
+          "provider_b": "0"
+        },
+        "storage": {
+          "reserved_bytes": "1",
+          "term_blocks": 2,
+          "rent_num": "1",
+          "rent_den": "2",
+          "funded_rent": "1",
+          "assignments": [
+            {
+              "provider": "provider_a",
+              "accepted_blocks": 1
+            },
+            {
+              "provider": "provider_b",
+              "accepted_blocks": 1
+            }
+          ]
+        }
+      },
+      "extrinsics": [
+        {
+          "call": "release_rent (pending API)",
+          "origin": "chain",
+          "at_block": 1,
+          "args": {
+            "provider": "provider_a"
+          }
+        },
+        {
+          "call": "replace_provider (pending API)",
+          "origin": "chain",
+          "at_block": 2,
+          "args": {
+            "from": "provider_a",
+            "to": "provider_b"
+          }
+        },
+        {
+          "call": "release_rent (pending API)",
+          "origin": "chain",
+          "at_block": 2,
+          "args": {
+            "provider": "provider_b"
+          }
+        }
+      ],
+      "alternatives": [
+        "Carry fractional debt across the reservation slot when its provider changes.",
+        "Cap provider entitlement with an explicit allocation priority; identify who bears rounding dust.",
+        "Independent per-provider ceilings conflict with the one-unit funded cap; repeated releases to the same provider alone do not cover replacement."
+      ]
+    },
+    {
+      "id": "force-dominance",
+      "family": "force-finalize",
+      "status": "pending",
+      "decision": {
+        "id": null,
+        "owner": "https://github.com/flop-labs/flop-core/issues/1905",
+        "requirements": [
+          "R12.1a",
+          "R12.1d",
+          "E.24"
+        ]
+      },
+      "source_issue": "https://github.com/flop-labs/flop-core/issues/1905",
+      "adapter": null,
+      "input": {
+        "balances": {
+          "escrow": "1000000000000000000000"
+        },
+        "storage": {
+          "channel_state": "Open"
+        },
+        "delivered_gn": "10000000000",
+        "turns": 1,
+        "rate_owner": "https://github.com/flop-labs/flop-core/issues/1610"
+      },
+      "extrinsics": [
+        {
+          "call": "settle versus force_settle -> finalize",
+          "origin": "agent/miner",
+          "at_block": 1,
+          "args": {
+            "delivered_work": true
+          }
+        }
+      ],
+      "alternatives": [
+        "Bind settlement mode at open or in the signed receipt.",
+        "Restrict the unilateral caller.",
+        "Ratify a cost-covering tariff via #1610; audit treatment and force/cooperative dominance remain #1905."
+      ]
+    },
+    {
+      "id": "da-loss-no-prefix",
+      "family": "da-loss-terminal",
+      "status": "pending",
+      "decision": {
+        "id": null,
+        "owner": "https://github.com/flop-labs/flop-core/issues/1948",
+        "requirements": [
+          "R13.0c",
+          "E.31"
+        ]
+      },
+      "source_issue": "https://github.com/flop-labs/flop-core/issues/1948",
+      "adapter": null,
+      "input": {
+        "balances": {
+          "escrow": "1000",
+          "challenger_bond": "100"
+        },
+        "storage": {
+          "channel_state": "Settling",
+          "da_status": "Unrecoverable",
+          "cosigned_prefix": false
+        },
+        "baseline_decision": "D-0430"
+      },
+      "extrinsics": [
+        {
+          "call": "finalize",
+          "origin": "challenger",
+          "at_block": 101,
+          "args": {
+            "terminal_da_loss": true
+          }
+        }
+      ],
+      "alternatives": [
+        "Retain D-0430 full escrow refund and challenger-bond return, without fraud slash.",
+        "Supersede D-0430 with an evidence-bound prefix payout and tail refund; no expected payout until ratified."
+      ]
+    },
+    {
+      "id": "da-loss-cosigned-prefix",
+      "family": "da-loss-terminal",
+      "status": "pending",
+      "decision": {
+        "id": null,
+        "owner": "https://github.com/flop-labs/flop-core/issues/1948",
+        "requirements": [
+          "R13.0c",
+          "E.31"
+        ]
+      },
+      "source_issue": "https://github.com/flop-labs/flop-core/issues/1948",
+      "adapter": null,
+      "input": {
+        "balances": {
+          "escrow": "1000",
+          "challenger_bond": "100"
+        },
+        "storage": {
+          "channel_state": "Settling",
+          "da_status": "Unrecoverable",
+          "cosigned_prefix": true
+        },
+        "baseline_decision": "D-0430"
+      },
+      "extrinsics": [
+        {
+          "call": "finalize",
+          "origin": "challenger",
+          "at_block": 101,
+          "args": {
+            "terminal_da_loss": true
+          }
+        }
+      ],
+      "alternatives": [
+        "Retain D-0430 full escrow refund and challenger-bond return, without fraud slash.",
+        "Supersede D-0430 with an evidence-bound prefix payout and tail refund; no expected payout until ratified."
+      ]
+    }
+  ]
+}

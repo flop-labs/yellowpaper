@@ -70,10 +70,36 @@ def repeat(byte: int, length: int = 32) -> bytes:
     return bytes([byte]) * length
 
 
+def h_ids_preimage(prompt_ids: list[int], generated_ids: list[int]) -> bytes:
+    return (
+        len(prompt_ids).to_bytes(4, "little")
+        + b"".join(token.to_bytes(4, "little") for token in prompt_ids)
+        + len(generated_ids).to_bytes(4, "little")
+        + b"".join(token.to_bytes(4, "little") for token in generated_ids)
+    )
+
+
 def build() -> dict[str, object]:
     genesis = bytes(range(32))
     agent, miner = repeat(0x11), repeat(0x22)
     channel_id = channel_id_v1(genesis, agent, miner, 42)
+    h_ids_vectors = []
+    for vector_id, prompt_ids, generated_ids in (
+        ("endianness", [1, 2, 3], [4, 5]),
+        ("leaf_fixture", [], [0, 0xFFFF_FFFF]),
+    ):
+        preimage = h_ids_preimage(prompt_ids, generated_ids)
+        committed = h_ids(prompt_ids, generated_ids)
+        assert committed == wire.blake2_256(preimage)
+        h_ids_vectors.append(
+            {
+                "id": vector_id,
+                "prompt_ids": prompt_ids,
+                "generated_ids": generated_ids,
+                "preimage_hex": hx(preimage),
+                "hash_hex": hx(committed),
+            }
+        )
     fields: dict[str, object] = {
         "channel_id": channel_id,
         "turn_index": 0xFFFF_FFFF,
@@ -90,7 +116,6 @@ def build() -> dict[str, object]:
     leaves = {version.name: transcript_leaf(version, **fields) for version in TranscriptLeafVersion}
     tree_leaves = [leaves["V1"], leaves["V2"], leaves["V3"]]
     path = merkle_path(tree_leaves, 2)
-    legacy_path = merkle_path(tree_leaves, 0)
     root = merkle_root(tree_leaves)
     assert root_from_path(tree_leaves[2], path) == root
 
@@ -107,6 +132,10 @@ def build() -> dict[str, object]:
     legacy_leaf_signature = bytes.fromhex(
         "1454f6cf53b85cd7a0665ef54785cb037bb0464270b42fc0760ba28482eee44e"
         "aa482284b51d7e23558bf5e844eca10b3c2b62f95504fccf2c4d57e86b910180"
+    )
+    duplicate_leaf_signature = bytes.fromhex(
+        "32bb5ff26603f838007ae540e6ff28bba6c359b9cc876469f2a864dbefe3ab33"
+        "2772e2f6d91ed0499de9a33c43656a4193386167ca111904c43650c362172982"
     )
     record = TurnRecord(
         TranscriptLeafVersion.V3,
@@ -151,9 +180,16 @@ def build() -> dict[str, object]:
     wrong_path[1] = (wrong_path[1][0], not wrong_path[1][1])
     wrong_path_turn = encode_verified_turn(record, wrong_path)
     wrong_version_turn = bytes([TranscriptLeafVersion.V2]) + verified_turn[1:]
+    duplicate_record = replace(
+        record,
+        turn_index=0,
+        g_n=10,
+        enclave_sig=duplicate_leaf_signature,
+    )
+    duplicate_verified_turn = encode_verified_turn(duplicate_record, [])
     legacy_record = TurnRecord(
         TranscriptLeafVersion.V1,
-        fields["turn_index"],  # type: ignore[arg-type]
+        0,
         fields["h_in"],  # type: ignore[arg-type]
         fields["h_out"],  # type: ignore[arg-type]
         fields["g_n"],  # type: ignore[arg-type]
@@ -165,7 +201,7 @@ def build() -> dict[str, object]:
         fields["latency_ms"],  # type: ignore[arg-type]
         legacy_leaf_signature,
     )
-    legacy_verified_turn = encode_verified_turn(legacy_record, legacy_path)
+    legacy_verified_turn = encode_verified_turn(legacy_record, [])
 
     # hp-poui default DecodePolicy SCALE encoding.
     sampling = (0).to_bytes(4, "little") + (1_000_000).to_bytes(4, "little")
@@ -262,7 +298,7 @@ def build() -> dict[str, object]:
                 "inputs": {
                     "genesis_hash_hex": hx(genesis),
                     "agent_account_id32_hex": hx(agent),
-                    "nonce": 7,
+                    "nonce": "7",
                     "model_hash_hex": hx(model_hash),
                     "payload_hash_hex": hx(payload_hash),
                     "commit_hash_hex": hx(commit_hash),
@@ -275,8 +311,8 @@ def build() -> dict[str, object]:
             },
             "inputs": {
                 "task_hash_hex": hx(task_hash),
-                "gn_weight": 42,
-                "latency_ms": 500,
+                "gn_weight": "42",
+                "latency_ms": "500",
                 "model_hash_hex": hx(model_hash),
                 "output_hash_hex": hx(output_hash),
                 "decode_policy_hash_hex": hx(decode_policy_hash),
@@ -293,6 +329,14 @@ def build() -> dict[str, object]:
             "validator_attestation_scale_hex": hx(attestation_scale),
             "expected": "accept when pending tuple, active signer and quorum also pass",
         },
+        "h_ids_v1": {
+            "encoding": (
+                "prompt_count:u32LE || prompt_ids:u32LE... || "
+                "generated_count:u32LE || generated_ids:u32LE...; "
+                "counts are fixed u32LE, not SCALE Compact"
+            ),
+            "vectors": h_ids_vectors,
+        },
         "compute_channel_v1": {
             "domains": {
                 "channel_id_ascii": CHANNEL_ID_DOMAIN_V1.decode(),
@@ -308,7 +352,7 @@ def build() -> dict[str, object]:
                     "genesis_hash_hex": hx(genesis),
                     "agent_account_id32_hex": hx(agent),
                     "miner_account_id32_hex": hx(miner),
-                    "nonce": 42,
+                    "nonce": "42",
                 },
                 "preimage_hex": hx(
                     CHANNEL_ID_DOMAIN_V1
@@ -331,7 +375,7 @@ def build() -> dict[str, object]:
                 "toploc_commitment_hash_hex": hx(fields["toploc_commitment_hash"]),  # type: ignore[arg-type]
                 "miner_recv_ms": str(fields["miner_recv_ms"]),
                 "miner_done_ms": str(fields["miner_done_ms"]),
-                "latency_ms": 1,
+                "latency_ms": "1",
             },
             "leaf_versions": [
                 {
@@ -374,8 +418,8 @@ def build() -> dict[str, object]:
                 "inputs": {
                     "channel_id_hex": hx(signed_channel),
                     "final_root_hex": hx(signed_root),
-                    "aggregate_gn": 42,
-                    "payable": 1_000,
+                    "aggregate_gn": "42",
+                    "payable": "1000",
                 },
                 "preimage_hex": hx(receipt),
                 "public_key_hex": hx(agent_public_key),
@@ -431,7 +475,7 @@ def build() -> dict[str, object]:
             },
             {
                 "id": "duplicate_turn_index",
-                "bytes_hex": hx(compact_u32(2) + verified_turn + verified_turn),
+                "bytes_hex": hx(compact_u32(2) + duplicate_verified_turn + duplicate_verified_turn),
                 "mutation": "repeat turn_index",
                 "expected": "reject DuplicateVerifiedTurn",
                 "site": "verified_work_from_turns",
@@ -510,6 +554,11 @@ def build() -> dict[str, object]:
                 "consumer": "verify_receipt -> verified_work_from_turns -> verify_turn_proof",
             },
             {
+                "appendix": "F.3",
+                "family": "h_ids_v1",
+                "consumer": "compute_channel::h_ids / SDK transcript h_ids encoders",
+            },
+            {
                 "appendix": "F.3/G.1 dispute",
                 "family": "compute_channel_v1",
                 "consumer": "respond_dispute",
@@ -528,6 +577,27 @@ def build() -> dict[str, object]:
     }
 
 
+def validate_document(document: dict[str, object], schema: dict[str, object]) -> None:
+    """Check the structural contract and its semantic boundary, not hashes/signatures."""
+    jsonschema.Draft202012Validator(schema).validate(document)
+    channel = document["compute_channel_v1"]
+    codec = document["codec"]
+    for name, rows, keys in (
+        ("negative_cases", document["negative_cases"], ("id",)),
+        ("h_ids_v1.vectors", document["h_ids_v1"]["vectors"], ("id",)),
+        ("compute_channel_v1.leaf_versions", channel["leaf_versions"], ("version",)),
+        ("codec.scale_compact_u32", codec["scale_compact_u32"], ("value",)),
+        ("codec.malformed_compact", codec["malformed_compact"], ("bytes_hex",)),
+        ("coverage", document["coverage"], ("appendix", "family")),
+    ):
+        seen = set()
+        for row in rows:
+            identity = tuple(row[key] for key in keys)
+            if identity in seen:
+                raise ValueError(f"{name}: duplicate {keys}: {identity}")
+            seen.add(identity)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--check", action="store_true")
@@ -535,7 +605,7 @@ def main() -> int:
     document = build()
     schema = json.loads(SCHEMA_PATH.read_text())
     jsonschema.Draft202012Validator.check_schema(schema)
-    jsonschema.Draft202012Validator(schema).validate(document)
+    validate_document(document, schema)
     rendered = json.dumps(document, indent=2, sort_keys=True) + "\n"
     if args.check:
         if not OUTPUT.exists() or OUTPUT.read_text() != rendered:

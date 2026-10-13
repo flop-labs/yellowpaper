@@ -100,7 +100,7 @@ SOURCE_FACTS = {
         "VRF-seeded, stake-weighted, without-replacement committee sampler",
         "let (stake, who) = pool.swap_remove(hit);",
     ],
-    "formal-specs/lean/FlopSpecs/CommitteeSampling.lean": [
+    "lean-proofs/FlopSpecs/CommitteeSampling.lean": [
         "def SelectionTailDominated (selTail : ℕ → ℝ) (N : ℕ) (p : ℝ) : Prop :=",
         "∀ f, selTail f ≤ binomialTail N f p",
     ],
@@ -196,49 +196,73 @@ WEIGHT_SCHEMAS = {
     ("pallets/pallets/compute-channel/src/weights.rs", "open_channel"): {
         "parameter": None,
         "base_ref_time": 86_740_000,
-        "proof_size": 18_940,
+        "proof_size": 27_132,
         "per_unit_ref_time": 0,
-        "reads": 8,
-        "writes": 7,
+        "reads": 10,
+        "writes": 9,
     },
     ("pallets/pallets/compute-channel/src/weights.rs", "settle"): {
         "parameter": "n: u32",
         "base_ref_time": 77_180_000,
-        "proof_size": 16_360,
+        "proof_size": 61_416,
         "per_unit_ref_time": 35_000_000,
-        "reads": 10,
+        "reads": 24,
+        "writes": 8,
+    },
+    ("pallets/pallets/compute-channel/src/weights.rs", "certificate_settle"): {
+        "parameter": None,
+        "base_ref_time": 85_000_000,
+        "proof_size": 67_152,
+        "per_unit_ref_time": 0,
+        "reads": 28,
         "writes": 7,
     },
     ("pallets/pallets/compute-channel/src/weights.rs", "force_settle"): {
         "parameter": "n: u32",
         "base_ref_time": 83_910_000,
-        "proof_size": 17_480,
+        "proof_size": 31_184,
         "per_unit_ref_time": 35_000_000,
-        "reads": 10,
-        "writes": 2,
+        "reads": 16,
+        "writes": 6,
     },
     ("pallets/pallets/compute-channel/src/weights.rs", "finalize"): {
         "parameter": None,
         "base_ref_time": 55_440_000,
-        "proof_size": 13_120,
+        "proof_size": 59_378,
         "per_unit_ref_time": 0,
-        "reads": 6,
-        "writes": 7,
+        "reads": 21,
+        "writes": 11,
+    },
+    ("pallets/pallets/compute-channel/src/weights.rs", "release_forward_bond"): {
+        "parameter": "n: u32",
+        "base_ref_time": 80_000_000,
+        "proof_size": 34_384,
+        "per_unit_ref_time": 35_000_000,
+        "reads": 14,
+        "writes": 5,
+    },
+    ("pallets/pallets/compute-channel/src/weights.rs", "timeout"): {
+        "parameter": None,
+        "base_ref_time": 45_000_000,
+        "proof_size": 22_788,
+        "per_unit_ref_time": 0,
+        "reads": 10,
+        "writes": 9,
     },
     ("pallets/pallets/compute-channel/src/weights.rs", "open_dispute"): {
         "parameter": None,
         "base_ref_time": 52_460_000,
-        "proof_size": 12_400,
+        "proof_size": 16_560,
         "per_unit_ref_time": 0,
-        "reads": 3,
+        "reads": 4,
         "writes": 3,
     },
     ("pallets/pallets/compute-channel/src/weights.rs", "respond_dispute"): {
         "parameter": None,
-        "base_ref_time": 96_520_000,
-        "proof_size": 20_260,
+        "base_ref_time": 131_520_000,
+        "proof_size": 20_328,
         "per_unit_ref_time": 0,
-        "reads": 6,
+        "reads": 7,
         "writes": 3,
     },
     ("pallets/pallets/compute-channel/src/weights.rs", "submit_toploc_evidence"): {
@@ -663,19 +687,47 @@ def parse_weight(text: str, name: str, parameter: str | None) -> dict:
                 break
     else:
         raise ValueError(f"unterminated weight {name}")
-    parts = re.findall(r"Weight::from_parts\(([\d_]+), ([\d_]+)\)", body)
-    if not parts:
+    body = re.sub(r"//[^\n]*", "", body)
+    parts = re.compile(
+        r"Weight::from_parts\(\s*([\d_]+),\s*([\d_]+)\s*\)"
+        r"(?:\s*\.saturating_mul\(([^)]*)\))?"
+    )
+    totals = {"base_ref_time": 0, "proof_size": 0, "per_unit_ref_time": 0}
+    part_count = 0
+
+    def weight_part(match: re.Match) -> str:
+        nonlocal part_count
+        part_count += 1
+        ref_time, proof_size = (int(match[index].replace("_", "")) for index in (1, 2))
+        multiplier = match[3]
+        if multiplier is not None:
+            expected = f"{parameter.split(':', 1)[0]} as u64" if parameter else None
+            if multiplier.strip() != expected or proof_size:
+                raise ValueError(f"unsupported per-unit weight for {name}")
+            totals["per_unit_ref_time"] += ref_time
+        else:
+            totals["base_ref_time"] += ref_time
+            totals["proof_size"] += proof_size
+        return "PART"
+
+    expression = parts.sub(weight_part, body)
+    if not part_count:
         raise ValueError(f"missing Weight::from_parts for {name}")
-    reads = re.search(r"\.reads\((\d+)\)", body)
-    writes = re.search(r"\.writes\((\d+)\)", body)
-    return {
-        "parameter": parameter,
-        "base_ref_time": int(parts[0][0].replace("_", "")),
-        "proof_size": int(parts[0][1].replace("_", "")),
-        "per_unit_ref_time": int(parts[1][0].replace("_", "")) if len(parts) > 1 else 0,
-        "reads": int(reads.group(1)) if reads else 0,
-        "writes": int(writes.group(1)) if writes else 0,
-    }
+    db_counts = {"reads": 0, "writes": 0}
+
+    def db_part(match: re.Match) -> str:
+        db_counts[match[1]] += int(match[2])
+        return "PART"
+
+    expression = re.sub(
+        r"(?:T::DbWeight::get|RocksDbWeight::get)\(\)\.(reads|writes)\((\d+)\)",
+        db_part,
+        expression,
+    )
+    expression = re.sub(r"\s+", "", expression)
+    if not re.fullmatch(r"PART(?:\.saturating_add\(PART\))*", expression):
+        raise ValueError(f"unsupported weight expression for {name}")
+    return {"parameter": parameter, **totals, **db_counts}
 
 
 def parse_runtime_db_weight(text: str) -> dict[str, int]:
