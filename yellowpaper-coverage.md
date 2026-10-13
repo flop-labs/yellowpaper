@@ -29,9 +29,9 @@ Existence-resolved per-section citations for each top-level `##` section of `yel
 | Appendix E — Open Specification Items | ✓ | · | · | · | · |
 | Appendix F — Message & Storage Formats | · | · | · | · | · |
 | Appendix G — Extrinsic Index | · | · | · | · | · |
-| Appendix H — Conformance & Implementation-Status Matrix | · | ✓ | · | · | · |
+| Appendix H — Conformance & Implementation-Status Matrix | · | ✓ | ✓ | · | ✓ |
 | Appendix I — Runtime Composition | · | · | · | · | · |
-| **TOTAL (resolved)** | **19** | **15** | **12** | **0** | **2** |
+| **TOTAL (resolved)** | **19** | **15** | **13** | **0** | **3** |
 
 **Legend:** `✓` the cited path exists in the authoring repository and, when a symbol is named, that symbol resolves in the cited file · `~` referenced-but-dangling (path/symbol not found — a `--check` failure) · `·` absent. This is an artifact-existence and citation-integrity matrix. A `✓` does **not** establish that a theorem's assumptions hold for the protocol, that a proof covers the full implementation, that a modeled gate is wired in settlement, or that an empirical claim has been reproduced. The **Quint** column is a standalone bounded model (`formal-specs/`); the **Studio** column is a Quint Studio component model (`quint-specs/`) whose symbol is a property or observation registered in `quint-specs/quint.lock`. Studio grounds those models by replaying the component's Rust tests through its oracle, but this matrix records the model identity only: oracle results live in Studio, and a `✓` is not a claim that they are current or passing.
 

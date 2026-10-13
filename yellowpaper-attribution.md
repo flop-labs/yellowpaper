@@ -377,7 +377,7 @@ and `next_deadline_inv` support `S.reachable_deadline`.
 
 | R-id | Requirement | Lean | Quint | Rust |
 |------|-------------|------|-------|------|
-| R8.1 | Convex `R_p²` unlock (`R_p² ≤ R_p`) | `Vesting::unlock_le_ratio` | — | `pallets/pallets/work-vesting` |
+| R8.1 | Finalized non-zero `B_p` for `create_grant`; Root-only `force_create_grant` bypass; convex `R_p²` unlock (`R_p² ≤ R_p`) | `Vesting::unlock_le_ratio` | — | `work-vesting::{create_grant,force_create_grant}`; runtime `HwCalibrationAdapter::pledge_baseline` |
 | R8.2 | Blackout revocation (1.0× slash) | — | — | `work-vesting` |
 | R8.1a–b | Ghost-Task known-answer canary; bounded escrow slash | `GhostTaskAudit::bounded_slash_payoff` | `verification/statistical-sampling::invariant_checker_quorum_before_slash`, `invariant_no_self_checked_slash` | `pallets/pallets/synthetic-tasks` |
 
@@ -391,6 +391,7 @@ and `next_deadline_inv` support `S.reachable_deadline`.
 | R9.4 | Work-first genesis (airdrops only) | — | — | genesis config |
 | R9.5 | Committee premium inside the validator pool (no second mint) | — | — | `validators::distribute_consensus_reward` |
 | R9.6 | Tx-fee split: 10% burn / 100% remainder to author | — | `economics/tokenomics-supply::inv_burn_tier_monotone` | `pallets/pallets/transaction-fees`; runtime `DealWithFees` |
+| Appendix D | Chain inclusion-fee terms: base + encoded length + adjusted weight; tip separate | — | — | runtime `TransactionPayment` (`WeightToFee`, `LengthToFee`, `ZKVFeeUpdate`) |
 | R9.7–R9.11 | Fixed genesis/allocation; current-runtime de-sudo (**arbitrary `set_code` outside model**) | `Genesis::valid_genesis_is_airdrop_only`, `premint_not_valid`, `airdrop_le_total`, `baseUnit_pos`, `desudo_irreversible` (**modeled transitions only**) | — | genesis chain-spec; `pallet_sudo` removal |
 | §9.2 demand | Payer-authorized demanded/settled work (**does not establish independent demand; open E.49**) | — | — | work-crediting paths; synthetic-task floor |
 

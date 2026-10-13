@@ -82,8 +82,8 @@ open, and sponsored principal already unbonding remains slashable. This closes a
 race. It does not establish `sum(channel exposure) ≤ miner collectible collateral`. Multiple simultaneous
 frauds can reuse one bond economically. After the first full slash, the adapter explicitly maps
 `NotSlashable` to a zero additional slash so later victim escrows can close. The generated unit-bond
-penalty waterfall preserves this negative result: penalty demands `[1,1,1]` collect slash/burn amounts
-`[1,0,0]` from the shared bond. Collection routes through the slash-proceeds path; it does not imply that
+penalty waterfall preserves this negative result: penalty demands `[1,1,1,1]` collect slash/burn amounts
+`[1,0,0,0]` from the shared bond. Collection routes through the slash-proceeds path; it does not imply that
 victims receive those amounts.
 
 Forward/CRU positions have a separate bond escrow path. This evidence does not treat that mechanism as an

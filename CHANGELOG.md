@@ -8,6 +8,19 @@ After publication, use Semantic Versioning and Keep a Changelog, preserving rele
 
 ### Changed
 
+- Name RTMR3 as the only accepted measurement path for the model root (§3.3 step 2), matching the
+  step 3 verifier and D-0404.
+
+- Bring Appendix E/H status, trackers and code paths up to date with landed code; no protocol rule
+  changes. Index the on-chain bisection dispute calls in G.1 and correct `open_dispute`'s arguments;
+  mark multi-round bisection and `G_n` overflow rejection LIVE; record the development-network
+  paid-storage pallet (rent released without audit), its CI-run Quint models and its simulation as
+  PARTIAL; narrow E.9, E.32, E.41, E.46, E.47, E.51 and E.54 to what remains open; and replace
+  enforcement paths for code removed with the per-task path in §11.1 and H.5.
+
+- Specify Appendix D's chain inclusion-fee terms, align the shared-collateral example with its
+  generated four-claim row, and list both work-vesting grant entry points in Appendix G.3.
+
 - Ratify slot/tranche position rent (D-0524, R5.4e/f, E.54, F.7, G.4): replacements retain
   historical earned rent, failed or forfeited deltas refund the payer, and new tariffs use separate
   funded tranches. Supersede independent provider ceilings; add seven executable balance vectors.
