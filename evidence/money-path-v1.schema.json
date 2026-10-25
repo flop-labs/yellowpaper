@@ -41,7 +41,9 @@
               "rent-ceil",
               "force-finalize",
               "da-loss-terminal",
-              "non-delivery-timeout"
+              "non-delivery-timeout",
+              "reservation-slot-release",
+              "lease-withdrawal"
             ]
           },
           "status": {
@@ -86,6 +88,7 @@
           "adapter": {
             "enum": [
               "compute-channel",
+              "paid-storage-arithmetic",
               null
             ]
           },
@@ -125,118 +128,7 @@
             }
           },
           "expected": {
-            "type": "object",
-            "properties": {
-              "result": {
-                "enum": [
-                  "Ok",
-                  "TariffExceedsEscrow"
-                ]
-              },
-              "balances": {
-                "type": "object",
-                "properties": {
-                  "agent": {
-                    "type": "string",
-                    "pattern": "^(0|[1-9][0-9]*)$"
-                  },
-                  "miner": {
-                    "type": "string",
-                    "pattern": "^(0|[1-9][0-9]*)$"
-                  },
-                  "challenger": {
-                    "type": "string",
-                    "pattern": "^(0|[1-9][0-9]*)$"
-                  },
-                  "pallet": {
-                    "type": "string",
-                    "pattern": "^(0|[1-9][0-9]*)$"
-                  }
-                },
-                "required": [
-                  "agent",
-                  "miner",
-                  "challenger",
-                  "pallet"
-                ],
-                "additionalProperties": false
-              },
-              "issuance_burned": {
-                "type": "string",
-                "pattern": "^(0|[1-9][0-9]*)$"
-              },
-              "storage": {
-                "type": "object",
-                "properties": {
-                  "channel_state": {
-                    "enum": [
-                      "Open",
-                      "Closed"
-                    ]
-                  },
-                  "settlement_tariff_pay": {
-                    "oneOf": [
-                      {
-                        "type": "string",
-                        "pattern": "^(0|[1-9][0-9]*)$"
-                      },
-                      {
-                        "type": "null"
-                      }
-                    ]
-                  },
-                  "total_escrow_reserved": {
-                    "type": "string",
-                    "pattern": "^(0|[1-9][0-9]*)$"
-                  },
-                  "total_miner_paid": {
-                    "type": "string",
-                    "pattern": "^(0|[1-9][0-9]*)$"
-                  },
-                  "total_refunded": {
-                    "type": "string",
-                    "pattern": "^(0|[1-9][0-9]*)$"
-                  },
-                  "total_burned": {
-                    "type": "string",
-                    "pattern": "^(0|[1-9][0-9]*)$"
-                  },
-                  "total_audit_earmarked": {
-                    "type": "string",
-                    "pattern": "^(0|[1-9][0-9]*)$"
-                  },
-                  "total_gn_credited": {
-                    "type": "string",
-                    "pattern": "^(0|[1-9][0-9]*)$"
-                  }
-                },
-                "required": [
-                  "channel_state",
-                  "settlement_tariff_pay",
-                  "total_escrow_reserved",
-                  "total_miner_paid",
-                  "total_refunded",
-                  "total_burned",
-                  "total_audit_earmarked",
-                  "total_gn_credited"
-                ],
-                "additionalProperties": false
-              },
-              "events": {
-                "type": "array",
-                "items": {
-                  "type": "object"
-                }
-              }
-            },
-            "required": [
-              "result",
-              "balances",
-              "issuance_burned",
-              "storage",
-              "events"
-            ],
-            "additionalProperties": false
+            "type": "object"
           },
           "alternatives": {
             "type": "array",
@@ -244,6 +136,10 @@
             "items": {
               "type": "string"
             }
+          },
+          "pending_reason": {
+            "type": "string",
+            "minLength": 1
           }
         },
         "required": [
@@ -267,9 +163,6 @@
               }
             },
             "then": {
-              "required": [
-                "alternatives"
-              ],
               "not": {
                 "required": [
                   "expected"
@@ -286,7 +179,19 @@
                     }
                   }
                 }
-              }
+              },
+              "anyOf": [
+                {
+                  "required": [
+                    "alternatives"
+                  ]
+                },
+                {
+                  "required": [
+                    "pending_reason"
+                  ]
+                }
+              ]
             }
           },
           {
@@ -302,112 +207,481 @@
                 "expected"
               ],
               "not": {
-                "required": [
-                  "alternatives"
+                "anyOf": [
+                  {
+                    "required": [
+                      "alternatives"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "pending_reason"
+                    ]
+                  }
                 ]
               },
-              "properties": {
-                "adapter": {
-                  "const": "compute-channel"
-                },
-                "family": {
-                  "enum": [
-                    "force-finalize",
-                    "non-delivery-timeout"
-                  ]
-                },
-                "decision": {
+              "oneOf": [
+                {
                   "properties": {
-                    "id": {
-                      "const": "D-0422"
+                    "adapter": {
+                      "const": "compute-channel"
+                    },
+                    "family": {
+                      "enum": [
+                        "force-finalize",
+                        "non-delivery-timeout"
+                      ]
+                    },
+                    "decision": {
+                      "properties": {
+                        "id": {
+                          "const": "D-0422"
+                        }
+                      }
+                    },
+                    "input": {
+                      "type": "object",
+                      "properties": {
+                        "balances": {
+                          "type": "object",
+                          "properties": {
+                            "agent": {
+                              "type": "string",
+                              "pattern": "^(0|[1-9][0-9]*)$"
+                            },
+                            "miner": {
+                              "type": "string",
+                              "pattern": "^(0|[1-9][0-9]*)$"
+                            },
+                            "challenger": {
+                              "type": "string",
+                              "pattern": "^(0|[1-9][0-9]*)$"
+                            },
+                            "pallet": {
+                              "type": "string",
+                              "pattern": "^(0|[1-9][0-9]*)$"
+                            }
+                          },
+                          "required": [
+                            "agent",
+                            "miner",
+                            "challenger",
+                            "pallet"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "storage": {
+                          "type": "object",
+                          "properties": {
+                            "channel_state": {
+                              "const": "Open"
+                            },
+                            "escrow": {
+                              "type": "string",
+                              "pattern": "^(0|[1-9][0-9]*)$"
+                            }
+                          },
+                          "required": [
+                            "channel_state",
+                            "escrow"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "profile": {
+                          "type": "object",
+                          "properties": {
+                            "audit_fee_split_ppm": {
+                              "const": 0
+                            },
+                            "base_per_turn": {
+                              "const": "1"
+                            },
+                            "rate_g": {
+                              "const": "1"
+                            },
+                            "phi_percent": {
+                              "const": 20
+                            },
+                            "da_status": {
+                              "const": "Available"
+                            }
+                          },
+                          "required": [
+                            "audit_fee_split_ppm",
+                            "base_per_turn",
+                            "rate_g",
+                            "phi_percent",
+                            "da_status"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      "required": [
+                        "balances",
+                        "storage",
+                        "profile"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "expected": {
+                      "type": "object",
+                      "properties": {
+                        "result": {
+                          "enum": [
+                            "Ok",
+                            "TariffExceedsEscrow"
+                          ]
+                        },
+                        "balances": {
+                          "type": "object",
+                          "properties": {
+                            "agent": {
+                              "type": "string",
+                              "pattern": "^(0|[1-9][0-9]*)$"
+                            },
+                            "miner": {
+                              "type": "string",
+                              "pattern": "^(0|[1-9][0-9]*)$"
+                            },
+                            "challenger": {
+                              "type": "string",
+                              "pattern": "^(0|[1-9][0-9]*)$"
+                            },
+                            "pallet": {
+                              "type": "string",
+                              "pattern": "^(0|[1-9][0-9]*)$"
+                            }
+                          },
+                          "required": [
+                            "agent",
+                            "miner",
+                            "challenger",
+                            "pallet"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "issuance_burned": {
+                          "type": "string",
+                          "pattern": "^(0|[1-9][0-9]*)$"
+                        },
+                        "storage": {
+                          "type": "object",
+                          "properties": {
+                            "channel_state": {
+                              "enum": [
+                                "Open",
+                                "Closed"
+                              ]
+                            },
+                            "settlement_tariff_pay": {
+                              "oneOf": [
+                                {
+                                  "type": "string",
+                                  "pattern": "^(0|[1-9][0-9]*)$"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "total_escrow_reserved": {
+                              "type": "string",
+                              "pattern": "^(0|[1-9][0-9]*)$"
+                            },
+                            "total_miner_paid": {
+                              "type": "string",
+                              "pattern": "^(0|[1-9][0-9]*)$"
+                            },
+                            "total_refunded": {
+                              "type": "string",
+                              "pattern": "^(0|[1-9][0-9]*)$"
+                            },
+                            "total_burned": {
+                              "type": "string",
+                              "pattern": "^(0|[1-9][0-9]*)$"
+                            },
+                            "total_audit_earmarked": {
+                              "type": "string",
+                              "pattern": "^(0|[1-9][0-9]*)$"
+                            },
+                            "total_gn_credited": {
+                              "type": "string",
+                              "pattern": "^(0|[1-9][0-9]*)$"
+                            }
+                          },
+                          "required": [
+                            "channel_state",
+                            "settlement_tariff_pay",
+                            "total_escrow_reserved",
+                            "total_miner_paid",
+                            "total_refunded",
+                            "total_burned",
+                            "total_audit_earmarked",
+                            "total_gn_credited"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "events": {
+                          "type": "array",
+                          "items": {
+                            "type": "object"
+                          }
+                        }
+                      },
+                      "required": [
+                        "result",
+                        "balances",
+                        "issuance_burned",
+                        "storage",
+                        "events"
+                      ],
+                      "additionalProperties": false
                     }
                   }
                 },
-                "input": {
-                  "type": "object",
+                {
                   "properties": {
-                    "balances": {
+                    "adapter": {
+                      "const": "paid-storage-arithmetic"
+                    },
+                    "family": {
+                      "const": "rent-ceil"
+                    },
+                    "decision": {
+                      "properties": {
+                        "id": {
+                          "const": "D-0524"
+                        }
+                      }
+                    },
+                    "input": {
                       "type": "object",
                       "properties": {
-                        "agent": {
-                          "type": "string",
-                          "pattern": "^(0|[1-9][0-9]*)$"
+                        "balances": {
+                          "type": "object",
+                          "properties": {
+                            "reservation_escrow": {
+                              "type": "string",
+                              "pattern": "^(0|[1-9][0-9]*)$"
+                            },
+                            "payer_refund": {
+                              "type": "string",
+                              "pattern": "^(0|[1-9][0-9]*)$"
+                            },
+                            "provider_a": {
+                              "type": "string",
+                              "pattern": "^(0|[1-9][0-9]*)$"
+                            },
+                            "provider_b": {
+                              "type": "string",
+                              "pattern": "^(0|[1-9][0-9]*)$"
+                            },
+                            "provider_c": {
+                              "type": "string",
+                              "pattern": "^(0|[1-9][0-9]*)$"
+                            },
+                            "provider_d": {
+                              "type": "string",
+                              "pattern": "^(0|[1-9][0-9]*)$"
+                            },
+                            "provider_e": {
+                              "type": "string",
+                              "pattern": "^(0|[1-9][0-9]*)$"
+                            },
+                            "provider_f": {
+                              "type": "string",
+                              "pattern": "^(0|[1-9][0-9]*)$"
+                            }
+                          },
+                          "required": [
+                            "reservation_escrow",
+                            "payer_refund",
+                            "provider_a"
+                          ],
+                          "additionalProperties": false
                         },
-                        "miner": {
-                          "type": "string",
-                          "pattern": "^(0|[1-9][0-9]*)$"
-                        },
-                        "challenger": {
-                          "type": "string",
-                          "pattern": "^(0|[1-9][0-9]*)$"
-                        },
-                        "pallet": {
-                          "type": "string",
-                          "pattern": "^(0|[1-9][0-9]*)$"
+                        "storage": {
+                          "type": "object",
+                          "properties": {
+                            "reserved_bytes": {
+                              "type": "string",
+                              "pattern": "^(0|[1-9][0-9]*)$"
+                            },
+                            "tranches": {
+                              "type": "array",
+                              "minItems": 1,
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "start": {
+                                    "type": "integer",
+                                    "minimum": 0
+                                  },
+                                  "term_blocks": {
+                                    "type": "integer",
+                                    "minimum": 1
+                                  },
+                                  "rent_num": {
+                                    "type": "string",
+                                    "pattern": "^(0|[1-9][0-9]*)$"
+                                  },
+                                  "rent_den": {
+                                    "type": "string",
+                                    "pattern": "^[1-9][0-9]*$"
+                                  }
+                                },
+                                "required": [
+                                  "start",
+                                  "term_blocks",
+                                  "rent_num",
+                                  "rent_den"
+                                ],
+                                "additionalProperties": false
+                              }
+                            }
+                          },
+                          "required": [
+                            "reserved_bytes",
+                            "tranches"
+                          ],
+                          "additionalProperties": false
                         }
                       },
                       "required": [
-                        "agent",
-                        "miner",
-                        "challenger",
-                        "pallet"
+                        "balances",
+                        "storage"
                       ],
                       "additionalProperties": false
                     },
-                    "storage": {
+                    "extrinsics": {
+                      "type": "array",
+                      "minItems": 1,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "call": {
+                            "const": "rent_interval"
+                          },
+                          "origin": {
+                            "enum": [
+                              "provider_a",
+                              "provider_b",
+                              "provider_c",
+                              "provider_d",
+                              "provider_e",
+                              "provider_f"
+                            ]
+                          },
+                          "at_block": {
+                            "type": "integer",
+                            "minimum": 1
+                          },
+                          "args": {
+                            "type": "object",
+                            "properties": {
+                              "start": {
+                                "type": "integer",
+                                "minimum": 0
+                              },
+                              "end": {
+                                "type": "integer",
+                                "minimum": 1
+                              },
+                              "accepted": {
+                                "type": "boolean"
+                              }
+                            },
+                            "required": [
+                              "start",
+                              "end",
+                              "accepted"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "required": [
+                          "call",
+                          "origin",
+                          "at_block",
+                          "args"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "expected": {
                       "type": "object",
                       "properties": {
-                        "channel_state": {
-                          "const": "Open"
+                        "balances": {
+                          "type": "object",
+                          "properties": {
+                            "reservation_escrow": {
+                              "type": "string",
+                              "pattern": "^(0|[1-9][0-9]*)$"
+                            },
+                            "payer_refund": {
+                              "type": "string",
+                              "pattern": "^(0|[1-9][0-9]*)$"
+                            },
+                            "provider_a": {
+                              "type": "string",
+                              "pattern": "^(0|[1-9][0-9]*)$"
+                            },
+                            "provider_b": {
+                              "type": "string",
+                              "pattern": "^(0|[1-9][0-9]*)$"
+                            },
+                            "provider_c": {
+                              "type": "string",
+                              "pattern": "^(0|[1-9][0-9]*)$"
+                            },
+                            "provider_d": {
+                              "type": "string",
+                              "pattern": "^(0|[1-9][0-9]*)$"
+                            },
+                            "provider_e": {
+                              "type": "string",
+                              "pattern": "^(0|[1-9][0-9]*)$"
+                            },
+                            "provider_f": {
+                              "type": "string",
+                              "pattern": "^(0|[1-9][0-9]*)$"
+                            }
+                          },
+                          "required": [
+                            "reservation_escrow",
+                            "payer_refund",
+                            "provider_a"
+                          ],
+                          "additionalProperties": false
                         },
-                        "escrow": {
+                        "interval_earnings": {
+                          "type": "array",
+                          "minItems": 1,
+                          "items": {
+                            "type": "string",
+                            "pattern": "^(0|[1-9][0-9]*)$"
+                          }
+                        },
+                        "funded_rent": {
+                          "type": "string",
+                          "pattern": "^(0|[1-9][0-9]*)$"
+                        },
+                        "paid_rent": {
                           "type": "string",
                           "pattern": "^(0|[1-9][0-9]*)$"
                         }
                       },
                       "required": [
-                        "channel_state",
-                        "escrow"
-                      ],
-                      "additionalProperties": false
-                    },
-                    "profile": {
-                      "type": "object",
-                      "properties": {
-                        "audit_fee_split_ppm": {
-                          "const": 0
-                        },
-                        "base_per_turn": {
-                          "const": "1"
-                        },
-                        "rate_g": {
-                          "const": "1"
-                        },
-                        "phi_percent": {
-                          "const": 20
-                        },
-                        "da_status": {
-                          "const": "Available"
-                        }
-                      },
-                      "required": [
-                        "audit_fee_split_ppm",
-                        "base_per_turn",
-                        "rate_g",
-                        "phi_percent",
-                        "da_status"
+                        "balances",
+                        "interval_earnings",
+                        "funded_rent",
+                        "paid_rent"
                       ],
                       "additionalProperties": false
                     }
-                  },
-                  "required": [
-                    "balances",
-                    "storage",
-                    "profile"
-                  ],
-                  "additionalProperties": false
+                  }
                 }
-              }
+              ]
             }
           }
         ]

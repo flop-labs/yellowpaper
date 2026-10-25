@@ -1,5 +1,5 @@
 # Copyright 2026 FLOP Network
-# SPDX-License-Identifier: Apache-2.0
+# SPDX-License-Identifier: MIT OR Apache-2.0
 # /// script
 # requires-python = ">=3.12"
 # dependencies = []

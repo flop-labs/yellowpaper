@@ -390,7 +390,7 @@ and `next_deadline_inv` support `S.reachable_deadline`.
 | R9.3 | Separate subsidy: 5 eras (8→4→2→1→0.5 per recipient), zero from era 5 | — | — | `pallets/pallets/flop-subsidy` |
 | R9.4 | Work-first genesis (airdrops only) | — | — | genesis config |
 | R9.5 | Committee premium inside the validator pool (no second mint) | — | — | `validators::distribute_consensus_reward` |
-| R9.6 | Tx-fee split: 10% burn / 100% remainder to author | — | `economics/tokenomics-supply::inv_burn_tier_monotone` | `pallets/pallets/transaction-fees`; runtime `DealWithFees` |
+| R9.6 | Tx-fee split: 0% burn / 100% to author (D-0529) | — | `economics/tokenomics-supply::inv_burn_tier_monotone` | `pallets/pallets/transaction-fees`; runtime `DealWithFees` |
 | Appendix D | Chain inclusion-fee terms: base + encoded length + adjusted weight; tip separate | — | — | runtime `TransactionPayment` (`WeightToFee`, `LengthToFee`, `ZKVFeeUpdate`) |
 | R9.7–R9.11 | Fixed genesis/allocation; current-runtime de-sudo (**arbitrary `set_code` outside model**) | `Genesis::valid_genesis_is_airdrop_only`, `premint_not_valid`, `airdrop_le_total`, `baseUnit_pos`, `desudo_irreversible` (**modeled transitions only**) | — | genesis chain-spec; `pallet_sudo` removal |
 | §9.2 demand | Payer-authorized demanded/settled work (**does not establish independent demand; open E.49**) | — | — | work-crediting paths; synthetic-task floor |
@@ -423,7 +423,7 @@ direction. Its invariants and the Lean premises do not establish deployed pair c
 | R11.2a | Authenticated submitted-turn sum equals claimed `aggregate_gn` (**not execution/completeness**) | — | `channel/session-gn-integrity::inv_no_overclaim` | `compute-channel: verified_work_from_turns` |
 | R11.2b | Current-profile channel receipts issue no public work credit | — | `channel/session-gn-integrity::inv_no_public_credit` | `compute-channel` payout helpers; runtime `cooperative_work_credit` regressions |
 | §11.3 slashing | Single-authority slash table; value-coupled floor | `CoCVoC::CoCVoC.value_coupled_security` | — | `validators: do_slash` |
-| §11.3 curve/waterfall | Correlated equivocation curve; delegated-loss order (operator→delegators→sponsors) | `DelegatedSlashing::waterfall_conserves`, `equivPenalty_mono` | — | `validators: do_slash` |
+| §11.3 curve/waterfall | Correlated equivocation curve; self-stake-first loss order (operator self-stake → E.32 sponsors; third-party delegation deprecated per D-0530) | `DelegatedSlashing::waterfall_conserves`, `equivPenalty_mono` | — | `validators: do_slash` |
 | INV-02 / fail_task / INV-M06 | Session cap; fail-task authority; payout atomicity | `SessionEnforcement::transfers_within_cap`, `fails_within_rate`, `distribute_atomic` | — | `agent-wallet`; `flop-poui`; `distribute_from_escrow` |
 
 ## §12 — Sessions & settlement

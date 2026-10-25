@@ -17,6 +17,7 @@ stated assumptions and status.
 | **Claim evidence** | [`research/prepublication-evidence.md`](research/prepublication-evidence.md) · [`ledger`](evidence/yellowpaper-claim-evidence.json) · [`reproducer`](evidence/reproduce.py) |
 | **Parameter source** | [`params/flop-protocol-params.yaml`](params/flop-protocol-params.yaml) · [`table generator`](scripts/gen_param_table.py) |
 | **Wire-format vectors** | [`evidence/wire-format-v1.json`](evidence/wire-format-v1.json) · [`schema`](evidence/wire-format-v1.schema.json) |
+| **Money-path vectors** | [`evidence/money-path-v1.json`](evidence/money-path-v1.json) · [`schema`](evidence/money-path-v1.schema.json) · [`case guide`](evidence/money-path-v1.md) · [`checker`](evidence/check-money-path-vectors.py) |
 | **Formal claims and publication status** | [`evidence/proof-bundle/README.md`](evidence/proof-bundle/README.md) · [`yellowpaper-attribution.md`](yellowpaper-attribution.md) |
 | **Give feedback** | [Open an issue](../../issues/new/choose) |
 | **Report a vulnerability** | **Not** an issue — see [`SECURITY.md`](SECURITY.md) |
@@ -70,6 +71,9 @@ The [wire-format corpus](evidence/wire-format-v1.json) freezes Appendix F's posi
 cases. Check it without the private repository using
 `uv run --script evidence/generate-wire-format-vectors.py --check`; the adjacent
 `evidence/compute-channel.py` is the standalone Python implementation used by that command.
+Validate the [money-path corpus](evidence/money-path-v1.md) structure with
+`uv run --script evidence/check-money-path-vectors.py`; executable amount conformance requires the
+source repository's pallet runner.
 `uv run --script scripts/gen_param_table.py --check` likewise checks Appendix A against the parameter
 YAML here. `scripts/check_params.py` and `scripts/check_param_identities.py` check the YAML against
 implementation and proof files that exist only in the authoring repository, so they report those files

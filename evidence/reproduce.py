@@ -24,7 +24,7 @@ from pathlib import Path
 PERBILL = 1_000_000_000
 THRESHOLD_PARTS = 666_666_666
 RUNTIME_PALLET_INDICES = {"FlopPoui": 86, "ComputeChannel": 103}
-RUNTIME_MAX_ACTIVE_VALIDATORS = 200
+RUNTIME_MAX_ACTIVE_VALIDATORS = 1_000
 FINALITY_COMMITTEE_CAP = 100
 NORMAL_MAX_BYTES = 5 * 1024 * 1024 * 75 // 100
 OPERATIONAL_MAX_BYTES = 5 * 1024 * 1024
@@ -51,7 +51,7 @@ SOURCE_FACTS = {
         "pub const ChannelMaxMerklePathLen: u32 = 64;",
         "FlopPoui: pallet_flop_poui = 86,",
         "ComputeChannel: pallet_compute_channel = 103,",
-        "pub const MAX_ACTIVE_VALIDATORS: u32 = 200;",
+        "pub const MAX_ACTIVE_VALIDATORS: u32 = 1_000;",
         "pub const AlephMaxCommittee: u32 = 100;",
         "::max_with_normal_ratio(5 * 1024 * 1024, NORMAL_DISPATCH_RATIO)",
         "const NORMAL_DISPATCH_RATIO: Perbill = Perbill::from_percent(75);",
@@ -196,26 +196,26 @@ WEIGHT_SCHEMAS = {
     ("pallets/pallets/compute-channel/src/weights.rs", "open_channel"): {
         "parameter": None,
         "base_ref_time": 86_740_000,
-        "proof_size": 27_132,
+        "proof_size": 31_228,
         "per_unit_ref_time": 0,
-        "reads": 10,
+        "reads": 11,
         "writes": 9,
     },
     ("pallets/pallets/compute-channel/src/weights.rs", "settle"): {
         "parameter": "n: u32",
         "base_ref_time": 77_180_000,
-        "proof_size": 61_416,
+        "proof_size": 109_416,
         "per_unit_ref_time": 35_000_000,
         "reads": 24,
-        "writes": 8,
+        "writes": 9,
     },
     ("pallets/pallets/compute-channel/src/weights.rs", "certificate_settle"): {
         "parameter": None,
         "base_ref_time": 85_000_000,
-        "proof_size": 67_152,
+        "proof_size": 115_152,
         "per_unit_ref_time": 0,
         "reads": 28,
-        "writes": 7,
+        "writes": 8,
     },
     ("pallets/pallets/compute-channel/src/weights.rs", "force_settle"): {
         "parameter": "n: u32",
@@ -228,10 +228,10 @@ WEIGHT_SCHEMAS = {
     ("pallets/pallets/compute-channel/src/weights.rs", "finalize"): {
         "parameter": None,
         "base_ref_time": 55_440_000,
-        "proof_size": 59_378,
+        "proof_size": 107_378,
         "per_unit_ref_time": 0,
         "reads": 21,
-        "writes": 11,
+        "writes": 12,
     },
     ("pallets/pallets/compute-channel/src/weights.rs", "release_forward_bond"): {
         "parameter": "n: u32",
@@ -244,10 +244,10 @@ WEIGHT_SCHEMAS = {
     ("pallets/pallets/compute-channel/src/weights.rs", "timeout"): {
         "parameter": None,
         "base_ref_time": 45_000_000,
-        "proof_size": 22_788,
+        "proof_size": 70_788,
         "per_unit_ref_time": 0,
         "reads": 10,
-        "writes": 9,
+        "writes": 10,
     },
     ("pallets/pallets/compute-channel/src/weights.rs", "open_dispute"): {
         "parameter": None,
@@ -260,10 +260,10 @@ WEIGHT_SCHEMAS = {
     ("pallets/pallets/compute-channel/src/weights.rs", "respond_dispute"): {
         "parameter": None,
         "base_ref_time": 131_520_000,
-        "proof_size": 20_328,
+        "proof_size": 68_328,
         "per_unit_ref_time": 0,
         "reads": 7,
-        "writes": 3,
+        "writes": 4,
     },
     ("pallets/pallets/compute-channel/src/weights.rs", "submit_toploc_evidence"): {
         "parameter": None,
@@ -880,7 +880,7 @@ def direct_rail_analysis() -> dict:
             "supported_sizes_exercised": [100, RUNTIME_MAX_ACTIVE_VALIDATORS],
             "runtime_max": RUNTIME_MAX_ACTIVE_VALIDATORS,
             "unsupported_boundary": {
-                "active_validators": 1_000,
+                "active_validators": 1_001,
                 "status": "not a supported active-set state; excluded from capacity rows",
             },
         },

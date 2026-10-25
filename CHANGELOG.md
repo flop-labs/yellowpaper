@@ -1,12 +1,55 @@
 # Yellowpaper changelog
 
 The initial public release is **0.5.0 (draft)**. No version has been published yet. Prepublication
-edits are folded into the initial text; there are no public errata or patch releases to record.
-After publication, use Semantic Versioning and Keep a Changelog, preserving released versions.
+edits are folded into the initial text.
+After publication, use [Semantic Versioning](https://semver.org/spec/v2.0.0.html) and
+[Keep a Changelog](https://keepachangelog.com/en/1.1.0/), preserving released versions.
 
 ## [Unreleased]
 
 ### Changed
+
+- State in §15.5 R15.5 that proven-fault slash proceeds at the active-set floor are confiscated and transferred to the Foundation (R9.10) rather than burned.
+
+- Propagate the zero-burn, operator self-stake-only, and off-chain referral rulings to the normative
+  spec and canonical parameters (D-0529, D-0530, D-0531; #2792, #1945, #1358): set
+  `tx_fee_burn_percent_live` (`BurnFees`) to 0% with 100% of live transaction fees and tips routed to
+  the block author (§9.1 R9.6, Appendix D, Appendix H); replace legacy "full-burn" slash terminology
+  with 100% routing to `FLOPFoundationAccount` (§11.3, §13.2, §15.7, Appendix A); prohibit third-party
+  delegated staking into validators and miners, deprecate delegation extrinsics/caps and operator
+  commissions (`miner_staking::delegate`, `max_delegators_per_miner`, `miner_commission_cap_percent`),
+  and formalize the 5% duration-locked community staking pool across seven lock tiers without
+  slashing risk (§2.3, §6.1, §9.1 R9.12, §11.3, §15.2, E.32, E.40, G.3); and record that the
+  800,000,000 FLOP `genesis_reserve` funds the off-chain explorer referral leaderboard and periodic
+  lotteries in place of on-chain referral commissions (§9.1 R9.4, E.38).
+
+- Let sponsors post an operator's whole registration bond on devnet and testnet (R6.1a; D-0528). The
+  bond stays frozen in the sponsor account and is refunded only to the sponsor. It counts as miner or
+  validator self-stake only on runtimes built with `sponsored_self_stake_enabled`. Narrow E.32 to its
+  mainnet questions; index the new calls in G.3 and their status in H.1.
+
+- Reconcile normative contradictions surfaced by the 2026-10-13 mirror sync (#2648): align §15.5,
+  E.56 and H.5 with the implemented `validator_min_active_validators` = 4 removal/rotation floor and
+  10% churn cap (#1727) while keeping the D-0507/D-0508/E.42 policy questions open; reconcile §9.3
+  R9.9, §15.5 R15.5/R15.5b and Appendix G.3 on active-set entry paths (`rotate` promotion from
+  `ValidatorQueue` vs direct `un_jail`/`rejoin` restoration under `validator_active_set_cap`, and
+  rotation ejection thawing self-stake before re-registration); align §9, R9.2, R9.3, Appendix A and
+  Appendix D cumulative emission and subsidy totals with the runtime's `era(b) = ⌊b / H⌋` boundary
+  and unrewarded genesis block 0 (R9.7); define the +9%/yr validator stake baseline's annual
+  `31,536,000`-block boundary, integer floor formula and 1%-of-`total_issuance` cap in §15.2; update
+  §13.2 V11 and E.57 to compose `W` against R1.2a's multi-round bisection dispute lifetime (`8 d 20 h`);
+  define Validator grant unlocked amount (`P − S`) and slashed-principal accounting `S` in §8.2
+  R8.7/R8.8; and clarify in §11.2 R11.2b and §8.2 R8.7 that settled-session airdrop unlock/spend
+  credit is private payment-denominated vesting credit distinct from public `G_n` work credit.
+
+- Credit miner block rewards toward the Miner airdrop unlock (R8.7; D-0527, superseding D-0517
+  item 1). A Miner grant now unlocks one FLOP per FLOP of the miner-leg block rewards minted to the
+  grantee, counted once the distribution block is finalized, as well as per FLOP of its settled
+  channel payouts after the dispute window. Other block-reward legs, the subsidy, transaction fees, refunds, penalties and
+  bonds still earn nothing.
+
+- Mark INV-M06 payout atomicity LIVE in §11.1 and H.5: channel settlement now reverts when the
+  refund-penalty burn fails, as it already did for the miner and refund transfers.
 
 - Name RTMR3 as the only accepted measurement path for the model root (§3.3 step 2), matching the
   step 3 verifier and D-0404.
@@ -25,7 +68,7 @@ After publication, use Semantic Versioning and Keep a Changelog, preserving rele
   historical earned rent, failed or forfeited deltas refund the payer, and new tariffs use separate
   funded tranches. Supersede independent provider ceilings; add seven executable balance vectors.
 
-- Dispose implemented HTLC pair directions as target-only for initial publication (E.48, #1498).
+- Describe implemented HTLC pair directions as target-only for initial publication (E.48).
   Preserve cross-leg late-claim, finality-stall and failed-payout counterexamples, qualify the local
   formal models, and add focused pallet/contract expiry-ordering tests and a reproducible pair gate.
 
@@ -36,18 +79,20 @@ After publication, use Semantic Versioning and Keep a Changelog, preserving rele
   drawn from locked principal goes to the `payable` first and is refunded first, back to the grant as frozen
   principal. E.38 no longer holds the Agent horizon.
 
-- Make current-profile channel settlements payment-only (R11.2b, task 1494). Receipt claims no
+- Make current-profile channel settlements payment-only (§11.2 R11.2b). Receipt claims no
   longer feed public work rewards or performance vesting, including unilateral/DA-void payout.
-  Historical recovery and future audited credit remain open; the distinct decision ID awaits approval.
+  Historical recovery and future audited credit remain open.
 
 - Tighten the Appendix F vector schema to require canonical fields, byte widths, integer ranges,
   case identities, and coverage. Wide integers use decimal strings so JSON consumers preserve
   their exact values; the public generator also checks duplicate identities.
+- Protect Ephemeral DA blobs from pruning while any usage pin remains, matching Leased blobs
+  (R5.3d; D-0521). Pins do not extend expiry or admit new usage after the retention deadline.
 
 - Replace §8.2's Miner and Validator airdrop unlock (R8.7, R8.8; D-0517). A Miner grant is a quarter
   liquid at its start and unlocks the rest one FLOP per FLOP it receives as miner from settled
-  sessions once their dispute window passes, with no end block; block rewards earn no credit, and the performance adjustment
-  is retired. A Validator grant stays frozen until the first halving, then grants release one per day
+  sessions once their dispute window passes, with no end block (D-0527 adds miner block rewards), and
+  the performance adjustment is retired. A Validator grant stays frozen until the first halving, then grants release one per day
   without unbonding; none releases until E.38 fixes the order. Only Agent grants may still spend
   locked principal on compute; a miner may bond its locked principal as its own self-stake.
 - Make block rewards and the subsidy liquid on issue (R9.13; D-0518). The miner and validator legs and
@@ -63,7 +108,7 @@ After publication, use Semantic Versioning and Keep a Changelog, preserving rele
 
 ### Added
 
-- Ratified D-0519 (owner, 2026-10-04): paid-storage service lanes close at a fixed boundary with
+- Specify paid-storage service lanes that close at a fixed boundary with
   a funding-pinned claim deadline on the finalized prefix. Only the lane's provider redeems, with
   strict sequence, counter and amount checks, including after reassignment. Otherwise-valid
   post-close signatures remain payable within the unspent budget until the deadline; finalization

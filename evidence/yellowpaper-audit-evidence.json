@@ -489,10 +489,10 @@
       "references": [
         {
           "fragment": "Self::check_reservation_cap(&agent, escrow)?;",
-          "line": 1203
+          "line": 1270
         }
       ],
-      "sha256": "34dbc848f5090fa33075b701c462aab13cf3379c7762addd07bc487027263847",
+      "sha256": "2d285c8637d70f8213b139d64793439895c65d11cc57a00e5586d05eafda2b0c",
       "span": [
         "pub fn open_channel(",
         "pub fn top_up_escrow("
@@ -503,10 +503,10 @@
       "references": [
         {
           "fragment": "T::Slasher::slash_fraud(&ch.miner, channel_id)?;",
-          "line": 2997
+          "line": 3069
         }
       ],
-      "sha256": "411b28a0265c4e4b1b55b54d5d992d7f0635041c69239da6b3f5b70341a26660",
+      "sha256": "49db76e3fa15400fc337502e17036133675a566df1e904182f8dbd311d756db2",
       "span": [
         "pub fn resolve_timeout_dispute(",
         "pub fn resolve_unrecoverable_transcript("
@@ -517,18 +517,18 @@
       "references": [
         {
           "fragment": "slash_proof_forgery_with_amount(",
-          "line": 1681
+          "line": 1802
         },
         {
           "fragment": "Error::<Runtime>::NotSlashable",
-          "line": 1693
+          "line": 1814
         },
         {
           "fragment": "Ok(0)",
-          "line": 1696
+          "line": 1817
         }
       ],
-      "sha256": "a0a03e190685a10defb5e67389eea9d0ffbf610c3ef070db58f1e1033115910e",
+      "sha256": "924c982ac3a56ee9df7b6ec98f9f7af6ec64cdd92142ef850ef892cc8419cbcf",
       "span": [
         "impl pallet_compute_channel::ChannelSlasher",
         "pub struct ChannelDaAvailability"
@@ -539,11 +539,11 @@
       "references": [
         {
           "fragment": "Perbill::from_percent(100)",
-          "line": 883
+          "line": 913
         },
         {
           "fragment": "true, // permanent blacklist",
-          "line": 885
+          "line": 915
         }
       ],
       "sha256": "cae435577c58d4b593b9dae87e5bfc254126ed7d08831021585d261cd42f1acc",
@@ -557,10 +557,10 @@
       "references": [
         {
           "fragment": "Self::miner_busy_count(&miner) == 0",
-          "line": 869
+          "line": 1067
         }
       ],
-      "sha256": "219c92da5b091e609b0b23597d10ecbb682ffa4414417a46e6a82740d43859f1",
+      "sha256": "8cefbe9f302daa5ad76512b8925a78facae080539d8163f44ff2d4e75ea0f1ca",
       "span": [
         "pub fn unbond(",
         "pub fn claim_unbonded("
@@ -571,10 +571,10 @@
       "references": [
         {
           "fragment": "SponsorPositionStatus::Active | SponsorPositionStatus::Unbonding",
-          "line": 2134
+          "line": 3132
         }
       ],
-      "sha256": "6f57d4b1559c694c0ce720bc4ecb156d101b82a162158ad4abfabbdf336a07e0",
+      "sha256": "6a9f70978cb61492d7b5b1c15feb749624a38a5c16022a96e5dd63b3b5df1610",
       "span": [
         "pub fn slash_sponsor_positions(",
         "pub fn slash_delegator_positions("

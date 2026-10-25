@@ -2,7 +2,7 @@
   "$schema": "money-path-v1.schema.json",
   "version": "flop-money-path-v1",
   "source": {
-    "yellowpaper_commit": "21e19594bbc3f73ba8d44e01fc872cb5ab37c1ae",
+    "yellowpaper_commit": "b904b8535619a596c7210cfef5dc5af1000fcd0d",
     "yellowpaper_path": "whitepaper/yellowpaper.md"
   },
   "vectors": [
@@ -642,73 +642,555 @@
     {
       "id": "rent-provider-replacement",
       "family": "rent-ceil",
-      "status": "pending",
+      "status": "landed",
       "decision": {
-        "id": null,
+        "id": "D-0524",
         "owner": "https://github.com/flop-labs/flop-core/issues/1965",
         "requirements": [
           "R5.4e",
-          "R5.4f"
+          "R5.4f",
+          "R5.4n"
         ]
       },
       "source_issue": "https://github.com/flop-labs/yellowpaper/issues/80",
-      "adapter": null,
+      "adapter": "paid-storage-arithmetic",
       "input": {
         "balances": {
           "reservation_escrow": "1",
+          "payer_refund": "0",
           "provider_a": "0",
           "provider_b": "0"
         },
         "storage": {
           "reserved_bytes": "1",
-          "term_blocks": 2,
-          "rent_num": "1",
-          "rent_den": "2",
-          "funded_rent": "1",
-          "assignments": [
+          "tranches": [
             {
-              "provider": "provider_a",
-              "accepted_blocks": 1
-            },
-            {
-              "provider": "provider_b",
-              "accepted_blocks": 1
+              "start": 0,
+              "term_blocks": 2,
+              "rent_num": "1",
+              "rent_den": "2"
             }
           ]
         }
       },
       "extrinsics": [
         {
-          "call": "release_rent (pending API)",
-          "origin": "chain",
+          "call": "rent_interval",
+          "origin": "provider_a",
           "at_block": 1,
           "args": {
-            "provider": "provider_a"
+            "start": 0,
+            "end": 1,
+            "accepted": true
           }
         },
         {
-          "call": "replace_provider (pending API)",
-          "origin": "chain",
+          "call": "rent_interval",
+          "origin": "provider_b",
           "at_block": 2,
           "args": {
-            "from": "provider_a",
-            "to": "provider_b"
-          }
-        },
-        {
-          "call": "release_rent (pending API)",
-          "origin": "chain",
-          "at_block": 2,
-          "args": {
-            "provider": "provider_b"
+            "start": 1,
+            "end": 2,
+            "accepted": true
           }
         }
       ],
-      "alternatives": [
-        "Carry fractional debt across the reservation slot when its provider changes.",
-        "Cap provider entitlement with an explicit allocation priority; identify who bears rounding dust.",
-        "Independent per-provider ceilings conflict with the one-unit funded cap; repeated releases to the same provider alone do not cover replacement."
-      ]
+      "expected": {
+        "balances": {
+          "reservation_escrow": "0",
+          "payer_refund": "0",
+          "provider_a": "1",
+          "provider_b": "0"
+        },
+        "interval_earnings": [
+          "1",
+          "0"
+        ],
+        "funded_rent": "1",
+        "paid_rent": "1"
+      }
+    },
+    {
+      "id": "rent-multiple-replacements",
+      "family": "rent-ceil",
+      "status": "landed",
+      "decision": {
+        "id": "D-0524",
+        "owner": "https://github.com/flop-labs/flop-core/issues/1965",
+        "requirements": [
+          "R5.4e",
+          "R5.4f",
+          "R5.4n"
+        ]
+      },
+      "source_issue": "https://github.com/flop-labs/yellowpaper/issues/80",
+      "adapter": "paid-storage-arithmetic",
+      "input": {
+        "balances": {
+          "reservation_escrow": "6",
+          "payer_refund": "0",
+          "provider_a": "0",
+          "provider_b": "0",
+          "provider_c": "0",
+          "provider_d": "0",
+          "provider_e": "0",
+          "provider_f": "0"
+        },
+        "storage": {
+          "reserved_bytes": "1",
+          "tranches": [
+            {
+              "start": 0,
+              "term_blocks": 10,
+              "rent_num": "3",
+              "rent_den": "5"
+            }
+          ]
+        }
+      },
+      "extrinsics": [
+        {
+          "call": "rent_interval",
+          "origin": "provider_a",
+          "at_block": 1,
+          "args": {
+            "start": 0,
+            "end": 1,
+            "accepted": true
+          }
+        },
+        {
+          "call": "rent_interval",
+          "origin": "provider_b",
+          "at_block": 2,
+          "args": {
+            "start": 1,
+            "end": 2,
+            "accepted": true
+          }
+        },
+        {
+          "call": "rent_interval",
+          "origin": "provider_c",
+          "at_block": 3,
+          "args": {
+            "start": 2,
+            "end": 3,
+            "accepted": true
+          }
+        },
+        {
+          "call": "rent_interval",
+          "origin": "provider_d",
+          "at_block": 4,
+          "args": {
+            "start": 3,
+            "end": 4,
+            "accepted": true
+          }
+        },
+        {
+          "call": "rent_interval",
+          "origin": "provider_e",
+          "at_block": 5,
+          "args": {
+            "start": 4,
+            "end": 5,
+            "accepted": true
+          }
+        },
+        {
+          "call": "rent_interval",
+          "origin": "provider_f",
+          "at_block": 10,
+          "args": {
+            "start": 5,
+            "end": 10,
+            "accepted": true
+          }
+        }
+      ],
+      "expected": {
+        "balances": {
+          "reservation_escrow": "0",
+          "payer_refund": "0",
+          "provider_a": "1",
+          "provider_b": "1",
+          "provider_c": "0",
+          "provider_d": "1",
+          "provider_e": "0",
+          "provider_f": "3"
+        },
+        "interval_earnings": [
+          "1",
+          "1",
+          "0",
+          "1",
+          "0",
+          "3"
+        ],
+        "funded_rent": "6",
+        "paid_rent": "6"
+      }
+    },
+    {
+      "id": "rent-failed-block",
+      "family": "rent-ceil",
+      "status": "landed",
+      "decision": {
+        "id": "D-0524",
+        "owner": "https://github.com/flop-labs/flop-core/issues/1965",
+        "requirements": [
+          "R5.4e",
+          "R5.4f",
+          "R5.4n"
+        ]
+      },
+      "source_issue": "https://github.com/flop-labs/yellowpaper/issues/80",
+      "adapter": "paid-storage-arithmetic",
+      "input": {
+        "balances": {
+          "reservation_escrow": "2",
+          "payer_refund": "0",
+          "provider_a": "0",
+          "provider_b": "0"
+        },
+        "storage": {
+          "reserved_bytes": "1",
+          "tranches": [
+            {
+              "start": 0,
+              "term_blocks": 4,
+              "rent_num": "1",
+              "rent_den": "2"
+            }
+          ]
+        }
+      },
+      "extrinsics": [
+        {
+          "call": "rent_interval",
+          "origin": "provider_a",
+          "at_block": 1,
+          "args": {
+            "start": 0,
+            "end": 1,
+            "accepted": false
+          }
+        },
+        {
+          "call": "rent_interval",
+          "origin": "provider_b",
+          "at_block": 4,
+          "args": {
+            "start": 1,
+            "end": 4,
+            "accepted": true
+          }
+        }
+      ],
+      "expected": {
+        "balances": {
+          "reservation_escrow": "0",
+          "payer_refund": "1",
+          "provider_a": "0",
+          "provider_b": "1"
+        },
+        "interval_earnings": [
+          "0",
+          "1"
+        ],
+        "funded_rent": "2",
+        "paid_rent": "1"
+      }
+    },
+    {
+      "id": "rent-repeat-assignment",
+      "family": "rent-ceil",
+      "status": "landed",
+      "decision": {
+        "id": "D-0524",
+        "owner": "https://github.com/flop-labs/flop-core/issues/1965",
+        "requirements": [
+          "R5.4e",
+          "R5.4f",
+          "R5.4n"
+        ]
+      },
+      "source_issue": "https://github.com/flop-labs/yellowpaper/issues/80",
+      "adapter": "paid-storage-arithmetic",
+      "input": {
+        "balances": {
+          "reservation_escrow": "1",
+          "payer_refund": "0",
+          "provider_a": "0",
+          "provider_b": "0"
+        },
+        "storage": {
+          "reserved_bytes": "1",
+          "tranches": [
+            {
+              "start": 0,
+              "term_blocks": 3,
+              "rent_num": "1",
+              "rent_den": "3"
+            }
+          ]
+        }
+      },
+      "extrinsics": [
+        {
+          "call": "rent_interval",
+          "origin": "provider_a",
+          "at_block": 1,
+          "args": {
+            "start": 0,
+            "end": 1,
+            "accepted": true
+          }
+        },
+        {
+          "call": "rent_interval",
+          "origin": "provider_b",
+          "at_block": 2,
+          "args": {
+            "start": 1,
+            "end": 2,
+            "accepted": true
+          }
+        },
+        {
+          "call": "rent_interval",
+          "origin": "provider_a",
+          "at_block": 3,
+          "args": {
+            "start": 2,
+            "end": 3,
+            "accepted": true
+          }
+        }
+      ],
+      "expected": {
+        "balances": {
+          "reservation_escrow": "0",
+          "payer_refund": "0",
+          "provider_a": "1",
+          "provider_b": "0"
+        },
+        "interval_earnings": [
+          "1",
+          "0",
+          "0"
+        ],
+        "funded_rent": "1",
+        "paid_rent": "1"
+      }
+    },
+    {
+      "id": "rent-partial-epochs",
+      "family": "rent-ceil",
+      "status": "landed",
+      "decision": {
+        "id": "D-0524",
+        "owner": "https://github.com/flop-labs/flop-core/issues/1965",
+        "requirements": [
+          "R5.4e",
+          "R5.4f",
+          "R5.4n"
+        ]
+      },
+      "source_issue": "https://github.com/flop-labs/yellowpaper/issues/80",
+      "adapter": "paid-storage-arithmetic",
+      "input": {
+        "balances": {
+          "reservation_escrow": "3",
+          "payer_refund": "0",
+          "provider_a": "0"
+        },
+        "storage": {
+          "reserved_bytes": "1",
+          "tranches": [
+            {
+              "start": 0,
+              "term_blocks": 5,
+              "rent_num": "3",
+              "rent_den": "5"
+            }
+          ]
+        }
+      },
+      "extrinsics": [
+        {
+          "call": "rent_interval",
+          "origin": "provider_a",
+          "at_block": 2,
+          "args": {
+            "start": 0,
+            "end": 2,
+            "accepted": true
+          }
+        },
+        {
+          "call": "rent_interval",
+          "origin": "provider_a",
+          "at_block": 5,
+          "args": {
+            "start": 2,
+            "end": 5,
+            "accepted": true
+          }
+        }
+      ],
+      "expected": {
+        "balances": {
+          "reservation_escrow": "0",
+          "payer_refund": "0",
+          "provider_a": "3"
+        },
+        "interval_earnings": [
+          "2",
+          "1"
+        ],
+        "funded_rent": "3",
+        "paid_rent": "3"
+      }
+    },
+    {
+      "id": "rent-extension-new-tariff",
+      "family": "rent-ceil",
+      "status": "landed",
+      "decision": {
+        "id": "D-0524",
+        "owner": "https://github.com/flop-labs/flop-core/issues/1965",
+        "requirements": [
+          "R5.4e",
+          "R5.4f",
+          "R5.4n"
+        ]
+      },
+      "source_issue": "https://github.com/flop-labs/yellowpaper/issues/80",
+      "adapter": "paid-storage-arithmetic",
+      "input": {
+        "balances": {
+          "reservation_escrow": "2",
+          "payer_refund": "0",
+          "provider_a": "0",
+          "provider_b": "0"
+        },
+        "storage": {
+          "reserved_bytes": "1",
+          "tranches": [
+            {
+              "start": 0,
+              "term_blocks": 2,
+              "rent_num": "1",
+              "rent_den": "2"
+            },
+            {
+              "start": 2,
+              "term_blocks": 2,
+              "rent_num": "1",
+              "rent_den": "3"
+            }
+          ]
+        }
+      },
+      "extrinsics": [
+        {
+          "call": "rent_interval",
+          "origin": "provider_a",
+          "at_block": 3,
+          "args": {
+            "start": 0,
+            "end": 3,
+            "accepted": true
+          }
+        },
+        {
+          "call": "rent_interval",
+          "origin": "provider_b",
+          "at_block": 4,
+          "args": {
+            "start": 3,
+            "end": 4,
+            "accepted": true
+          }
+        }
+      ],
+      "expected": {
+        "balances": {
+          "reservation_escrow": "0",
+          "payer_refund": "0",
+          "provider_a": "2",
+          "provider_b": "0"
+        },
+        "interval_earnings": [
+          "2",
+          "0"
+        ],
+        "funded_rent": "2",
+        "paid_rent": "2"
+      }
+    },
+    {
+      "id": "rent-close-partial-service",
+      "family": "rent-ceil",
+      "status": "landed",
+      "decision": {
+        "id": "D-0524",
+        "owner": "https://github.com/flop-labs/flop-core/issues/1965",
+        "requirements": [
+          "R5.4e",
+          "R5.4f",
+          "R5.4n"
+        ]
+      },
+      "source_issue": "https://github.com/flop-labs/yellowpaper/issues/80",
+      "adapter": "paid-storage-arithmetic",
+      "input": {
+        "balances": {
+          "reservation_escrow": "2",
+          "payer_refund": "0",
+          "provider_a": "0",
+          "provider_b": "0"
+        },
+        "storage": {
+          "reserved_bytes": "1",
+          "tranches": [
+            {
+              "start": 0,
+              "term_blocks": 4,
+              "rent_num": "1",
+              "rent_den": "2"
+            }
+          ]
+        }
+      },
+      "extrinsics": [
+        {
+          "call": "rent_interval",
+          "origin": "provider_a",
+          "at_block": 1,
+          "args": {
+            "start": 0,
+            "end": 1,
+            "accepted": true
+          }
+        }
+      ],
+      "expected": {
+        "balances": {
+          "reservation_escrow": "0",
+          "payer_refund": "1",
+          "provider_a": "1",
+          "provider_b": "0"
+        },
+        "interval_earnings": [
+          "1"
+        ],
+        "funded_rent": "2",
+        "paid_rent": "1"
+      }
     },
     {
       "id": "force-dominance",
@@ -832,6 +1314,386 @@
       "alternatives": [
         "Retain D-0430 full escrow refund and challenger-bond return, without fraud slash.",
         "Supersede D-0430 with an evidence-bound prefix payout and tail refund; no expected payout until ratified."
+      ]
+    },
+    {
+      "id": "reservation-slot-settle",
+      "family": "reservation-slot-release",
+      "status": "pending",
+      "decision": {
+        "id": null,
+        "owner": "https://github.com/flop-labs/flop-core/issues/2649",
+        "requirements": [
+          "R12.2"
+        ]
+      },
+      "source_issue": "https://github.com/flop-labs/yellowpaper/issues/48",
+      "adapter": null,
+      "input": {
+        "balances": {
+          "channel_escrow": "1000"
+        },
+        "storage": {
+          "channel_state": "Open",
+          "active_reservation_count": 1,
+          "channel_reservation_active": true
+        }
+      },
+      "extrinsics": [
+        {
+          "call": "settle",
+          "origin": "miner",
+          "at_block": 100,
+          "args": {
+            "channel": "channel_1"
+          }
+        }
+      ],
+      "pending_reason": "R12.2 requires this terminal path to free the identity slot exactly once; executable corpus coverage is pending."
+    },
+    {
+      "id": "reservation-slot-expire",
+      "family": "reservation-slot-release",
+      "status": "pending",
+      "decision": {
+        "id": null,
+        "owner": "https://github.com/flop-labs/flop-core/issues/2649",
+        "requirements": [
+          "R12.2"
+        ]
+      },
+      "source_issue": "https://github.com/flop-labs/yellowpaper/issues/48",
+      "adapter": null,
+      "input": {
+        "balances": {
+          "channel_escrow": "1000"
+        },
+        "storage": {
+          "channel_state": "Open",
+          "active_reservation_count": 1,
+          "channel_reservation_active": true
+        }
+      },
+      "extrinsics": [
+        {
+          "call": "expire",
+          "origin": "miner",
+          "at_block": 100,
+          "args": {
+            "channel": "channel_1"
+          }
+        }
+      ],
+      "pending_reason": "R12.2 requires this terminal path to free the identity slot exactly once; executable corpus coverage is pending."
+    },
+    {
+      "id": "reservation-slot-timeout",
+      "family": "reservation-slot-release",
+      "status": "pending",
+      "decision": {
+        "id": null,
+        "owner": "https://github.com/flop-labs/flop-core/issues/2649",
+        "requirements": [
+          "R12.2"
+        ]
+      },
+      "source_issue": "https://github.com/flop-labs/yellowpaper/issues/48",
+      "adapter": null,
+      "input": {
+        "balances": {
+          "channel_escrow": "1000"
+        },
+        "storage": {
+          "channel_state": "Open",
+          "active_reservation_count": 1,
+          "channel_reservation_active": true
+        }
+      },
+      "extrinsics": [
+        {
+          "call": "timeout",
+          "origin": "miner",
+          "at_block": 100,
+          "args": {
+            "channel": "channel_1"
+          }
+        }
+      ],
+      "pending_reason": "R12.2 requires this terminal path to free the identity slot exactly once; executable corpus coverage is pending."
+    },
+    {
+      "id": "reservation-slot-fraud",
+      "family": "reservation-slot-release",
+      "status": "pending",
+      "decision": {
+        "id": null,
+        "owner": "https://github.com/flop-labs/flop-core/issues/2649",
+        "requirements": [
+          "R12.2"
+        ]
+      },
+      "source_issue": "https://github.com/flop-labs/yellowpaper/issues/48",
+      "adapter": null,
+      "input": {
+        "balances": {
+          "channel_escrow": "1000"
+        },
+        "storage": {
+          "channel_state": "Settling",
+          "active_reservation_count": 1,
+          "channel_reservation_active": true
+        }
+      },
+      "extrinsics": [
+        {
+          "call": "fraud",
+          "origin": "challenger",
+          "at_block": 100,
+          "args": {
+            "channel": "channel_1"
+          }
+        }
+      ],
+      "pending_reason": "R12.2 requires this terminal path to free the identity slot exactly once; executable corpus coverage is pending."
+    },
+    {
+      "id": "reservation-slot-finalize",
+      "family": "reservation-slot-release",
+      "status": "pending",
+      "decision": {
+        "id": null,
+        "owner": "https://github.com/flop-labs/flop-core/issues/2649",
+        "requirements": [
+          "R12.2"
+        ]
+      },
+      "source_issue": "https://github.com/flop-labs/yellowpaper/issues/48",
+      "adapter": null,
+      "input": {
+        "balances": {
+          "channel_escrow": "1000"
+        },
+        "storage": {
+          "channel_state": "Settling",
+          "active_reservation_count": 1,
+          "channel_reservation_active": true
+        }
+      },
+      "extrinsics": [
+        {
+          "call": "finalize",
+          "origin": "miner",
+          "at_block": 100,
+          "args": {
+            "channel": "channel_1"
+          }
+        }
+      ],
+      "alternatives": [
+        "Finalize releases the in-flight slot exactly once when it closes a force-settled channel.",
+        "Finalize retains the slot until a separately specified release path; R12.2 currently enumerates settle/expire/timeout/fraud only."
+      ]
+    },
+    {
+      "id": "lease-withdraw-unpinned",
+      "family": "lease-withdrawal",
+      "status": "pending",
+      "decision": {
+        "id": null,
+        "owner": "https://github.com/flop-labs/flop-core/issues/2649",
+        "requirements": [
+          "R5.3f"
+        ]
+      },
+      "source_issue": "https://github.com/flop-labs/yellowpaper/issues/70",
+      "adapter": null,
+      "input": {
+        "balances": {
+          "publisher_deposit_held": "10000",
+          "extender_refund": "0"
+        },
+        "storage": {
+          "retention": "Leased",
+          "publisher": "publisher",
+          "lease_end": 100,
+          "pin_count": 0,
+          "outstanding_audit": false
+        }
+      },
+      "extrinsics": [
+        {
+          "call": "withdraw_lease",
+          "origin": "publisher",
+          "at_block": 10,
+          "args": {
+            "commitment": "leased_blob"
+          }
+        }
+      ],
+      "pending_reason": "R5.3f permits withdrawal before lease_end, removes the blob and refunds the full deposit to the publisher. Executable corpus coverage is pending."
+    },
+    {
+      "id": "lease-withdraw-pinned",
+      "family": "lease-withdrawal",
+      "status": "pending",
+      "decision": {
+        "id": null,
+        "owner": "https://github.com/flop-labs/flop-core/issues/2649",
+        "requirements": [
+          "R5.3f"
+        ]
+      },
+      "source_issue": "https://github.com/flop-labs/yellowpaper/issues/70",
+      "adapter": null,
+      "input": {
+        "balances": {
+          "publisher_deposit_held": "10000",
+          "extender_refund": "0"
+        },
+        "storage": {
+          "retention": "Leased",
+          "publisher": "publisher",
+          "lease_end": 100,
+          "pin_count": 1,
+          "outstanding_audit": false
+        }
+      },
+      "extrinsics": [
+        {
+          "call": "withdraw_lease",
+          "origin": "publisher",
+          "at_block": 10,
+          "args": {
+            "commitment": "leased_blob"
+          }
+        }
+      ],
+      "pending_reason": "R5.3f rejects withdrawal while pinned, preserving the blob and full deposit hold. Executable corpus coverage is pending."
+    },
+    {
+      "id": "lease-withdraw-nonpublisher",
+      "family": "lease-withdrawal",
+      "status": "pending",
+      "decision": {
+        "id": null,
+        "owner": "https://github.com/flop-labs/flop-core/issues/2649",
+        "requirements": [
+          "R5.3f"
+        ]
+      },
+      "source_issue": "https://github.com/flop-labs/yellowpaper/issues/70",
+      "adapter": null,
+      "input": {
+        "balances": {
+          "publisher_deposit_held": "10000",
+          "extender_refund": "0"
+        },
+        "storage": {
+          "retention": "Leased",
+          "publisher": "publisher",
+          "lease_end": 100,
+          "pin_count": 0,
+          "outstanding_audit": false
+        }
+      },
+      "extrinsics": [
+        {
+          "call": "withdraw_lease",
+          "origin": "extender",
+          "at_block": 10,
+          "args": {
+            "commitment": "leased_blob"
+          }
+        }
+      ],
+      "pending_reason": "R5.3f rejects any signer other than the publisher, preserving the blob and deposit hold. Executable corpus coverage is pending."
+    },
+    {
+      "id": "lease-withdraw-after-top-up",
+      "family": "lease-withdrawal",
+      "status": "pending",
+      "decision": {
+        "id": null,
+        "owner": "https://github.com/flop-labs/flop-core/issues/2649",
+        "requirements": [
+          "R5.3f"
+        ]
+      },
+      "source_issue": "https://github.com/flop-labs/yellowpaper/issues/70",
+      "adapter": null,
+      "input": {
+        "balances": {
+          "publisher_deposit_held": "10000",
+          "extender_refund": "0"
+        },
+        "storage": {
+          "retention": "Leased",
+          "publisher": "publisher",
+          "lease_end": 100,
+          "pin_count": 0,
+          "outstanding_audit": false
+        }
+      },
+      "extrinsics": [
+        {
+          "call": "top_up_lease",
+          "origin": "extender",
+          "at_block": 10,
+          "args": {
+            "commitment": "leased_blob",
+            "extra_blocks": 100
+          }
+        },
+        {
+          "call": "withdraw_lease",
+          "origin": "publisher",
+          "at_block": 11,
+          "args": {
+            "commitment": "leased_blob"
+          }
+        }
+      ],
+      "pending_reason": "R5.3f makes a third-party top-up extend only the prune horizon: the unpinned publisher can still withdraw before the extended lease_end, receives the full deposit, and owes no extender refund. Executable corpus coverage is pending."
+    },
+    {
+      "id": "lease-withdraw-outstanding-audit",
+      "family": "lease-withdrawal",
+      "status": "pending",
+      "decision": {
+        "id": null,
+        "owner": "https://github.com/flop-labs/flop-core/issues/2649",
+        "requirements": [
+          "R5.3f"
+        ]
+      },
+      "source_issue": "https://github.com/flop-labs/yellowpaper/issues/70",
+      "adapter": null,
+      "input": {
+        "balances": {
+          "publisher_deposit_held": "10000",
+          "extender_refund": "0"
+        },
+        "storage": {
+          "retention": "Leased",
+          "publisher": "publisher",
+          "lease_end": 100,
+          "pin_count": 0,
+          "outstanding_audit": true
+        }
+      },
+      "extrinsics": [
+        {
+          "call": "withdraw_lease",
+          "origin": "publisher",
+          "at_block": 10,
+          "args": {
+            "commitment": "leased_blob"
+          }
+        }
+      ],
+      "alternatives": [
+        "Withdrawal removes the blob and refunds the publisher under R5.3f; an already-issued audit remains independently resolvable under a future E.47 rule.",
+        "Withdrawal removes the blob and refunds the publisher under R5.3f; an already-issued audit is cancelled or otherwise discharged under a future E.47 rule."
       ]
     }
   ]

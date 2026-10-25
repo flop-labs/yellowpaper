@@ -7,7 +7,8 @@
 
 Reads `params/flop-protocol-params.yaml` (the single source of truth) and verifies
 that every enforced parameter's `expect` snippet is present in each implementation
-file. Fails (exit 1) if any implementation has drifted from the canonical value.
+file, ignoring whitespace between tokens. Fails (exit 1) if any implementation
+has drifted from the canonical value.
 
 Usage:
     uv run --script scripts/check_params.py            # check, print report
@@ -98,6 +99,15 @@ def _underscored(value) -> str:
     return str(value)
 
 
+def _count_snippet(text: str, expect: str) -> int:
+    """Count non-overlapping snippets, allowing whitespace between whole tokens."""
+    pattern = r"\s*".join(
+        rf"\b{re.escape(token)}\b" if re.fullmatch(r"\w+", token) else re.escape(token)
+        for token in re.findall(r"\w+|[^\w\s]", expect)
+    )
+    return len(re.findall(pattern, text))
+
+
 def main() -> int:
     quiet = "--quiet" in sys.argv
     spec = yaml.safe_load(CANON.read_text())
@@ -131,7 +141,7 @@ def main() -> int:
                 failures.append(f"[{name}] missing file: {impl['file']}")
                 continue
             text = fpath.read_text()
-            n = text.count(expect)
+            n = _count_snippet(text, expect)
             if want is not None:
                 if n != want:
                     failures.append(

@@ -117,13 +117,38 @@ def _strip_artifacts(text: str) -> str:
     return " ".join(text.split()).strip(" ,;·-")
 
 
+def _sentence_ends(text: str) -> list[int]:
+    """Candidate sentence ends, excluding decimals and common abbreviations."""
+    return [
+        match.start() + 1
+        for match in re.finditer(r"(?<=[a-z0-9)\]%])\.\s+[A-Z]", text)
+        if not re.search(r"\b(?:i\.e|e\.g|vs|cf|etc)\.$", text[: match.start() + 1], re.I)
+    ]
+
+
 def _first_sentence(text: str) -> str:
     text = _strip_artifacts(" ".join(str(text).split()))
-    # Cut at the first sentence break, but keep decimals / abbreviations intact.
-    m = re.search(r"(?<=[a-z0-9)\]%])\.\s+[A-Z]", text)
-    if m:
-        text = text[: m.start() + 1]
-    return text
+    ends = _sentence_ends(text)
+    return text[: ends[0]] if ends else text
+
+
+def description_errors(doc: str, params: list[dict]) -> list[str]:
+    """Reject description prefixes that stop inside a YAML sentence."""
+    descriptions = {
+        param["name"]: _cell(_strip_artifacts(param.get("description") or param.get("note") or ""))
+        for param in params
+    }
+    errors = []
+    for line in doc.splitlines():
+        match = re.match(r'\| <a id="param-([\w]+)"></a>', line)
+        if not match or match.group(1) not in descriptions:
+            continue
+        name = match.group(1)
+        cell = re.split(r"(?<!\\)\|", line)[-2].strip()
+        full = descriptions[name]
+        if cell != full and full.startswith(cell) and len(cell) not in _sentence_ends(full):
+            errors.append(f"{name}: Appendix A description ends mid-sentence: {cell!r}")
+    return errors
 
 
 def _section_link(text: str, sections: dict[str, str]) -> str:
@@ -271,6 +296,11 @@ def main() -> int:
     block = render()
     updated = _splice(doc, block)
     if check:
+        spec = yaml.safe_load(CANON.read_text())
+        errors = description_errors(doc, spec.get("parameters", []) + spec.get("reference", []))
+        if errors:
+            print("gen_param_table: " + "\n".join(errors), file=sys.stderr)
+            return 1
         if updated != doc:
             print(
                 "gen_param_table: yellowpaper.md param table is STALE — run "
@@ -278,7 +308,8 @@ def main() -> int:
                 file=sys.stderr,
             )
             return 1
-        print("gen_param_table: param table up to date.")
+        count = len(spec.get("parameters", [])) + len(spec.get("reference", []))
+        print(f"gen_param_table: param table up to date; {count} descriptions checked.")
         return 0
     if updated != doc:
         YP.write_text(updated)

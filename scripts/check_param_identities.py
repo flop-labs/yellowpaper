@@ -69,7 +69,14 @@ def main() -> int:
         # both recipients; terminates (no floor) at the same boundary the reward floors
         return (2 * sub_rate) / 2**era if era < n_halvings else Fraction(0)
 
-    emission = lambda n: halving * sum(reward(e) for e in range(n))  # noqa: E731
+    # Era 0 is blocks 1..=H-1 (H-1 rewarded blocks, since genesis block 0 is unrewarded per R9.7),
+    # while each subsequent era e >= 1 is e*H..=(e+1)*H-1 (H rewarded blocks).
+    def emission(n: int) -> Fraction:
+        return halving * sum(reward(e) for e in range(n)) - (reward(0) if n > 0 else Fraction(0))
+
+    subsidy_lifetime = halving * sum(
+        subsidy_total_rate(e) for e in range(n_halvings)
+    ) - subsidy_total_rate(0)
 
     checks: list[tuple[str, Fraction, Fraction]] = [
         # --- genesis conservation: the four cohorts must exhaust the pool ---
@@ -108,18 +115,18 @@ def main() -> int:
             halving * n_halvings,
         ),
         (
-            "subsidy lifetime total == 1,955,232,000",
-            halving * sum(subsidy_total_rate(e) for e in range(n_halvings)),
-            Fraction(1_955_232_000),
+            "subsidy lifetime total == 1,955,231,984",
+            subsidy_lifetime,
+            Fraction(1_955_231_984),
         ),
         # --- emission milestones quoted in the yellowpaper and mirrored in Lean/Quint/TS ---
         (
-            "emission_through_halving_eras == r0.halving.63/32",
+            "emission_through_halving_eras == r0.halving.63/32 - r0",
             Fraction(params["emission_through_halving_eras"]),
             emission(n_halvings + 1),
         ),
         (
-            "emission_at_end_of_era6 == 2.r0.H",
+            "emission_at_end_of_era6 == 2.r0.H - r0",
             Fraction(params["emission_at_end_of_era6"]),
             emission(n_halvings + 2),
         ),
@@ -146,7 +153,7 @@ def main() -> int:
         (
             "da_shard_count >= da_min_replication_factor",
             Fraction(params["da_shard_count"]) >= Fraction(params["da_min_replication_factor"]),
-            f'R={params["da_shard_count"]} < k={params["da_min_replication_factor"]} would be unreconstructable',
+            f"R={params['da_shard_count']} < k={params['da_min_replication_factor']} would be unreconstructable",
         ),
     ]
 
@@ -156,12 +163,8 @@ def main() -> int:
     # its file: a reminder in the success path is not a gate, and would leave the Lean
     # `norm_num` proof to discover the drift by breaking the build.
     #
-    # total_issued_end_era6 = genesis + 2.r0.halving + the whole subsidy schedule.
-    total_era6 = (
-        Fraction(params["genesis_supply"])
-        + emission(n_halvings + 2)
-        + halving * sum(subsidy_total_rate(e) for e in range(n_halvings))
-    )
+    # total_issued_end_era6 = genesis + (2.r0.halving - r0) + the whole subsidy schedule (less block 0).
+    total_era6 = Fraction(params["genesis_supply"]) + emission(n_halvings + 2) + subsidy_lifetime
     genesis = Fraction(params["genesis_supply"])
 
     mirrors: list[tuple[str, str, str, Fraction]] = [
@@ -245,8 +248,7 @@ def main() -> int:
             f"{mirrors_checked} external mirrors match."
         )
         print(
-            "  derived constants mirrored outside params/, verified against their shipped "
-            "literals:"
+            "  derived constants mirrored outside params/, verified against their shipped literals:"
         )
         print(
             f"    total_issued_end_era6 = {int(total_era6):,}"

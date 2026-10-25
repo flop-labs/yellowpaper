@@ -30,6 +30,26 @@ REQUIRED_SEEDS = {
     "force-dominance",
     "da-loss-no-prefix",
     "da-loss-cosigned-prefix",
+    "reservation-slot-settle",
+    "reservation-slot-expire",
+    "reservation-slot-timeout",
+    "reservation-slot-fraud",
+    "reservation-slot-finalize",
+    "lease-withdraw-unpinned",
+    "lease-withdraw-pinned",
+    "lease-withdraw-nonpublisher",
+    "lease-withdraw-after-top-up",
+    "lease-withdraw-outstanding-audit",
+}
+
+RENT_VECTORS = {
+    "rent-provider-replacement",
+    "rent-multiple-replacements",
+    "rent-failed-block",
+    "rent-repeat-assignment",
+    "rent-partial-epochs",
+    "rent-extension-new-tariff",
+    "rent-close-partial-service",
 }
 
 
@@ -46,8 +66,13 @@ def validate(corpus: dict, schema: dict) -> tuple[int, int]:
     landed = [vector for vector in vectors if vector["status"] == "landed"]
     if not landed:
         raise ValueError("money-path corpus has no landed vectors")
+    rent = {vector["id"] for vector in landed if vector["adapter"] == "paid-storage-arithmetic"}
+    if rent != RENT_VECTORS:
+        raise ValueError("money-path corpus must retain all seven D-0524 arithmetic vectors")
     for vector in landed:
         calls = [call["call"] for call in vector["extrinsics"]]
+        if vector["adapter"] == "paid-storage-arithmetic":
+            continue  # Schema constrains every call; the pallet rent helper checks amounts.
         if calls not in (["force_settle", "finalize"], ["force_settle"], ["timeout"]):
             raise ValueError(f"unsupported landed call sequence: {vector['id']}")
     return len(landed), len(vectors) - len(landed)
