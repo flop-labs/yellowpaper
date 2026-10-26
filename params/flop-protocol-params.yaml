@@ -1320,7 +1320,7 @@ parameters:
     unit: percent
     decision: D-0422
     rust: ChannelRefundPenalty
-    description: "Static D-0422 penalty fraction phi on unused escrow for ambiguous early close; penalty routes 100% to burn/Foundation, never miner."
+    description: "Static D-0422 penalty fraction phi on unused escrow for ambiguous early close; penalty routes 100% to FLOPFoundationAccount with zero burn (R9.10), never miner."
     implementations:
       - { file: pallets/runtime/zkverify/src/lib.rs, expect: "ChannelRefundPenalty: Perbill = Perbill::from_percent(20)" }
       - { file: ai-agent-simulator/src/model/session-channel.ts, expect: "export const CHANNEL_REFUND_PENALTY_PHI_PERCENT = 20;" }

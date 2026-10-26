@@ -9,6 +9,10 @@ After publication, use [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 
 ### Changed
 
+- Name `FLOPFoundationAccount` as the sink of the failed/early-close penalty `φ·(E−P)` with zero burn in
+  §12.1 R12.1d, §11.1 INV-M06, Appendix A (`refund_penalty_phi_percent`) and Appendix G.1 `finalize`,
+  matching §9.3 R9.10 and Appendix D; record in Appendix H.5 that the runtime still burns that leg.
+
 - State in §15.5 R15.5 that proven-fault slash proceeds at the active-set floor are confiscated and transferred to the Foundation (R9.10) rather than burned.
 
 - Propagate the zero-burn, operator self-stake-only, and off-chain referral rulings to the normative
