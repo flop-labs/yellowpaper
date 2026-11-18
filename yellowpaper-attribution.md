@@ -7,12 +7,13 @@ implementation and proof-artifact detail that the normative spec keeps out of it
 describes the *target protocol*, not where it is proved or coded).
 
 **How to read it.** A cell names the artifact that backs the requirement:
+
 - **Lean** — a theorem in `lean-proofs/FlopSpecs/<File>.lean` (`File::theorem`).
-- **Quint** — a legacy invariant in `formal-specs/<path>.qnt` (`file::inv_*`), or a property of a Quint
-  Studio component model marked **Studio** (`quint-specs/<component>.qnt::property`, registered in
-  `quint-specs/quint.lock`; Studio replays the component's Rust tests against it). A Studio property is
-  bounded-sampled and oracle-replayed evidence, not a proof. A registered property is not by itself an
-  executed result; its current oracle result lives in Studio.
+- **Quint** — an invariant in the native `studio-specs/` export, or a registered property
+  of the native Studio export. The root legacy Studio
+  models and their scenario suite are retired; rows that depended on them are
+  marked pending below. Native typechecks and five scenario runs do not establish
+  broader implementation correspondence. See the migration scope.
 - **Rust** — the enforcing pallet / module (`pallets/pallets/<pallet>`; a named `fn`/const where useful).
 - **—** — no artifact of that kind; the requirement is code-enforced only, prose, or an open item
   (see the yellowpaper's Appendix E). A `—` in the Lean/Quint columns is not a defect: most operational
@@ -163,14 +164,14 @@ This pass inspected the Studio checkout at `25defc056be84f5c000e2c5e1b34bb454889
 (`/Users/svidyuk/me/flop-core`). The Lean sources below are tracked in that checkout at the
 same revision. They were read, not rebuilt. Studio's supported operator MCP reframed and
 confirmed the four existing system analyses; confirmation authorizes checking, **not a passing
-result**. The current checked sets and subsequent results belong to `systemAnalyses` in
-`quint.lock`.
+result**. That review's checked sets and results belonged to `systemAnalyses` in the
+historical registry at the inspected revision.
 
 | Requirement / interaction | Checked properties and source links | Remaining obligation |
 | --- | --- | --- |
 | R6.4a, R12.1f, R13.0b/c — Compute-channel money-path gate | `settlement_ledger_balances`, `retention_through_all_legal_disputes`, `unrecoverable_transcript_refunds_escrow_in_full`; channel model, degraded settlement, settlement composition | Net payment accounting, actual transcript identity/expiry, full receipt inputs and structured attestation binding are missing from the channel model. These full checks are not-driven; partial ID/work or Boolean claim checks cannot discharge them. `SettlementScenario` assumes challenges, fraud and DA availability; `DisputeBisection.covers` bounds rounds, not wall-clock retention. |
-| R15.4a/c, E.42/E.52 — AlephBFT PoUI-gated finality | `selection_time_eligibility`, `deterministic_session_snapshot`, `recency_from_accepted_duty`; validators model, committee sampling | Eligibility uses the independently captured selection-time pool. Later expiry does not invalidate history; recency can expire within a session even with a longer recency window. Root rotation remains inside the actual session and may violate unconditional stability. `selection_capture_le_hoeffding` requires `SelectionTailDominated`; bounded committee examples do not establish that distributional premise. |
-| R7.2 and proof/reward provenance — PoUI proof-to-reward pipeline | `production_credit_provenance`, `credited_miner_capacity_bonded`, `credit_cap_from_valid_calibration`, `credit_cap_units_preserved`, `recorded_weight_matches_credit`; calibration fast path, integer reward arithmetic | `renewal_never_raises_cap` assumes an accepted renewal. `stake_covers_settlement_exposure` assumes bounded work/caps/elapsed time, stake rate at least one and sufficient stake. Neither proves the Rust adapters or units. `SettlementInt.BlockRewards.conservation` covers the fixed pot split and rounding, not per-miner decay weighting. WorkVesting and compute-channel callbacks remain outside this five-component span. |
+| R15.4a/c, E.42/E.52 — AlephBFT PoI-gated finality | `selection_time_eligibility`, `deterministic_session_snapshot`, `recency_from_accepted_duty`; validators model, committee sampling | Eligibility uses the independently captured selection-time pool. Later expiry does not invalidate history; recency can expire within a session even with a longer recency window. Root rotation remains inside the actual session and may violate unconditional stability. `selection_capture_le_hoeffding` requires `SelectionTailDominated`; bounded committee examples do not establish that distributional premise. |
+| R7.2 and proof/reward provenance — PoI proof-to-reward pipeline | `production_credit_provenance`, `credited_miner_capacity_bonded`, `credit_cap_from_valid_calibration`, `credit_cap_units_preserved`, `recorded_weight_matches_credit`; calibration fast path, integer reward arithmetic | `renewal_never_raises_cap` assumes an accepted renewal. `stake_covers_settlement_exposure` assumes bounded work/caps/elapsed time, stake rate at least one and sufficient stake. Neither proves the Rust adapters or units. `SettlementInt.BlockRewards.conservation` covers the fixed pot split and rounding, not per-miner decay weighting. WorkVesting and compute-channel callbacks remain outside this five-component span. |
 | R2.3 — AlephBFT node finality loop | `justified_finality`, `certified_finality_nonforking`, `served_prefix_within_bft_finality`; node model, finality gadget, consensus theorem | `Consensus.FinalCtx.nonforking` requires certificates from the same voting context, a faulty minority and honest non-equivocation; runtime vote weight is one per seat. Distinct committee accounts alone do not discharge these premises. Root reports, honest-node finalized-head inherents and best-head movement are separate paths. No BFT liveness claim is made. |
 
 **R12.1f correction:** Rust now checks `now <= dispute.respond_by` in both
@@ -216,10 +217,10 @@ not counts of distinct new runtime bugs.
 
 | Analysis | Broken | No sampled counterexample | Not tested | Not driven |
 | --- | ---: | ---: | ---: | ---: |
-| PoUI proof-to-reward pipeline | 16 | 33 | 3 | 2 |
+| PoI proof-to-reward pipeline | 16 | 33 | 3 | 2 |
 | AlephBFT node finality loop | 13 | 19 | 0 | 0 |
 
-The PoUI composed model
+The PoI composed model
 contains 16 passing reproductions. Particularly useful cases are
 `staleQuorumSnapshotCreditTest` (submission-time denominator versus live attester membership),
 `creditRecordedAtZeroWeightTest` (the default decay factor), and
@@ -269,7 +270,7 @@ or protocol predicate.
 | R2.1 | BABE authoring, 1 s blocks | — | — | runtime BABE config; `pallets/pallets/aleph` |
 | R2.2 | Finality read via `FinalizedPrefix`, never tip | — | — | `pallets/primitives/hp-consensus`; `pallet_aleph::LastFinalized` |
 | R2.3 | Strictly `< ⅓` Byzantine committee seats (`3f < n`; sampler bridge open E.42) | `Consensus::Committee.quorum_inter_gt_third`; `Consensus::FinalCtx.nonforking` (**unit weights**, quorum certificates, honest non-equivocation); `CommitteeSampling::selection_capture_le_hoeffding` (**conditional** on `SelectionTailDominated`) | `consensus/weak-subjectivity::inv_honest_quorum` | equal-seat signatures: `pallets/pallets/aleph`; `finality-aleph::verify_committee_multisignature` |
-| R2.4 | PoUI committee gate = stake + accepted verification duty, never proof production (**runtime still keys recency on prover credit, E.52; zero-duty fallback drops recency; conformance gap E.42**) | `CommitteeSampling::selection_capture_le_hoeffding` | `consensus/consensus::committee_poui_gated` | `hp_consensus::select_committee`; `validators::poui_committee_sampled` |
+| R2.4 | PoI committee gate = stake + accepted verification duty, never proof production (**runtime still keys recency on prover credit, E.52; zero-duty fallback drops recency; conformance gap E.42**) | `CommitteeSampling::selection_capture_le_hoeffding` | `consensus/consensus::committee_poui_gated` | `hp_consensus::select_committee`; `validators::poui_committee_sampled` |
 | R2.5 | Up-to-100 weighted VRF sample (**undersized pools return all; capture bound open E.42**) | `CommitteeSampling::selection_capture_le_hoeffding` (**does not discharge the sampler hypothesis**) | — | `hp_consensus::sample_committee_weighted` (`committee.rs`); `validators::poui_committee_sampled` |
 | R2.6 | Engine isolation (pallets depend only on `FinalizedPrefix`) | — | `consensus/consensus::finalized_within_head` | `pallets/primitives/hp-consensus` |
 | R2.7 | Disclosed and benchmarked byte/weight profile (**PENDING: benchmark open E.46; 125,000 B is an assumption**) | — | — | runtime block-length / weight config supplies limits, not measured throughput |
@@ -279,17 +280,17 @@ or protocol predicate.
 
 | R-id | Requirement | Lean | Quint | Rust |
 |------|-------------|------|-------|------|
-| R3.1 | TOPLOC commitment required (**presence enforced; execution-correctness bridge open E.43/E.44**) | `VerificationStack::sessionAccept_needs_both` (**abstract**) | `verification/proof-verification.qnt` | `flop-poui: hp_poui::toploc`, `report_toploc_*` |
+| R3.1 | TOPLOC commitment required (**presence enforced; execution-correctness bridge open E.43/E.44**) | `VerificationStack::sessionAccept_needs_both` (**abstract**) | `studio-specs/reference-proof-verification/reference_proof_verification.qnt` | `flop-poui: hp_poui::toploc`, `report_toploc_*` |
 | R3.2 | TEE optional; fallback bound survives broken TEE (**conditional on supplied fallback**) | `VerificationStack::sessionVerifier_survives_broken_tee` (**abstract AND-combinator**) | — | `pallets/verifiers/dstack` (optional HARD path) |
 | R3.3 | Independent re-execution deterrence (**conditional payoff model; open E.45**) | `Security::deterred`; `DisputeBisection::covers`; `DisputeCost::bond_covers_dispute` | — | `pallets/pallets/miner-slashing` |
 | R3.5a,c | Dispute preconditions (**theorem assumes every fraud challenged and data available**) | `DisputePrereqs::fraud_not_finalized` | — | `compute-channel`; `da-registry` |
 | R3.5d | Re-execution checker lane: 3 bonded distinct-operator checkers, unanimous, VRF-assigned; TEE-attested verdict = OPTIONAL tier that never lowers the floor; validators verify + co-sign (**PLANNED E.53**) | `VerificationStack::sessionVerifier_survives_broken_tee` (TEE-optional floor) | — | `compute_channel::report_toploc_mismatch` (validator-recomputed today); `toploc-checker.ts` · #1553 |
 | R3.6 agg | Aggregate verifies ⇒ every leaf statement verifies (knowledge-soundness, abstract) | `DisputePrereqs::aggregate_sound` | — | `flop-poui` aggregate root |
-| R3.4 | Settlement gate = validator BFT quorum | `ToplocSession::sessionMiss_full_sample` | `verification/proof-verification.qnt` | `flop-poui: submit_validator_attestations` |
+| R3.4 | Settlement gate = validator BFT quorum | `ToplocSession::sessionMiss_full_sample` | `studio-specs/reference-proof-verification/reference_proof_verification.qnt` | `flop-poui: submit_validator_attestations` |
 | R3.5 | Binding of `task_hash`/`gn_weight`/`model_hash`/`output_hash` (**producer-side task derivation open E.51**) | `TeeAttestationFlow::blacklisted_not_verified` | — | `flop-poui` (`report_data`/`output_hash` checks) |
 | R3.6 | Replay: each `task_hash` credited once | — | — | `flop-poui: ProcessedTasks` |
 | R3.4a–c | TOPLOC commitment/fail-closed cell (**empirical detector + conditional formula; bridge open E.43**) | `VerificationComparison::interchangeable_of_eq_errors` (**assumes equal supplied errors**) | — | `flop-poui: hp_poui::toploc`; `model-registry` band constants |
-| R3.6a–c | Quorum: distinct active-validator sigs ≥ `ceil(active×θ)` | — | `verification/proof-verification.qnt` | `flop-poui: submit_validator_attestations`, `oracle.rs` |
+| R3.6a–c | Quorum: distinct active-validator sigs ≥ `ceil(active×θ)` | — | `studio-specs/reference-proof-verification/reference_proof_verification.qnt` | `flop-poui: submit_validator_attestations`, `oracle.rs` |
 
 ## §4 — Metering
 
@@ -370,7 +371,7 @@ and `next_deadline_inv` support `S.reachable_deadline`.
 | R7.1a | `accept_benchmark_burst` fail-closed conditions; deposit before activation | `Calibration::Bp_le_worstMean` | `verification/hardware-calibration::inv_active_is_usable`; Studio `hw-calibration::cap_never_exceeds_empirical`, `tier_matches_attestation` | `hw-calibration` |
 | R7.1b | HARD-tier inventory: missing SKU ceiling fails closed, no SOFT downgrade | `Computable::classAdjustedCeiling` | `verification/hardware-calibration::inv_accepted_cap_uses_versioned_ceiling`; Studio `hw-calibration::tier_matches_attestation`, `hard_cap_within_discounted_ceiling` | `hw-calibration` |
 | R7.1c | `C_emp` counted once; never multiplied by GPU/channel/session/batch | `Calibration::Gn_le_max` | `verification/hardware-calibration::inv_cap_le_empirical`; Studio `hw-calibration::cap_never_exceeds_empirical` | `hw-calibration: flop_meter` |
-| R7.2 | Renewable cap: lease-frozen; renewal never raises cap; SKU change no silent alter | `CalibrationFastPath::renewal_never_raises_cap` | `verification/hardware-calibration::inv_renewal_never_raises_cap`; Studio `hw-calibration::renewal_never_raises_cap` (per renewal, ≤ the value stored immediately before it; cumulative, ≤ initial cap), `hard_cap_within_discounted_ceiling`, `registration_ends_at_expiry`; scenarios + mutation witnesses in `quint-specs/hw-calibration_test.qnt`, and the four directed renewal runs above in `quint-specs/hw-calibration-renewal_test.qnt` | `hw-calibration: renew_benchmark_cap` |
+| R7.2 | Renewable cap: lease-frozen; renewal never raises cap; SKU change no silent alter | `CalibrationFastPath::renewal_never_raises_cap` | `verification/hardware-calibration::inv_renewal_never_raises_cap`; Studio `hw-calibration::renewal_never_raises_cap` (per renewal, ≤ the value stored immediately before it; cumulative, ≤ initial cap), `hard_cap_within_discounted_ceiling`, `registration_ends_at_expiry`; scenarios + mutation witnesses in retired Studio witness; replacement pending, and the four directed renewal runs above in retired Studio witness; replacement pending | `hw-calibration: renew_benchmark_cap` |
 | R7.3 | Restart/reconnect renewal; fingerprint change invalidates; drift≠cheat by signature | `CalibrationDrift::cheat_detected`; `DriftDetection::breach_on_large_deviation`, `no_breach_in_tolerance` (EWMA statistical layer) | `verification/hardware-calibration::inv_hardware_identity_bound`; Studio `hw-calibration::cap_bound_to_current_identity` (renewal triggers are off-chain, `miner-worker`) | `hw-calibration`; `miner-worker` |
 
 ## §8 — Performance-locked vesting
@@ -435,8 +436,8 @@ direction. Its invariants and the Lean premises do not establish deployed pair c
 | R12.1c | HARD measured-root binding; SOFT predicate open E.33 | — | — | `model-registry: verify_measured_root`; `compute-channel` |
 | R12.1d | Failed/early close split (`P`, `φ`) conserves | `RefundPenalty::conservation` | — | `compute-channel` |
 | R12.1e | Over-use → abort or `top_up_escrow` | — | — | `compute-channel: top_up_escrow` |
-| R12.1f | Disputes fraud-only; non-response → fraud | — | `channel/channel-settlement::inv_dispute_fails_closed`, `inv_dispute_upheld_is_closed` | `compute-channel`; `miner-slashing` |
-| R12.1g | Freeze economic deadlines; recover through restored/ratified finalized prefix | `ChannelPayoutLiveness::escape_safe` (**prior best-head model; not a witness for current R12.1g**) | — | `compute-channel` (conformance gap until aligned) |
+| R12.1f | Disputes fraud-only; non-response → fraud | — | `channel/channel-settlement::inv_dispute_fails_closed`, `inv_dispute_upheld_is_closed`; Studio pin/expiry boundary checks (partial component coverage; independent retention contract retained) | `compute-channel`; `miner-slashing` |
+| R12.1g | Freeze economic deadlines; recover through restored/ratified finalized prefix | `ChannelPayoutLiveness::escape_safe` (**prior best-head model; not a witness for current R12.1g**) | Studio finalized-cutoff and DA deadline checks (partial; no end-to-end payout-liveness proof) | `compute-channel` (conformance gap until aligned) |
 | R12.1h | Session bounds + re-attestation cadence | — | — | `compute-channel` (open: Appendix E.27) |
 | R12.2 | Per-identity in-flight reservation cap | — | — | `compute-channel: ActiveReservationCount` |
 | R12.3 | Demand-side Sybil cost; perturb, don't punish | `DemandSideSybil::demand_sybil_tacit_collusion_bound` | — | `indexer/` gauges (monitoring) |
@@ -450,29 +451,41 @@ The actor×failure rows (M1–M16, V1–V12, O1–O4, F1–F5, A1–A10, P1–P4
 | R-id | Requirement | Lean | Quint | Rust |
 |------|-------------|------|-------|------|
 | R13.0 | Liveness repair never converts missing/stale evidence into payout | `DegradedSettlement::positive_payment_requires_available_transcript` | `channel/settlement-degraded-window::inv_liveness_patch_not_safety_bypass` | `compute-channel` |
-| R13.0a | Finality stall → freeze finality-clocked deadlines | `DeadlineFailClosed::extend_is_failclosed` | `consensus/finalized-deadlines::inv_final_le_best` | `compute-channel`; `pallet_aleph` |
+| R13.0a | Finality stall → freeze finality-clocked deadlines | `DeadlineFailClosed::extend_is_failclosed` | `consensus/finalized-deadlines::inv_final_le_best`; Studio DA slash/prune boundary checks (bounded component coverage) | `compute-channel`; `pallet_aleph` |
 | R13.0b | DA temporarily unavailable → extend window once | `DegradedSettlement::positive_payment_requires_available_transcript` | `da/da-provider-rotation::inv_repaired_no_stale_slash` | `da-registry`; `compute-channel` |
 | R13.0c | DA unrecoverable → fail-closed refund + bond return, no fraud slash | `DegradedSettlement::unrecoverable_transcript_voids_payment` | `channel/settlement-degraded-window::inv_terminal_da_loss_refunds_or_waits` | `compute-channel` (E.31 split residual) |
 | R13.0d | Attestation freshness elapsed → reject settlement until re-attested | `FailClosedSettlement::positive_pay_requires_accountable` | `cryptography/tee-attestation-flow` | `compute-channel: AttestationStale` |
 | R13.0e | Quorum/service unavailable → pause only attestation clocks within 4 h cap | `QuorumOutagePause::unrelated_continue`, `attestation_paused`, `no_indefinite_pause`, `pause_bounded` | `attestation/attest-quorum` | `flop-poui`; `compute-channel` |
-| R13.0f | Governance gate paused/rejected → preserve state; no implicit fallback | `Governance::GovernanceTransition.governance_reachable_safe` | `governance/governance.qnt` | runtime bounds |
+| R13.0f | Governance gate paused/rejected → preserve state; no implicit fallback | `Governance::GovernanceTransition.governance_reachable_safe` | `studio-specs/reference-governance/reference_governance.qnt` | runtime bounds |
 
 ## §14 — Governance
 
 | R-id | Requirement | Lean | Quint | Rust |
 |------|-------------|------|-------|------|
-| R14.1 | `protocol_upgrade` track: 67% + turnout floor + 14 d timelock | `Governance::GovernanceTransition.governance_reachable_safe` | `governance/governance.qnt` | `governance/tracks.rs`; `pallet_referenda` |
+| R14.1 | `protocol_upgrade` track: 67% + turnout floor + 14 d timelock | `Governance::GovernanceTransition.governance_reachable_safe` | `studio-specs/reference-governance/reference_governance.qnt` | `governance/tracks.rs`; `pallet_referenda` |
 | R14.2 | Foundation submit gate through first halving; FIP enact binds ratified value | `UpgradeSafety::nonFoundation_preHalving_rejected`, `gate_sunsets`, `enactGated_binds` | — | `EnsureFoundationProtocolSubmit` |
 | R14.3 | De-sudo precondition | — | — | `pallet_sudo` removal (genesis) |
 | R14.4 | Forkless vs. coordinated enactment | — | — | `system.set_code`; node release |
-| R14.5 | Current-runtime parameter safety envelope (**arbitrary `set_code` outside model; open E.50**) | `Governance::GovernanceTransition.governance_reachable_safe`; `UpgradeSafety::enactGated_in_envelope`, `migrate_conserves` | `governance/governance.qnt` | runtime bounds |
+| R14.5 | Current-runtime parameter safety envelope (**arbitrary `set_code` outside model; open E.50**) | `Governance::GovernanceTransition.governance_reachable_safe`; `UpgradeSafety::enactGated_in_envelope`, `migrate_conserves` | `studio-specs/reference-governance/reference_governance.qnt` | runtime bounds |
 | R14.6 | Circuit-breaker protected set; auto-expire | — | — | `pallets/pallets/emergency-pause`, `emergency-override` |
 
 ## §15 — Validators
 
 | R-id | Requirement | Lean | Quint | Rust |
 |------|-------------|------|-------|------|
-| R15.4a | PoUI gate (stake + verification liveness, R15.4c) then weighted distinct sample of 100 (**seat-capture bridge open E.42**) | `CommitteeSampling::selection_capture_le_hoeffding` (**conditional**) | `quint-specs/validators.qnt::poui_committee_only_admits_eligible` (selection snapshot only; three directed witnesses above) | `validators::poui_committee`; `hp_consensus::sample_committee_weighted` |
+| R15.4a | PoI gate (stake + verification liveness, R15.4c) then weighted distinct sample of 100 (**seat-capture bridge open E.42**) | `CommitteeSampling::selection_capture_le_hoeffding` (**conditional**) | retired Studio witness; replacement pending (selection snapshot only; three directed witnesses above) | `validators::poui_committee`; `hp_consensus::sample_committee_weighted` |
 | R15.4b | BABE-VRF seed, one epoch old, per-rotation domain-sep (**unbiasability not proven**) | `CommitteeSampling::selection_capture_le_hoeffding` (**assumes seed model**) | — | `validators::poui_committee_sampled` (BABE `randomness()`) |
 | R15.4c | Verification liveness: recency refreshed only by accepted duties (attestation-bundle signer, TOPLOC/escalation quorum signer, DA audit response, validator dispute opening); prover credit excluded; ≥1 protocol-issued duty per window (**PLANNED E.52**) | — | — | `validators::note_verified_work` (prover-fed today); runtime `ValidatorWorkRecorder` (to be removed) · #1552 |
 | R15.5 | Rotation by stake, min-performance floor; eject/promote 50 | — | — | `validators: do_rotate` |
+
+## Requested reference contracts
+
+The Studio reference inventory
+records all 28 supplied property names, their guarded checks, reached scenarios,
+and deliberate counterexamples. These supplementary reference contracts do not
+change the requirement classifications above or establish runtime conformance.
+Five gaps remain explicit: seat-share bounds, continuing committee size,
+continuing selection freshness, identity revocation after channel admission,
+and backing reduced after a vesting payment. Earlier `quint-specs/` audit links
+above name the historical inspected revision; they do not claim those archived
+models are the current editable Studio models.

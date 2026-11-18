@@ -290,7 +290,7 @@
       }
     ]
   },
-  "embedded_ledger_sha256": "04b0a8e5105342fc1cbe1397b5040aa47598cfb7882a70b4976b939e3a701847",
+  "embedded_ledger_sha256": "f087a2bb33e5a6bfe4708720d211e8feff9e72c5c78e36969d5ecf1bb79822d0",
   "generated_by": "evidence/reproduce.py",
   "schema_version": 2,
   "scope": "Deterministic SCALE fixtures, charged-weight ledger, and claim disposition; no runtime execution, empirical security assurance, or network benchmark.",
@@ -304,9 +304,9 @@
         "call_bytes": 232,
         "charged_call_weight": {
           "class": "Normal",
-          "proof_size": 31228,
-          "ref_time": 834511000,
-          "status": "charged estimate; not freshly benchmarked"
+          "proof_size": 227836,
+          "ref_time": 1134415000,
+          "status": "charged estimate; proof allowances provisional; not freshly benchmarked"
         },
         "dimensions": {},
         "extrinsic_bytes": 338,
@@ -323,7 +323,7 @@
           "class": "Normal",
           "proof_size": 4000,
           "ref_time": 120375000,
-          "status": "charged estimate; not freshly benchmarked"
+          "status": "charged estimate; proof allowances provisional; not freshly benchmarked"
         },
         "dimensions": {},
         "extrinsic_bytes": 172,
@@ -340,7 +340,7 @@
           "class": "Normal",
           "proof_size": 16560,
           "ref_time": 304841000,
-          "status": "charged estimate; not freshly benchmarked"
+          "status": "charged estimate; proof allowances provisional; not freshly benchmarked"
         },
         "dimensions": {},
         "extrinsic_bytes": 144,
@@ -355,9 +355,9 @@
         "call_bytes": 2417,
         "charged_call_weight": {
           "class": "Normal",
-          "proof_size": 68328,
-          "ref_time": 483648000,
-          "status": "charged estimate; not freshly benchmarked"
+          "proof_size": 101096,
+          "ref_time": 558624000,
+          "status": "charged estimate; proof allowances provisional; not freshly benchmarked"
         },
         "dimensions": {
           "merkle_path_entries": 64
@@ -374,9 +374,9 @@
         "call_bytes": 34,
         "charged_call_weight": {
           "class": "Normal",
-          "proof_size": 107378,
-          "ref_time": 1111824000,
-          "status": "charged estimate; not freshly benchmarked"
+          "proof_size": 181106,
+          "ref_time": 1372151000,
+          "status": "charged estimate; proof allowances provisional; not freshly benchmarked"
         },
         "dimensions": {},
         "extrinsic_bytes": 140,
@@ -392,9 +392,9 @@
       "call_bytes": 34775,
       "charged_call_weight": {
         "class": "Normal",
-        "proof_size": 109416,
-        "ref_time": 5426787000,
-        "status": "charged estimate; not freshly benchmarked"
+        "proof_size": 281448,
+        "ref_time": 5837066000,
+        "status": "charged estimate; proof allowances provisional; not freshly benchmarked"
       },
       "dimensions": {
         "merkle_path_entries_per_turn": 0,
@@ -442,9 +442,9 @@
         "call_bytes": 484,
         "charged_call_weight": {
           "class": "Normal",
-          "proof_size": 109416,
-          "ref_time": 981787000,
-          "status": "charged estimate; not freshly benchmarked"
+          "proof_size": 281448,
+          "ref_time": 1392066000,
+          "status": "charged estimate; proof allowances provisional; not freshly benchmarked"
         },
         "dimensions": {
           "merkle_path_entries_per_turn": 0,
@@ -464,9 +464,9 @@
         "call_bytes": 484,
         "charged_call_weight": {
           "class": "Normal",
-          "proof_size": 31184,
-          "ref_time": 698648000,
-          "status": "charged estimate; not freshly benchmarked"
+          "proof_size": 186832,
+          "ref_time": 1071439000,
+          "status": "charged estimate; proof allowances provisional; not freshly benchmarked"
         },
         "dimensions": {
           "merkle_path_entries_per_turn": 0,
@@ -486,9 +486,9 @@
         "call_bytes": 748,
         "charged_call_weight": {
           "class": "Normal",
-          "proof_size": 109416,
-          "ref_time": 981787000,
-          "status": "charged estimate; not freshly benchmarked"
+          "proof_size": 281448,
+          "ref_time": 1392066000,
+          "status": "charged estimate; proof allowances provisional; not freshly benchmarked"
         },
         "dimensions": {
           "merkle_path_entries_per_turn": 8,
@@ -508,9 +508,9 @@
         "call_bytes": 748,
         "charged_call_weight": {
           "class": "Normal",
-          "proof_size": 31184,
-          "ref_time": 698648000,
-          "status": "charged estimate; not freshly benchmarked"
+          "proof_size": 186832,
+          "ref_time": 1071439000,
+          "status": "charged estimate; proof allowances provisional; not freshly benchmarked"
         },
         "dimensions": {
           "merkle_path_entries_per_turn": 8,
@@ -530,9 +530,9 @@
         "call_bytes": 1540,
         "charged_call_weight": {
           "class": "Normal",
-          "proof_size": 109416,
-          "ref_time": 981787000,
-          "status": "charged estimate; not freshly benchmarked"
+          "proof_size": 281448,
+          "ref_time": 1392066000,
+          "status": "charged estimate; proof allowances provisional; not freshly benchmarked"
         },
         "dimensions": {
           "merkle_path_entries_per_turn": 32,
@@ -552,9 +552,9 @@
         "call_bytes": 1540,
         "charged_call_weight": {
           "class": "Normal",
-          "proof_size": 31184,
-          "ref_time": 698648000,
-          "status": "charged estimate; not freshly benchmarked"
+          "proof_size": 186832,
+          "ref_time": 1071439000,
+          "status": "charged estimate; proof allowances provisional; not freshly benchmarked"
         },
         "dimensions": {
           "merkle_path_entries_per_turn": 32,
@@ -574,9 +574,9 @@
         "call_bytes": 2597,
         "charged_call_weight": {
           "class": "Normal",
-          "proof_size": 109416,
-          "ref_time": 981787000,
-          "status": "charged estimate; not freshly benchmarked"
+          "proof_size": 281448,
+          "ref_time": 1392066000,
+          "status": "charged estimate; proof allowances provisional; not freshly benchmarked"
         },
         "dimensions": {
           "merkle_path_entries_per_turn": 64,
@@ -596,9 +596,9 @@
         "call_bytes": 2597,
         "charged_call_weight": {
           "class": "Normal",
-          "proof_size": 31184,
-          "ref_time": 698648000,
-          "status": "charged estimate; not freshly benchmarked"
+          "proof_size": 186832,
+          "ref_time": 1071439000,
+          "status": "charged estimate; proof allowances provisional; not freshly benchmarked"
         },
         "dimensions": {
           "merkle_path_entries_per_turn": 64,
@@ -618,9 +618,9 @@
         "call_bytes": 4534,
         "charged_call_weight": {
           "class": "Normal",
-          "proof_size": 109416,
-          "ref_time": 1506787000,
-          "status": "charged estimate; not freshly benchmarked"
+          "proof_size": 281448,
+          "ref_time": 1917066000,
+          "status": "charged estimate; proof allowances provisional; not freshly benchmarked"
         },
         "dimensions": {
           "merkle_path_entries_per_turn": 0,
@@ -640,9 +640,9 @@
         "call_bytes": 4534,
         "charged_call_weight": {
           "class": "Normal",
-          "proof_size": 31184,
-          "ref_time": 1223648000,
-          "status": "charged estimate; not freshly benchmarked"
+          "proof_size": 186832,
+          "ref_time": 1596439000,
+          "status": "charged estimate; proof allowances provisional; not freshly benchmarked"
         },
         "dimensions": {
           "merkle_path_entries_per_turn": 0,
@@ -662,9 +662,9 @@
         "call_bytes": 8758,
         "charged_call_weight": {
           "class": "Normal",
-          "proof_size": 109416,
-          "ref_time": 1506787000,
-          "status": "charged estimate; not freshly benchmarked"
+          "proof_size": 281448,
+          "ref_time": 1917066000,
+          "status": "charged estimate; proof allowances provisional; not freshly benchmarked"
         },
         "dimensions": {
           "merkle_path_entries_per_turn": 8,
@@ -684,9 +684,9 @@
         "call_bytes": 8758,
         "charged_call_weight": {
           "class": "Normal",
-          "proof_size": 31184,
-          "ref_time": 1223648000,
-          "status": "charged estimate; not freshly benchmarked"
+          "proof_size": 186832,
+          "ref_time": 1596439000,
+          "status": "charged estimate; proof allowances provisional; not freshly benchmarked"
         },
         "dimensions": {
           "merkle_path_entries_per_turn": 8,
@@ -706,9 +706,9 @@
         "call_bytes": 21430,
         "charged_call_weight": {
           "class": "Normal",
-          "proof_size": 109416,
-          "ref_time": 1506787000,
-          "status": "charged estimate; not freshly benchmarked"
+          "proof_size": 281448,
+          "ref_time": 1917066000,
+          "status": "charged estimate; proof allowances provisional; not freshly benchmarked"
         },
         "dimensions": {
           "merkle_path_entries_per_turn": 32,
@@ -728,9 +728,9 @@
         "call_bytes": 21430,
         "charged_call_weight": {
           "class": "Normal",
-          "proof_size": 31184,
-          "ref_time": 1223648000,
-          "status": "charged estimate; not freshly benchmarked"
+          "proof_size": 186832,
+          "ref_time": 1596439000,
+          "status": "charged estimate; proof allowances provisional; not freshly benchmarked"
         },
         "dimensions": {
           "merkle_path_entries_per_turn": 32,
@@ -750,9 +750,9 @@
         "call_bytes": 38342,
         "charged_call_weight": {
           "class": "Normal",
-          "proof_size": 109416,
-          "ref_time": 1506787000,
-          "status": "charged estimate; not freshly benchmarked"
+          "proof_size": 281448,
+          "ref_time": 1917066000,
+          "status": "charged estimate; proof allowances provisional; not freshly benchmarked"
         },
         "dimensions": {
           "merkle_path_entries_per_turn": 64,
@@ -772,9 +772,9 @@
         "call_bytes": 38342,
         "charged_call_weight": {
           "class": "Normal",
-          "proof_size": 31184,
-          "ref_time": 1223648000,
-          "status": "charged estimate; not freshly benchmarked"
+          "proof_size": 186832,
+          "ref_time": 1596439000,
+          "status": "charged estimate; proof allowances provisional; not freshly benchmarked"
         },
         "dimensions": {
           "merkle_path_entries_per_turn": 64,
@@ -794,9 +794,9 @@
         "call_bytes": 34775,
         "charged_call_weight": {
           "class": "Normal",
-          "proof_size": 109416,
-          "ref_time": 5426787000,
-          "status": "charged estimate; not freshly benchmarked"
+          "proof_size": 281448,
+          "ref_time": 5837066000,
+          "status": "charged estimate; proof allowances provisional; not freshly benchmarked"
         },
         "dimensions": {
           "merkle_path_entries_per_turn": 0,
@@ -816,9 +816,9 @@
         "call_bytes": 34775,
         "charged_call_weight": {
           "class": "Normal",
-          "proof_size": 31184,
-          "ref_time": 5143648000,
-          "status": "charged estimate; not freshly benchmarked"
+          "proof_size": 186832,
+          "ref_time": 5516439000,
+          "status": "charged estimate; proof allowances provisional; not freshly benchmarked"
         },
         "dimensions": {
           "merkle_path_entries_per_turn": 0,
@@ -838,9 +838,9 @@
         "call_bytes": 68567,
         "charged_call_weight": {
           "class": "Normal",
-          "proof_size": 109416,
-          "ref_time": 5426787000,
-          "status": "charged estimate; not freshly benchmarked"
+          "proof_size": 281448,
+          "ref_time": 5837066000,
+          "status": "charged estimate; proof allowances provisional; not freshly benchmarked"
         },
         "dimensions": {
           "merkle_path_entries_per_turn": 8,
@@ -860,9 +860,9 @@
         "call_bytes": 68567,
         "charged_call_weight": {
           "class": "Normal",
-          "proof_size": 31184,
-          "ref_time": 5143648000,
-          "status": "charged estimate; not freshly benchmarked"
+          "proof_size": 186832,
+          "ref_time": 5516439000,
+          "status": "charged estimate; proof allowances provisional; not freshly benchmarked"
         },
         "dimensions": {
           "merkle_path_entries_per_turn": 8,
@@ -882,9 +882,9 @@
         "call_bytes": 169943,
         "charged_call_weight": {
           "class": "Normal",
-          "proof_size": 109416,
-          "ref_time": 5426787000,
-          "status": "charged estimate; not freshly benchmarked"
+          "proof_size": 281448,
+          "ref_time": 5837066000,
+          "status": "charged estimate; proof allowances provisional; not freshly benchmarked"
         },
         "dimensions": {
           "merkle_path_entries_per_turn": 32,
@@ -904,9 +904,9 @@
         "call_bytes": 169943,
         "charged_call_weight": {
           "class": "Normal",
-          "proof_size": 31184,
-          "ref_time": 5143648000,
-          "status": "charged estimate; not freshly benchmarked"
+          "proof_size": 186832,
+          "ref_time": 5516439000,
+          "status": "charged estimate; proof allowances provisional; not freshly benchmarked"
         },
         "dimensions": {
           "merkle_path_entries_per_turn": 32,
@@ -926,9 +926,9 @@
         "call_bytes": 305239,
         "charged_call_weight": {
           "class": "Normal",
-          "proof_size": 109416,
-          "ref_time": 5426787000,
-          "status": "charged estimate; not freshly benchmarked"
+          "proof_size": 281448,
+          "ref_time": 5837066000,
+          "status": "charged estimate; proof allowances provisional; not freshly benchmarked"
         },
         "dimensions": {
           "merkle_path_entries_per_turn": 64,
@@ -948,9 +948,9 @@
         "call_bytes": 305239,
         "charged_call_weight": {
           "class": "Normal",
-          "proof_size": 31184,
-          "ref_time": 5143648000,
-          "status": "charged estimate; not freshly benchmarked"
+          "proof_size": 186832,
+          "ref_time": 5516439000,
+          "status": "charged estimate; proof allowances provisional; not freshly benchmarked"
         },
         "dimensions": {
           "merkle_path_entries_per_turn": 64,
@@ -970,9 +970,9 @@
         "call_bytes": 276695,
         "charged_call_weight": {
           "class": "Normal",
-          "proof_size": 109416,
-          "ref_time": 36786787000,
-          "status": "charged estimate; not freshly benchmarked"
+          "proof_size": 281448,
+          "ref_time": 37197066000,
+          "status": "charged estimate; proof allowances provisional; not freshly benchmarked"
         },
         "dimensions": {
           "merkle_path_entries_per_turn": 0,
@@ -992,9 +992,9 @@
         "call_bytes": 276695,
         "charged_call_weight": {
           "class": "Normal",
-          "proof_size": 31184,
-          "ref_time": 36503648000,
-          "status": "charged estimate; not freshly benchmarked"
+          "proof_size": 186832,
+          "ref_time": 36876439000,
+          "status": "charged estimate; proof allowances provisional; not freshly benchmarked"
         },
         "dimensions": {
           "merkle_path_entries_per_turn": 0,
@@ -1014,9 +1014,9 @@
         "call_bytes": 547031,
         "charged_call_weight": {
           "class": "Normal",
-          "proof_size": 109416,
-          "ref_time": 36786787000,
-          "status": "charged estimate; not freshly benchmarked"
+          "proof_size": 281448,
+          "ref_time": 37197066000,
+          "status": "charged estimate; proof allowances provisional; not freshly benchmarked"
         },
         "dimensions": {
           "merkle_path_entries_per_turn": 8,
@@ -1036,9 +1036,9 @@
         "call_bytes": 547031,
         "charged_call_weight": {
           "class": "Normal",
-          "proof_size": 31184,
-          "ref_time": 36503648000,
-          "status": "charged estimate; not freshly benchmarked"
+          "proof_size": 186832,
+          "ref_time": 36876439000,
+          "status": "charged estimate; proof allowances provisional; not freshly benchmarked"
         },
         "dimensions": {
           "merkle_path_entries_per_turn": 8,
@@ -1058,9 +1058,9 @@
         "call_bytes": 1358039,
         "charged_call_weight": {
           "class": "Normal",
-          "proof_size": 109416,
-          "ref_time": 36786787000,
-          "status": "charged estimate; not freshly benchmarked"
+          "proof_size": 281448,
+          "ref_time": 37197066000,
+          "status": "charged estimate; proof allowances provisional; not freshly benchmarked"
         },
         "dimensions": {
           "merkle_path_entries_per_turn": 32,
@@ -1080,9 +1080,9 @@
         "call_bytes": 1358039,
         "charged_call_weight": {
           "class": "Normal",
-          "proof_size": 31184,
-          "ref_time": 36503648000,
-          "status": "charged estimate; not freshly benchmarked"
+          "proof_size": 186832,
+          "ref_time": 36876439000,
+          "status": "charged estimate; proof allowances provisional; not freshly benchmarked"
         },
         "dimensions": {
           "merkle_path_entries_per_turn": 32,
@@ -1102,9 +1102,9 @@
         "call_bytes": 2440407,
         "charged_call_weight": {
           "class": "Normal",
-          "proof_size": 109416,
-          "ref_time": 36786787000,
-          "status": "charged estimate; not freshly benchmarked"
+          "proof_size": 281448,
+          "ref_time": 37197066000,
+          "status": "charged estimate; proof allowances provisional; not freshly benchmarked"
         },
         "dimensions": {
           "merkle_path_entries_per_turn": 64,
@@ -1124,9 +1124,9 @@
         "call_bytes": 2440407,
         "charged_call_weight": {
           "class": "Normal",
-          "proof_size": 31184,
-          "ref_time": 36503648000,
-          "status": "charged estimate; not freshly benchmarked"
+          "proof_size": 186832,
+          "ref_time": 36876439000,
+          "status": "charged estimate; proof allowances provisional; not freshly benchmarked"
         },
         "dimensions": {
           "merkle_path_entries_per_turn": 64,
@@ -1700,42 +1700,42 @@
       "path": "pallets/pallets/flop-poui/src/lib.rs"
     },
     {
-      "base_ref_time": 85000000,
+      "base_ref_time": 95000000,
       "parameter": null,
       "path": "pallets/pallets/compute-channel/src/weights.rs",
       "per_unit_ref_time": 0,
-      "proof_size": 115152,
-      "reads": 28,
+      "proof_size": 254416,
+      "reads": 54,
       "weight": "certificate_settle",
       "writes": 8
     },
     {
-      "base_ref_time": 55440000,
+      "base_ref_time": 75440000,
       "parameter": null,
       "path": "pallets/pallets/compute-channel/src/weights.rs",
       "per_unit_ref_time": 0,
-      "proof_size": 107378,
-      "reads": 21,
+      "proof_size": 181106,
+      "reads": 39,
       "weight": "finalize",
-      "writes": 12
+      "writes": 13
     },
     {
-      "base_ref_time": 83910000,
+      "base_ref_time": 103910000,
       "parameter": "n: u32",
       "path": "pallets/pallets/compute-channel/src/weights.rs",
       "per_unit_ref_time": 35000000,
-      "proof_size": 31184,
-      "reads": 16,
+      "proof_size": 186832,
+      "reads": 46,
       "weight": "force_settle",
-      "writes": 6
+      "writes": 7
     },
     {
       "base_ref_time": 86740000,
       "parameter": null,
       "path": "pallets/pallets/compute-channel/src/weights.rs",
       "per_unit_ref_time": 0,
-      "proof_size": 31228,
-      "reads": 11,
+      "proof_size": 227836,
+      "reads": 43,
       "weight": "open_channel",
       "writes": 9
     },
@@ -1750,12 +1750,12 @@
       "writes": 3
     },
     {
-      "base_ref_time": 80000000,
+      "base_ref_time": 90000000,
       "parameter": "n: u32",
       "path": "pallets/pallets/compute-channel/src/weights.rs",
       "per_unit_ref_time": 35000000,
-      "proof_size": 34384,
-      "reads": 14,
+      "proof_size": 67152,
+      "reads": 22,
       "weight": "release_forward_bond",
       "writes": 5
     },
@@ -1764,20 +1764,20 @@
       "parameter": null,
       "path": "pallets/pallets/compute-channel/src/weights.rs",
       "per_unit_ref_time": 0,
-      "proof_size": 68328,
-      "reads": 7,
+      "proof_size": 101096,
+      "reads": 15,
       "weight": "respond_dispute",
       "writes": 4
     },
     {
-      "base_ref_time": 77180000,
+      "base_ref_time": 97180000,
       "parameter": "n: u32",
       "path": "pallets/pallets/compute-channel/src/weights.rs",
       "per_unit_ref_time": 35000000,
-      "proof_size": 109416,
-      "reads": 24,
+      "proof_size": 281448,
+      "reads": 58,
       "weight": "settle",
-      "writes": 9
+      "writes": 10
     },
     {
       "base_ref_time": 30000000,
@@ -1790,14 +1790,14 @@
       "writes": 1
     },
     {
-      "base_ref_time": 45000000,
+      "base_ref_time": 65000000,
       "parameter": null,
       "path": "pallets/pallets/compute-channel/src/weights.rs",
       "per_unit_ref_time": 0,
-      "proof_size": 70788,
-      "reads": 10,
+      "proof_size": 193668,
+      "reads": 40,
       "weight": "timeout",
-      "writes": 10
+      "writes": 11
     },
     {
       "base_ref_time": 50000000,

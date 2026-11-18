@@ -99,10 +99,10 @@ parameters:
       re-balanced by D-0435 and re-scaled by D-0438 (ECON-009 sec. 2.1). D-0440 held the absolute
       grant at 1,200,000,000 while resizing the pool, so only its share moved 34.29% → 27.27%
       (ECON-010 sec. 2.1). Home: §9.3. The workbook
-      presents it as
-      testnet block reward 559,872,000 + capped testnet fee pool 640,128,000; the fee cap is
-      back-solved so the pool lands on exactly 1,200,000,000, so treat the round pool as the
-      ratified quantity, not as an output of the testnet model. This is the actual testnet→mainnet
+      illustrates it for a 90-day Era-T season as testnet block reward 559,872,000 + capped testnet
+      fee pool 640,128,000; the fee cap is back-solved so the pool lands on exactly 1,200,000,000.
+      The round pool is the ratified quantity whatever the season length (D-0547,
+      era_t_season_blocks), not an output of the testnet model. This is the actual testnet→mainnet
       conversion pool (assignPool in testnet-conversion.ts), so it must not silently diverge from
       the split; the total (genesis_supply) is enforced above, this pins the component too.
     implementations:
@@ -188,19 +188,19 @@ parameters:
   - name: validator_min_stake
     mutability: runtime-upgrade-only
     on_chain: {constants: [Validators.InitialMinimumStake]}
-    effective_mutability: governance-settable (Validators.force_set_minimum_stake); effective stake also grows with time, so only the initial constant is diffed
+    effective_mutability: governance-settable (Validators.force_set_minimum_stake); flat under D-0539 (no growth with time; the runtime growth step is to be removed), and only the initial constant is diffed
     value: 1_200_000
     unit: FLOP
     decision: D-0440
     rust: ValidatorInitialMinimumStake
     description: >
-      Baseline floor; compounds 9%/yr (MinimumValidatorStake). COUPLED to V_booked (realized effective value), NOT to reward — D-0413 (C5). Effective floor enforced at registration + committee admission = max(baseline, k·V_booked), ratcheted (never below baseline, composes with C6 thermostat). baseline = the CoCVoC required-stake requirement: ~1,163,309 FLOP at 96 FLOP/block (Lean Security.lean::CoCVoC.stake_at_current_params; the legacy 305,505 FAILS the deterrence margin — legacy_stake_insufficient_at_r96). THRESHOLD-ROBUST: in the reward-capture requiredStake the corruption fraction θ CANCELS, so 1/3 (the AlephBFT safety threshold, Consensus.quorum_inter_gt_third) vs the earlier '51%' framing barely moves the ~1.16M (51% is a Nakamoto number, not a BFT one). CAVEAT: this reward-pegged base FALLS with each halving (reward_floor_shrinks_across_halving) — it prices reward-capture, not value-at-risk; the DURABLE floor is the value-coupled k·V_booked below, not this baseline. RATIFIED AT 1,200,000 BY D-0440 (tokenomics workbook rev 2026-08-27; ECON-010): the superseded 305,505 predated both the 96-FLOP decision and the V_booked retarget, and Lean already proved it inadequate — legacy_stake_insufficient_at_r96 machine-checks that it FAILS the 1.22x margin at R=96, while scaled_stake_sufficient_at_r96 proves 1,200,000 HOLDS it. The shipped floor is now the value the spec proves sufficient, closing ECON-009 C1 / issue #1353. Because the aggregate bond IS the validator genesis cohort (genesis_validator_airdrop), this raise carried that cohort 305,505,000 -> 1,200,000,000 and forced the genesis_supply resize to 4,400,000,000. Runtime wiring LANDED (pallet_validators::ValueCoupledStakeFloor / effective_minimum_stake / set_value_coupled_floor, #86); k + retarget cadence calibration is governance/ENG-31. Stake-side coupling is non-inflationary.
+      Baseline floor (MinimumValidatorStake); flat under D-0539, which removes the former 9%/yr growth. COUPLED to V_booked (realized effective value), NOT to reward — D-0413 (C5). Effective floor enforced at registration + committee admission = max(baseline, k·V_booked), ratcheted (never below baseline, composes with C6 thermostat). baseline = the CoCVoC required-stake requirement: ~1,163,309 FLOP at 96 FLOP/block (Lean Security.lean::CoCVoC.stake_at_current_params; the legacy 305,505 FAILS the deterrence margin — legacy_stake_insufficient_at_r96). THRESHOLD-ROBUST: in the reward-capture requiredStake the corruption fraction θ CANCELS, so 1/3 (the AlephBFT safety threshold, Consensus.quorum_inter_gt_third) vs the earlier '51%' framing barely moves the ~1.16M (51% is a Nakamoto number, not a BFT one). CAVEAT: this reward-pegged base FALLS with each halving (reward_floor_shrinks_across_halving) — it prices reward-capture, not value-at-risk; the DURABLE floor is the value-coupled k·V_booked below, not this baseline. RATIFIED AT 1,200,000 BY D-0440 (tokenomics workbook rev 2026-08-27; ECON-010): the superseded 305,505 predated both the 96-FLOP decision and the V_booked retarget, and Lean already proved it inadequate — legacy_stake_insufficient_at_r96 machine-checks that it FAILS the 1.22x margin at R=96, while scaled_stake_sufficient_at_r96 proves 1,200,000 HOLDS it. The shipped floor is now the value the spec proves sufficient, closing ECON-009 C1 / issue #1353. Because the aggregate bond IS the validator genesis cohort (genesis_validator_airdrop), this raise carried that cohort 305,505,000 -> 1,200,000,000 and forced the genesis_supply resize to 4,400,000,000. Runtime wiring LANDED (pallet_validators::ValueCoupledStakeFloor / effective_minimum_stake / set_value_coupled_floor, #86); k + retarget cadence calibration is governance/ENG-31. Stake-side coupling is non-inflationary.
     implementations:
       - { file: pallets/runtime/zkverify/src/lib.rs, expect: "ValidatorInitialMinimumStake: Balance = 1_200_000 * VFY" }
       - { file: ai-agent-simulator/params.yaml, expect: "validator_min_stake: 1200000" }
       - { file: ai-agent-simulator/src/model/parameters.ts, expect: "validatorMinStake: 1_200_000" }
       - { file: ai-agent-simulator/julia/params_sensitivity.yaml, expect: "validator_min_stake: 1200000" }
-      - { file: formal-specs/staking/staking-verification-minimal.qnt, expect: "STAKE_REQUIRED: int = 1200000" }
+      - { file: studio-specs/reference-staking-verification-minimal/reference_staking_verification_minimal.qnt, expect: "STAKE_REQUIRED: int = 1200000" }
 
   - name: airdrop_vesting_duration_blocks
     mutability: runtime-upgrade-only
@@ -214,13 +214,32 @@ parameters:
       applies it to every tier today; under yellowpaper §8.2 R8.7 (D-0517, D-0522, D-0527) no
       ratified grant tier uses this duration (Miner grants unlock against miner block rewards and
       settled sessions, Agent grants against settled sessions, both with no end block; Validator
-      grants follow the first-halving freeze and daily release), so it is only the pallet's interim
-      schedule until R8.7 is implemented.
+      grants unlock linearly from block 0 over validator_unlock_duration_blocks under D-0539), so it
+      is only the pallet's interim schedule until R8.7 is implemented.
     implementations:
       - { file: pallets/pallets/airdrop-vesting/src/lib.rs, expect: "VESTING_DURATION_BLOCKS: u32 = 7_776_000" }
       - { file: pallets/runtime/zkverify/src/lib.rs,        expect: "AirdropVestingDurationBlocks: u32 = 7_776_000" }
       - { file: pallets/pallets/airdrop-vesting/README.md,  expect: "VestingDurationBlocks = ConstU32<7_776_000>" }
       - { file: docs/tokenomics/SPEC-022-performance-vesting.md, expect: "| `VestingDurationBlocks` | **7,776,000** |" }
+
+  - name: era_t_season_blocks
+    mutability: source-only
+    on_chain: {source_only: 'Testnet chain-spec/configuration value; no exported on-chain constant.'}
+    value: 7_776_000
+    unit: blocks
+    decision: D-0547
+    description: >
+      Era-T (testnet) season length, a testnet configuration value whose default and maximum is
+      7,776,000 blocks (90 d at 1 s blocks); governance may ratify an earlier snapshot height, so a
+      season can be shorter (yellowpaper §8.2 R8.5a). The three conversion pools
+      (genesis_miner_airdrop, genesis_validator_airdrop, genesis_agent_airdrop) stay fixed at
+      1,200,000,000 FLOP each and do not scale with season length; each pool is allocated over its
+      cohort's eligible activity in the actual season under the scoring and aggregation rule that
+      yellowpaper E.38 leaves open, and season length changes neither pool size nor cohort
+      boundaries. Reaching the season end
+      never authorizes a payout by itself. The simulator's declared season0_days: 90 is not read by
+      code and does not carry this block count, so no implementation is checked.
+    implementations: []
 
   # ---- Emission & Rewards ----
   - name: initial_block_reward
@@ -244,7 +263,7 @@ parameters:
       - { file: docs/tokenomics/SPEC-018-halving-schedule.md, expect: "(spec: 96 FLOP)" }
       - { file: docs/tokenomics/TOKENOMICS_SPECIFICATION.md, expect: "**Initial Block Reward** | 96 FLOP/block" }
       # Governance anti-inflation bound = the genesis reward (no headroom cap); keep Quint + Lean aligned to 96 (#508).
-      - { file: formal-specs/governance/governance.qnt,      expect: "P_EMISSION_CAP:    int = 96" }
+      - { file: studio-specs/reference-governance/reference_governance.qnt,      expect: "P_EMISSION_CAP:    int = 96" }
       - { file: lean-proofs/FlopSpecs/Governance.lean, expect: "p.emission ≤ 96" }
 
   - name: halving_interval_blocks
@@ -387,10 +406,10 @@ parameters:
       Blocks between block-rewards distributions (one day at 1 s blocks). Each distribution mints
       the per-block schedule summed over the blocks since the last one, split into the four legs.
       A period with no credited miner G_n still mints the validator, agent and staker legs (YP
-      R9.12); its miner leg is not minted (owner decision 2026-10-01, #2144 option B).
+      R9.12); its miner leg is not minted (decided 2026-10-01).
     implementations:
       - { file: pallets/runtime/zkverify/src/lib.rs,               expect: "RewardDistributionPeriodBlocks: u32 = 86_400" }
-      - { file: formal-specs/rewards/block-rewards-period.qnt,     expect: "PERIOD_BLOCKS: int = 86400" }
+      - { file: studio-specs/reference-block-rewards-period/reference_block_rewards_period.qnt,     expect: "PERIOD_BLOCKS: int = 86400" }
 
   - name: gn_decay_factor_ppb
     mutability: runtime-upgrade-only
@@ -401,13 +420,13 @@ parameters:
     quint: DEFAULT_DECAY_PPB
     description: >
       GnDecayFactor read when the key is absent: 1.0, i.e. NO decay, so a period's miner leg is
-      split purely by verified G_n (owner decision 2026-10-01, #2144). A factor below 1.0 set on
+      split purely by verified G_n (decided 2026-10-01). A factor below 1.0 set on
       the key would weigh a proof gn x factor^min(blocks since period start, 100), floored once.
       The 0.99 the pallet documented was never ratified, and the R7-P0-07 A/B test found every
-      decay value cost honest miners more than batchers. Before #2144 the key read 0.
+      decay value cost honest miners more than batchers. Before that decision the key read 0.
     implementations:
       - { file: pallets/pallets/block-rewards/src/lib.rs,          expect: "DEFAULT_GN_DECAY_FACTOR_PPB: u32 = 1_000_000_000" }
-      - { file: formal-specs/rewards/block-rewards-period.qnt,     expect: "DEFAULT_DECAY_PPB: int = 1000000000" }
+      - { file: studio-specs/reference-block-rewards-period/reference_block_rewards_period.qnt,     expect: "DEFAULT_DECAY_PPB: int = 1000000000" }
       - { file: sdk/python/src/flop_sdk/staking_client.py,         expect: "is not None else 1_000_000_000" }
       - { file: sdk/typescript/src/staking-client.ts,              expect: "?? 1_000_000_000" }
 
@@ -417,7 +436,7 @@ parameters:
     value: 1_100_000
     unit: ppm
     rust: FINALITY_COMMITTEE_PREMIUM_WEIGHT_PPM
-    description: Finality-committee validator reward weight inside the validator 10% pool. Same-stake committee validators receive 1.1x the base validator weight; no new mint or agent surcharge.
+    description: "[DEPRECATED — D-0539] Former finality-committee reward weight inside the validator 10% pool (1.1x the base weight). D-0539 splits the pool equally per active seat with no premium (§9.1 R9.5); the source constant is retained pending removal from the runtime."
     implementations:
       - { file: pallets/pallets/validators/src/lib.rs, expect: "FINALITY_COMMITTEE_PREMIUM_WEIGHT_PPM: u128 = 1_100_000" }
 
@@ -501,12 +520,15 @@ parameters:
 
   - name: miner_capacity_stake_per_gflop
     mutability: runtime-upgrade-only
-    on_chain: {constants: [MinerStaking.CapacityStakePerGflop]}
-    value: "VFY / 100"
-    unit: "(= 0.01 FLOP per GFLOP/s)"
-    description: "Capacity-proportional miner self-stake = min_miner_self_stake + B_p * this (LINEAR, NO CAP — a cap would make the largest miners' fraud +EV; D-0418, ENG-8). 0.01 FLOP per GFLOP/s of CALIBRATED B_p (VFY/100, where VFY = 1 FLOP). CALIBRATED: 0.01 confirmed vs fraud-profit-over-the-7d-dispute-window (whitepaper/research/miner-capacity-stake-calibration.md). LIVE end-to-end: Capacity bound to hw-calibration B_p (daily G_n /86_400 -> G_n/s); PoUI proof crediting gated on is_capacity_bonded (fail-closed). Fraud-deterrence, NOT consensus security (miners cast no consensus vote; takeover needs validator stake — D-0413)."
+    on_chain:
+      constants: [MinerStaking.CapacityStakePerGflop]
+      pending_upgrade: {runtime: 1014015, reason: "D-0541 re-anchors the rate; a chain keeps the VFY / 100 value until the runtime that carries D-0541 is applied."}
+    value: "VFY / 30_240_000"
+    unit: "FLOP per G_n of exposure (floors to 33,068,783,068 base units)"
+    decision: D-0541
+    description: "Capacity-proportional miner self-stake rate (LINEAR, NO CAP — a cap would make the largest miners' fraud +EV; D-0418, ENG-8). required_self_stake = min_miner_self_stake + this * floor(B_p * miner_stake_revocation_latency_blocks * miner_stake_surge_multiplier_ppm / 1e6), with B_p the CALIBRATED cap in G_n/s (hw-calibration daily G_n / 86_400). D-0541 (adopted 2026-11-11) anchors it at one H100 = 400,000 G_n/s sustained: 400,000 * 756,000 G_n of exposure * VFY / 30_240_000 ≈ 10,000 FLOP on top of the 10,000 base, ≈ 20,000 FLOP in all; effective ≈ 0.025 FLOP per G_n/s of cap. Integer division floors the rate (0.78 base units per G_n below nominal). Supersedes the VFY / 100 value (7,560 FLOP per G_n/s). Fraud-deterrence, NOT consensus security (miners cast no consensus vote; takeover needs validator stake — D-0413). D-0541 does not establish the D-0532 deterrence envelope."
     implementations:
-      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "pub const CapacityStakePerGflop: Balance = VFY / 100;" }
+      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "pub const CapacityStakePerGflop: Balance = VFY / 30_240_000;" }
 
   - name: miner_stake_revocation_latency_blocks
     mutability: runtime-upgrade-only
@@ -544,6 +566,7 @@ parameters:
     description: "D-0433 minimum chain-timed serving-entry burst (10 minutes at 1s blocks). yellowpaper §7.1."
     implementations:
       - { file: pallets/runtime/zkverify/src/lib.rs, expect: "CalibrationMinBurstBlocks: u32 = 600" }
+      - { file: tee-bridge/poui-oracle/src/main.rs, expect: '#[arg(long = "calibration-min-burst-blocks", default_value = "600")]' }
 
   - name: calibration_min_utilization_ppm
     mutability: runtime-upgrade-only
@@ -563,6 +586,56 @@ parameters:
     description: "HARD-tier provisional discount applied to attested SKU ceilings before min(empirical_burst_cap, discounted_sku_ceiling). yellowpaper §7.1."
     implementations:
       - { file: pallets/runtime/zkverify/src/lib.rs, expect: "CalibrationProvisionalDiscountPpm: u32 = 900_000" }
+
+  - name: calibration_max_soft_cap_gn_per_sec
+    mutability: runtime-upgrade-only
+    on_chain: {constants: [HwCalibration.MaxSoftCapGnPerSec]}
+    value: 999_999
+    unit: G_n/s
+    decision: D-0542
+    description: >
+      Ceiling on a SOFT (non-attested) effective calibration cap. Strictly below the 1,000,000 G_n
+      direct PoI proof floor, so no SOFT cap can satisfy that gate's scalar check before its
+      units are fixed. Applied at acceptance and renewal; the hw-calibration v1 migration clamps stored
+      SOFT caps once. yellowpaper §7.1 R7.1d.
+    implementations:
+      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "CalibrationMaxSoftCapGnPerSec: u64 = 999_999" }
+      - { file: tee-bridge/poui-oracle/src/main.rs, expect: '#[arg(long = "calibration-max-soft-cap-gn-per-sec", default_value = "999999")]' }
+
+  - name: channel_max_unconsented_session_blocks
+    mutability: runtime-upgrade-only
+    on_chain: {constants: [ComputeChannel.MaxUnconsentedSessionBlocks]}
+    value: 14_400
+    unit: blocks
+    decision: D-0543
+    description: >
+      Longest SLA window a bare open_channel (no miner signature) may reserve calibration capacity
+      for: 4 h at 1 s blocks. Miner-signed offers, acked force_opens and cleared forward bids keep
+      their own SLA. yellowpaper §7.1 R7.1f.
+    implementations:
+      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "ChannelMaxUnconsentedSessionBlocks: BlockNumber = 14_400" }
+      - { file: pallets/pallets/compute-channel/src/lib.rs, expect: "type MaxUnconsentedSessionBlocks: Get<BlockNumberFor<Self>>;" }
+
+  - name: channel_unconsented_reservation_tariff
+    mutability: runtime-upgrade-only
+    on_chain: {constants: [ComputeChannel.UnconsentedReservationTariff]}
+    value: 41_335_978_835
+    unit: "base unit (10^-18 FLOP) per G_n"
+    decision: D-0544
+    description: >
+      Minimum escrow per reserved G_n that a bare open_channel must post: escrow >= reserved rate x
+      max(window, 1) x this. Derived in the runtime as floor(miner_capacity_stake_per_gflop x
+      miner_stake_surge_multiplier_ppm / 1e6) = floor(33,068,783,068 x 1.25), about 4.13e-8 FLOP per
+      G_n: collateral parity with the miner's per-G_n capacity stake, just below D-0533's proposed
+      5e-8 publisher floor. A minimum capacity payment, not refundable collateral: a cooperative
+      settle pays the whole escrow to the miner (D-0403) and a unilateral close withholds 20% of the
+      unused escrow from the refund. 400,000 G_n/s for 1,200 blocks escrows about 19.8 FLOP. scripts/check_param_identities.py
+      recomputes the derivation. yellowpaper §7.1 R7.1f.
+    implementations:
+      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "ChannelUnconsentedReservationTariff: Balance = UNCONSENTED_RESERVATION_TARIFF;" }
+      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "const UNCONSENTED_RESERVATION_TARIFF: Balance = CapacityStakePerGflop::get() * (MinerStakeSurgeMultiplierPpm::get() as Balance) / 1_000_000;" }
+      - { file: pallets/runtime/zkverify/src/tests/param_consts.rs, expect: "assert_eq!(tariff, 41_335_978_835);" }
+      - { file: pallets/pallets/compute-channel/src/lib.rs, expect: "type UnconsentedReservationTariff: Get<BalanceOf<Self>>;" }
 
   - name: calibration_lease_blocks
     mutability: runtime-upgrade-only
@@ -617,7 +690,7 @@ parameters:
     on_chain: {source_only: 'Model, SDK, or documented value; no exported on-chain constant.'}
     value: 0.1
     unit: "FLOP per 10 GFLOP/s"
-    description: "Simulator mirror of miner_capacity_stake_per_gflop (D-0418). The protocol const is VFY/100 = 0.01 FLOP per GFLOP/s; the sim encodes it per-10-GFLOP, so 0.01/GFLOP == 0.1 per-10-GFLOP. Enforced across BOTH sim param files so the rejected v2-draft value (1.0 = 0.1/GFLOP, 10x too high) cannot drift back (the Julia sensitivity flow reads params_sensitivity.yaml)."
+    description: "Simulator capacity-bond coefficient in the D-0418 form base + k * B_p. It still holds the D-0418 value k = 0.01 FLOP per GFLOP/s (0.1 per-10-GFLOP); the D-0541 runtime rate is equivalent to k ≈ 0.025 (0.25 per-10-GFLOP), and realigning the simulator is a separate follow-up. Enforced across BOTH sim param files so the rejected v2-draft value (1.0 = 0.1/GFLOP, 10x too high) cannot drift back (the Julia sensitivity flow reads params_sensitivity.yaml)."
     implementations:
       - { file: ai-agent-simulator/params.yaml,                  expect: "miner_stake_per_10_gflop: 0.1" }
       - { file: ai-agent-simulator/julia/params_sensitivity.yaml, expect: "miner_stake_per_10_gflop: 0.1" }
@@ -655,13 +728,14 @@ parameters:
   - name: max_active_reservations_base
     mutability: runtime-upgrade-only
     on_chain: {constants: [ComputeChannel.MaxActiveReservationsBase]}
-    value: 4
+    value: 400
     unit: count
+    decision: D-0540
     description: Base number of concurrent active capacity reservations per agent identity. Combined with escrow_per_reservation_slot for non-flat scaling (effective = base + floor(escrow / slot)); fail-closed at open/force_open (ENG-16, yellowpaper §12.2).
     implementations:
-      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "pub const MaxActiveReservationsBase: u32 = 4;" }
+      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "pub const MaxActiveReservationsBase: u32 = 400;" }
       - { file: pallets/pallets/compute-channel/src/lib.rs, expect: "type MaxActiveReservationsBase: Get<u32>;" }
-      - { file: ai-agent-simulator/src/model/session-channel.ts, expect: "export const MAX_ACTIVE_RESERVATIONS_BASE = 4;" }
+      - { file: ai-agent-simulator/src/model/session-channel.ts, expect: "export const MAX_ACTIVE_RESERVATIONS_BASE = 400;" }
 
   - name: escrow_per_reservation_slot
     mutability: runtime-upgrade-only
@@ -673,6 +747,180 @@ parameters:
       - { file: pallets/runtime/zkverify/src/lib.rs, expect: "pub const EscrowPerReservationSlot: Balance = 50 * VFY;" }
       - { file: pallets/pallets/compute-channel/src/lib.rs, expect: "type EscrowPerReservationSlot: Get<BalanceOf<Self>>;" }
       - { file: ai-agent-simulator/src/model/session-channel.ts, expect: "export const ESCROW_PER_RESERVATION_SLOT = 50;" }
+
+  - name: fcu_blocks_per_day
+    mutability: runtime-upgrade-only
+    on_chain: {source_only: 'Compiled FCU adapter field; not separately exported as a FRAME metadata constant. Activation still requires governed empirical storage.'}
+    value: 86_400
+    unit: blocks
+    description: >
+      D-0434 whole UTC day at the 1-second target cadence; controls forward window alignment and liveness accounting. Yellowpaper §12.5.
+    implementations:
+      - { file: pallets/runtime/zkverify/src/fcu.rs, expect: "pub const FCU_BLOCKS_PER_DAY: BlockNumber = 86_400;" }
+
+  - name: fcu_acceptance_budget_ms
+    mutability: source-only
+    on_chain: {source_only: 'D-0538 inactive SDK/native service policy; compiled native registry validation, not a deployed metadata constant or setter.'}
+    value: 100
+    unit: ms
+    description: D-0538 §12.5 ratified service policy; implementation remains default-inactive pending production, pilot and economics qualification.
+    implementations:
+      - { file: sdk/typescript/src/compute-channel/fcu-policy.ts, expect: "export const FCU_ACCEPTANCE_BUDGET_MS = 100n;" }
+      - { file: lean-proofs/FlopSpecs/FcuPolicy.lean, expect: "def acceptanceBudget : ℕ := 100" }
+      - { file: pallets/pallets/compute-channel/src/fcu_service.rs, expect: "pub const FCU_SERVICE_ACCEPTANCE_MS: u64 = 100;" }
+
+  - name: fcu_accepted_chunk_max_ms
+    mutability: source-only
+    on_chain: {source_only: 'D-0538 SDK/native service commitment and admission cutoff; physical timing and activation remain separately qualified.'}
+    value: 1000
+    unit: ms
+    description: Maximum accepted-chunk completion latency, measured from miner acceptance under the sold profile. Yellowpaper §12.5.
+    implementations:
+      - { file: sdk/typescript/src/compute-channel/fcu-profile.ts, expect: "export const FCU_ACCEPTED_CHUNK_MAX_MS = 1_000n;" }
+      - { file: pallets/pallets/compute-channel/src/fcu_service.rs, expect: "pub const FCU_SERVICE_COMPLETION_MS: u64 = 1_000;" }
+
+  - name: fcu_finality_freshness_ms
+    mutability: source-only
+    on_chain: {source_only: 'D-0538 inactive SDK service policy; no deployed runtime constant or setter.'}
+    value: 10000
+    unit: ms
+    description: D-0538 §12.5 ratified service policy; implementation remains default-inactive pending production, pilot and economics qualification.
+    implementations:
+      - { file: sdk/typescript/src/compute-channel/fcu-policy.ts, expect: "export const FCU_FINALITY_FRESHNESS_MS = 10_000n;" }
+      - { file: lean-proofs/FlopSpecs/FcuPolicy.lean, expect: "def freshnessBudget : ℕ := 10000" }
+
+  - name: fcu_timing_proof_grace_ms
+    mutability: source-only
+    on_chain: {source_only: 'D-0538 inactive SDK claim policy; native reserve funding/settlement integration remains gated.'}
+    value: 60000
+    unit: ms
+    description: D-0538 §12.5 timing-proof grace or minimum post-delivery challenge window; existing longer dispute/DA deadlines remain binding.
+    implementations:
+      - { file: sdk/typescript/src/compute-channel/fcu-sla.ts, expect: "export const FCU_TIMING_PROOF_GRACE_MS = 60_000n;" }
+
+  - name: fcu_sla_challenge_ms
+    mutability: source-only
+    on_chain: {source_only: 'D-0538 inactive SDK claim policy; native reserve funding/settlement integration remains gated.'}
+    value: 86400000
+    unit: ms
+    description: D-0538 §12.5 timing-proof grace or minimum post-delivery challenge window; existing longer dispute/DA deadlines remain binding.
+    implementations:
+      - { file: sdk/typescript/src/compute-channel/fcu-sla.ts, expect: "export const FCU_SLA_CHALLENGE_MS = 86_400_000n;" }
+
+  - name: fcu_delivery_series_count
+    mutability: runtime-upgrade-only
+    on_chain: {source_only: 'D-0536 preparatory standardized-object UTC admission; existing block-aligned runtime profile integration and D-0538 qualification remain gated.'}
+    value: 14
+    unit: series
+    description: >
+      New primary offers expose UTC-calendar D+1 through D+14 delivery starts at 12:00 UTC. D is the authoritative purchase date. This counts offered date series, not FCU quantity, duration or outstanding positions; resale preserves sold dates. Yellowpaper §12.5.
+    implementations:
+      - { file: sdk/typescript/src/compute-channel/fcu-profile.ts, expect: "export const FCU_DELIVERY_SERIES_COUNT = 14;" }
+      - { file: lean-proofs/FlopSpecs/FcuServing.lean, expect: "def deliverySeriesCount : ℕ := 14" }
+      - { file: pallets/pallets/compute-channel/src/fcu_service.rs, expect: "pub const FCU_SERVICE_SERIES: u64 = 14;" }
+
+  - name: fcu_max_tenor
+    mutability: runtime-upgrade-only
+    on_chain: {source_only: 'Compiled FCU adapter field; not separately exported as a FRAME metadata constant. Activation still requires governed empirical storage.'}
+    value: 2_592_000
+    unit: blocks
+    description: >
+      D-0434 launch tenor cap: 30 times 86,400 blocks, or 30 target-cadence days. Forward term validation consumes this bound. Yellowpaper §12.5.
+    implementations:
+      - { file: pallets/runtime/zkverify/src/fcu.rs, expect: "pub const FCU_MAX_TENOR: BlockNumber = 2_592_000;" }
+
+  - name: model_registry_base_price_per_gn
+    mutability: runtime-upgrade-only
+    on_chain: {source_only: 'ModelRegistry Config price is not a metadata constant; verified against runtime source.'}
+    value: "VFY / 2_000_000"
+    unit: "base units per reference G_n (5e-7 FLOP)"
+    description: >
+      Unactivated H100 pricing candidate from proposed D-0533 (not ratified). Base / 10 is the publisher price floor.
+      Existing model prices require an explicitly pinned migration; lowering this
+      constant alone does not reprice them. Audit funding remains an activation blocker.
+      Simulator enterprise valuations are independent modeling inputs.
+    implementations:
+      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "pub const ModelRegistryBasePricePerGFLOP: u128 = VFY / 2_000_000;" }
+      - { file: pallets/runtime/zkverify/src/tests/param_consts.rs, expect: "assert_eq!(ModelRegistryBasePricePerGFLOP::get(), VFY / 2_000_000);" }
+      - { file: pallets/pallets/model-registry/src/mock.rs, expect: "pub const BasePricePerGFLOP: u128 = 500_000_000_000;" }
+      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "type BasePricePerGFLOP = EffectiveModelRegistryBasePrice;" }
+
+  - name: fcu_min_gn
+    mutability: runtime-upgrade-only
+    on_chain: {source_only: 'Compiled FCU adapter field; not separately exported as a FRAME metadata constant. Activation still requires governed empirical storage.'}
+    value: 100_000_000
+    unit: G_n
+    description: >
+      Fee-share floor: transfer_forward_units plus ExtrinsicBaseWeight costs 614,081,000 ref_time with the current 19 reads and 4 writes, at TransactionPicosecondFee = 5e6 planck/unit: 0.003070405 FLOP. At the BasePricePerGFLOP = 0.0000005 FLOP benchmark of proposed D-0533 (not ratified), the exact minimum for a 1 bp fee share is 61,408,100 G_n. The rounded 100,000,000 G_n candidate is worth 50 FLOP, giving 0.614081 bp (6.14081 bp at the /10 registration price floor). Legacy effective quota remains 10,000 until the guarded pricing cutover. This candidate does not authorize FCU primary admission. Yellowpaper §12.5.
+    implementations:
+      - { file: pallets/runtime/zkverify/src/fcu.rs, expect: "pub const FCU_MIN_GN: u128 = 100_000_000;" }
+
+  - name: fcu_liveness_checks_per_day
+    mutability: runtime-upgrade-only
+    on_chain: {source_only: 'Compiled FCU adapter field; not separately exported as a FRAME metadata constant. Activation still requires governed empirical storage.'}
+    value: 2
+    unit: checks/day
+    description: >
+      Structural Ghost observation cadence, retaining the existing FCU reference configuration: two checks per target-cadence day. Does not calibrate availability economics. Yellowpaper §12.5.
+    implementations:
+      - { file: pallets/runtime/zkverify/src/fcu.rs, expect: "pub const FCU_LIVENESS_CHECKS_PER_DAY: u32 = 2;" }
+
+  - name: fcu_missed_liveness_tolerance_ppm
+    mutability: runtime-upgrade-only
+    on_chain: {source_only: 'Compiled FCU adapter field; not separately exported as a FRAME metadata constant. Activation still requires governed empirical storage.'}
+    value: 200_000
+    unit: ppm
+    description: >
+      Structural missed-check threshold, retaining the existing FCU reference configuration (20 percent). Default requires strictly more missed observations and an Allowed runtime slash state. Yellowpaper §12.5.
+    implementations:
+      - { file: pallets/runtime/zkverify/src/fcu.rs, expect: "pub const FCU_MISSED_LIVENESS_TOLERANCE_PPM: u32 = 200_000;" }
+
+  - name: fcu_bond_grace
+    mutability: runtime-upgrade-only
+    on_chain: {source_only: 'Compiled FCU adapter field; not separately exported as a FRAME metadata constant. Activation still requires governed empirical storage.'}
+    value: 86_400
+    unit: blocks
+    description: >
+      One target-cadence day after the reservation end for bond escrow, matching the D+1 settlement deadline in D-0434 section 2. Liveness and governance pause guards remain mandatory. Yellowpaper §12.5.
+    implementations:
+      - { file: pallets/runtime/zkverify/src/fcu.rs, expect: "pub const FCU_BOND_GRACE: BlockNumber = 86_400;" }
+
+  - name: fcu_lot_fraction_ppm
+    mutability: runtime-upgrade-only
+    on_chain: {source_only: 'Compiled FCU adapter field; not separately exported as a FRAME metadata constant. Activation still requires governed empirical storage.'}
+    value: 1_000_000
+    unit: ppm
+    description: >
+      D-0434 bilateral launch: a holder must take the entire reservation. Dormant divisible-path tests retain the 100,000 ppm reference configuration. Yellowpaper §12.5.
+    implementations:
+      - { file: pallets/runtime/zkverify/src/fcu.rs, expect: "pub const FCU_LOT_FRACTION_PPM: u32 = 1_000_000;" }
+
+  - name: fcu_entropy_epoch_delay
+    mutability: runtime-upgrade-only
+    on_chain: {source_only: 'Compiled FCU auction entropy adapter; no independent FRAME constant.'}
+    value: 3
+    unit: epochs
+    description: The target epoch is fixed three BABE epochs after registration seals, preserving the TwoEpochsAgo commitment gap. Yellowpaper §12.5.
+    implementations:
+      - { file: pallets/runtime/zkverify/src/fcu.rs, expect: "pub const FCU_ENTROPY_EPOCH_DELAY: u64 = 3;" }
+
+  - name: fcu_entropy_execution_epochs
+    mutability: runtime-upgrade-only
+    on_chain: {source_only: 'Compiled FCU auction execution deadline; no independent FRAME constant.'}
+    value: 2
+    unit: epochs
+    description: A sealed bid may enter reveal in its fixed target epoch or the following epoch. It becomes permissionlessly refundable thereafter. Yellowpaper §12.5.
+    implementations:
+      - { file: pallets/runtime/zkverify/src/fcu.rs, expect: "pub const FCU_ENTROPY_EXECUTION_EPOCHS: u64 = 2;" }
+
+  - name: fcu_entropy_history_epochs
+    mutability: runtime-upgrade-only
+    on_chain: {source_only: 'Compiled epoch-tagged ring; no independent FRAME constant.'}
+    value: 6
+    unit: epochs
+    description: The six-slot entropy ring outlives every two-epoch execution window. Reused slots retain their epoch tag and cannot satisfy an older bid. Yellowpaper §12.5.
+    implementations:
+      - { file: pallets/runtime/zkverify/src/fcu.rs, expect: "pub const FCU_ENTROPY_HISTORY_EPOCHS: u64 = 6;" }
 
   - name: min_certificate_premium_ppm
     mutability: runtime-upgrade-only
@@ -807,7 +1055,7 @@ parameters:
       - { file: pallets/runtime/zkverify/src/lib.rs, expect: "pub const HasHtlcBurnSharePpt: u32 = 0;" }
       - { file: pallets/runtime/zkverify/src/lib.rs, expect: "type HtlcBurnShare = HasHtlcBurnSharePpt;" }
       - { file: lean-proofs/FlopSpecs/HtlcIncentives.lean, expect: "def shippedBurnSharePpt : Nat := 0" }
-      - { file: quint-specs/has-station.qnt, expect: "pure val HTLC_BURN_SHARE_PPT: int = 0" }
+      - { file: studio-specs/has-station/has_station.qnt, expect: "pure val HTLC_BURN_SHARE_PPT: int = 0" }
 
   - name: btc_block_time_flop_blocks
     mutability: runtime-upgrade-only
@@ -821,7 +1069,7 @@ parameters:
     implementations:
       - { file: pallets/runtime/zkverify/src/lib.rs, expect: "pub const HasBtcBlockTimeInFlopBlocks: u32 = 600;" }
 
-  # ---- PoUI simulator-mode safety flag (#297 CRIT-02 / RT-C02) ----
+  # ---- PoI simulator-mode safety flag (#297 CRIT-02 / RT-C02) ----
   # The simulator credit path (submit_stark_batch credits G_n with NO TEE verification)
   # is a devnet/E2E-only opt-in. AllowSimulatorMode is true ONLY in `volta` (devnet)
   # builds — the same feature that compiles pallet-flop-poui's `simulator` path — and
@@ -875,7 +1123,7 @@ parameters:
     implementations:
       - { file: pallets/runtime/zkverify/src/lib.rs, expect: 'pub const SponsoredSelfStake: bool = cfg!(feature = "sponsored-self-stake");' }
 
-  # ---- PoUI submission rate limit ----
+  # ---- PoI submission rate limit ----
   - name: poui_submission_window_blocks
     mutability: runtime-upgrade-only
     on_chain: {source_only: Not exported as a FRAME constant; verified against source only.}
@@ -883,7 +1131,7 @@ parameters:
     unit: blocks
     rust: PouiEpochDurationBlocks
     description: >
-      Block-aligned PoUI submission rate-limit window (1 day at 1 s blocks). The pallet resets
+      Block-aligned PoI submission rate-limit window (1 day at 1 s blocks). The pallet resets
       per-miner submission counts when now / PouiEpochDurationBlocks advances; this window is
       unrelated to the BABE epoch. yellowpaper §1.2.
     implementations:
@@ -1014,7 +1262,7 @@ parameters:
       landing off a node's best branch, block-request churn, reputation bans, validator isolation.
       1/50 gives ~1.6% — a ~12x reduction. Costs nothing in randomness: pallet_babe deposits epoch
       randomness from any VRF-carrying pre-digest and SecondaryVRFSlots blocks carry one, so the
-      beacon seeding the PoUI committee sampler is fed by every block regardless of c.
+      beacon seeding the PoI committee sampler is fed by every block regardless of c.
     implementations:
       - { file: pallets/runtime/zkverify/src/lib.rs, expect: "PRIMARY_PROBABILITY: (u64, u64) = (1, 50)" }
       # The relay-node test runtime carries its own copy (vendored from Polkadot, whose 1/4 is
@@ -1077,14 +1325,49 @@ parameters:
     unit: count
     rust: AlephMaxCommittee
     description: >
-      AlephBFT finalizing committee size: randomly sampled stake-weighted without replacement
-      from the PoUI-gated active set off a BABE-VRF seed (#448/#848). Sampling is performed by
-      sample_committee_weighted; formal sampling-risk values are mirrored in
+      AlephBFT finalizing committee size: drawn uniformly without replacement from the live,
+      PoI-gated seats of the active set off a per-block VRF seed revealed before the session
+      (D-0539). The deployed runtime still samples stake-weighted.
+      Stays 100 until E.58 ratifies the 200-seat benchmark. Formal sampling-risk values are mirrored in
       CommitteeSampling.Tunables, with the BFT fault-seat threshold derived from
       Consensus.FinalCtx.faulty_minority. Distinct from the active set, which is separately capped at
       validator_active_set_cap (D-0437). yellowpaper §15.4.
     implementations:
       - { file: pallets/runtime/zkverify/src/lib.rs, expect: "AlephMaxCommittee: u32 = 100" }
+
+  - name: committee_seed_lookahead_blocks
+    mutability: runtime-upgrade-only
+    on_chain:
+      constants: [Aleph.CommitteeSeedLookaheadBlocks]
+      pending_upgrade: {runtime: 1014019, reason: "Not yet deployed."}
+    value: 60
+    unit: blocks
+    rust: CommitteeSeedLookaheadBlocks
+    description: >
+      Positive lookahead delta from the last captured BABE per-block VRF output to the
+      Aleph committee boundary (§15.4 R15.4b). Placeholder at 1 s blocks until E.58
+      measures aleph-node connection setup; not a ratified measurement. Must be positive
+      because capture finalizes before the boundary's initialize hook, and delta + k must
+      fit AlephEpochBlocks. Empty windows use the warned epoch-randomness fallback.
+    implementations:
+      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "CommitteeSeedLookaheadBlocks: u32 = 60" }
+
+  - name: committee_seed_window_blocks
+    mutability: runtime-upgrade-only
+    on_chain:
+      constants: [Aleph.CommitteeSeedWindowBlocks]
+      pending_upgrade: {runtime: 1014019, reason: "Not yet deployed."}
+    value: 10
+    unit: blocks
+    rust: CommitteeSeedWindowBlocks
+    description: >
+      Positive window length k for ordered BABE VRF accumulation (§15.4 R15.4b).
+      Placeholder until E.58 ratifies k. Capture blocks (B - delta - k, B - delta],
+      reset on the first included block, skip plain slots, and freeze through B.
+      Full-window early knowledge requires all contributing authors to collude;
+      a^k assumes k VRF-bearing blocks and independent adversarial slot assignments.
+    implementations:
+      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "CommitteeSeedWindowBlocks: u32 = 10" }
 
   - name: validator_attestation_threshold
     mutability: governance-settable
@@ -1096,7 +1379,7 @@ parameters:
     decision: D-0414
     rust: PouiDefaultValidatorAttestationThreshold
     description: >
-      BFT attestation quorum (Perbill parts 666_666_666 = 2/3), root-governable; gates the direct PoUI
+      BFT attestation quorum (Perbill parts 666_666_666 = 2/3), root-governable; gates the direct PoI
       proof path + Ghost Tasks. yellowpaper §3.6/§13.3.
     implementations:
       - { file: pallets/runtime/zkverify/src/lib.rs, expect: "PouiDefaultValidatorAttestationThreshold: Perbill = Perbill::from_parts(666_666_666)" }
@@ -1134,7 +1417,7 @@ parameters:
     unit: profile-id
     rust: POUI_TEE_V1_PROFILE_ID
     description: >
-      Governed shared-attestation profile id for PoUI TEE v1 claims. New pending PoUI proofs pin
+      Governed shared-attestation profile id for PoI TEE v1 claims. New pending PoI proofs pin
       this id through `PouiTeeV1Profile` and reject claims for unknown or stale profile versions.
     implementations:
       - { file: pallets/pallets/flop-poui/src/lib.rs, expect: "POUI_TEE_V1_PROFILE_ID: H256 = H256([4u8; 32])" }
@@ -1146,7 +1429,7 @@ parameters:
     unit: profile-version
     rust: PouiTeeV1Profile
     description: >
-      Initial profile version for PoUI TEE v1 claims. Consumers pin this version at proof
+      Initial profile version for PoI TEE v1 claims. Consumers pin this version at proof
       submission and fail closed if governance updates the live profile before claim resolution.
     implementations:
       - file: pallets/runtime/zkverify/src/lib.rs
@@ -1164,7 +1447,7 @@ parameters:
     unit: blocks
     decision: D-0416
     rust: RotationIntervalBlocks
-    description: "Validator-set rotation cadence (~30 d at 1s); automatic on_initialize + manual rotate. yellowpaper §15.5."
+    description: "[SUPERSEDED — D-0539] Retained in the runtime until per-session re-selection replaces do_rotate. Validator-set rotation cadence (~30 d at 1s); automatic on_initialize + manual rotate. yellowpaper §15.5."
     implementations:
       - { file: pallets/runtime/zkverify/src/lib.rs, expect: "RotationIntervalBlocks: u64 = 2_592_000" }
 
@@ -1174,7 +1457,7 @@ parameters:
     value: 50
     unit: count
     rust: ValidatorsToEject
-    description: "Requested maximum per rotation; live ejections also require scored evidence (a blacklisted seat needs none and goes first) and respect the churn percentage and minimum active set. Live ranking is by work-recency/performance; stake ordering remains a §15.5 target."
+    description: "[SUPERSEDED — D-0539] Retained in the runtime until per-session re-selection replaces do_rotate. Requested maximum per rotation; live ejections also require scored evidence (a blacklisted seat needs none and goes first) and respect the churn percentage and minimum active set. Live ranking is by work-recency/performance; stake ordering remains a §15.5 target."
     implementations:
       - { file: pallets/runtime/zkverify/src/lib.rs, expect: "ValidatorsToEject: u32 = 50" }
 
@@ -1184,7 +1467,7 @@ parameters:
     value: 50
     unit: count
     rust: ValidatorsToPromote
-    description: "Per-rotation promote count from the queue (stake >= current minimum). yellowpaper §15.5."
+    description: "[SUPERSEDED — D-0539] Retained in the runtime until per-session re-selection replaces do_rotate. Per-rotation promote count from the queue (stake >= current minimum). yellowpaper §15.5."
     implementations:
       - { file: pallets/runtime/zkverify/src/lib.rs, expect: "ValidatorsToPromote: u32 = 50" }
 
@@ -1195,7 +1478,7 @@ parameters:
     unit: count
     decision: D-0437
     rust: ValidatorActiveSetCap
-    description: "Maximum active validators in ActiveValidators (admitted by rotation promotion from ValidatorQueue or direct un_jail/rejoin restoration). yellowpaper §9.3 R9.9, §15.5."
+    description: "Maximum active validators in ActiveValidators (admitted by per-session re-selection (R15.5) or un_jail/rejoin restoration). yellowpaper §9.3 R9.9, §15.5."
     implementations:
       - { file: pallets/runtime/zkverify/src/lib.rs, expect: "MAX_ACTIVE_VALIDATORS: u32 = 1_000" }
       - { file: pallets/runtime/zkverify/src/lib.rs, expect: "ValidatorActiveSetCap: u32 = 1_000" }
@@ -1218,7 +1501,7 @@ parameters:
     value: 10
     unit: percent
     rust: ValidatorRotationChurnPercent
-    description: "Maximum share of the current active set ejected in one rotation, rounded up to a whole validator."
+    description: "[SUPERSEDED — D-0539] Retained in the runtime until per-session re-selection replaces do_rotate. Maximum share of the current active set ejected in one rotation, rounded up to a whole validator."
     implementations:
       - { file: pallets/runtime/zkverify/src/lib.rs, expect: "ValidatorRotationChurnPercent: u32 = 10" }
       - { file: pallets/runtime/zkverify/src/lib.rs, expect: "type RotationChurnPercent = ValidatorRotationChurnPercent" }
@@ -1229,7 +1512,7 @@ parameters:
     value: 3
     unit: count
     rust: ValidatorMinScoredSamples
-    description: "Performance-score updates required within one rotation interval before a validator may be ejected."
+    description: "[SUPERSEDED — D-0539] Retained in the runtime until per-session re-selection replaces do_rotate. Performance-score updates required within one rotation interval before a validator may be ejected."
     implementations:
       - { file: pallets/runtime/zkverify/src/lib.rs, expect: "ValidatorMinScoredSamples: u32 = 3" }
       - { file: pallets/runtime/zkverify/src/lib.rs, expect: "type MinScoredSamples = ValidatorMinScoredSamples" }
@@ -1240,7 +1523,7 @@ parameters:
     value: 604_800
     unit: blocks
     rust: EjectionCooldownBlocks
-    description: "Cooldown (~7 d) before a rotation-ejected validator (whose self-stake freeze was thawed on ejection) may re-register into ValidatorQueue at effective_minimum_stake(); configured in Config, enforcement in register pending. Distinct from rejoin (which restores an extended-downtime-kicked validator directly to ActiveValidators). yellowpaper §15.5."
+    description: "[SUPERSEDED — D-0539] Retained in the runtime until per-session re-selection replaces do_rotate. Cooldown (~7 d) before a rotation-ejected validator (whose self-stake freeze was thawed on ejection) may re-register into ValidatorQueue at effective_minimum_stake(); configured in Config, enforcement in register pending. Distinct from rejoin (which restores an extended-downtime-kicked validator directly to ActiveValidators). yellowpaper §15.5."
     implementations:
       - { file: pallets/runtime/zkverify/src/lib.rs, expect: "EjectionCooldownBlocks: u64 = 604_800" }
 
@@ -1273,7 +1556,7 @@ parameters:
     unit: ratio
     decision: D-0413
     rust: ValidatorGrowthNumerator
-    description: "Numerator of the annual compounding factor on the validator minimum-stake floor (109/100 = +9%/yr). yellowpaper §15.2."
+    description: "[DEPRECATED — D-0539] Numerator of the former annual compounding factor on the validator minimum-stake floor (109/100 = +9%/yr); the floor is flat under D-0539, and the runtime constant is retained pending removal from the runtime. yellowpaper §15.2."
     implementations:
       - { file: pallets/runtime/zkverify/src/lib.rs, expect: "ValidatorGrowthNumerator: u64 = 109" }
 
@@ -1284,9 +1567,37 @@ parameters:
     unit: ratio
     decision: D-0413
     rust: ValidatorGrowthDenominator
-    description: "Denominator paired with validator_growth_numerator (109/100 = +9%/yr). yellowpaper §15.2."
+    description: "[DEPRECATED — D-0539] Denominator paired with validator_growth_numerator (109/100 = +9%/yr); retained pending removal from the runtime. yellowpaper §15.2."
     implementations:
       - { file: pallets/runtime/zkverify/src/lib.rs, expect: "ValidatorGrowthDenominator: u64 = 100" }
+
+  - name: validator_reward_bond_ppt
+    mutability: runtime-upgrade-only
+    on_chain: {source_only: Not exported as a FRAME constant; verified against source only.}
+    value: 500
+    unit: parts-per-thousand
+    decision: D-0539
+    rust: ValidatorRewardBondPpt
+    description: >
+      Share of each active seat's validator block-reward leg that is bonded and locked: at 500 ppt,
+      50% of the share is added to the seat's bonded self-stake and to its lock and 50% is liquid on
+      issue, and every validator fee leg is liquid (D-0539; yellowpaper §9.1 R9.13). Each bonded
+      tranche unlocks linearly over validator_unlock_duration_blocks from its bonding (§15 R15.7a),
+      and unlocking never unbonds. Spec-only; not yet implemented in the runtime.
+    implementations: []
+
+  - name: validator_unlock_duration_blocks
+    mutability: runtime-upgrade-only
+    on_chain: {source_only: Not exported as a FRAME constant; verified against source only.}
+    value: 315_360_000
+    unit: blocks
+    decision: D-0539
+    rust: ValidatorUnlockDurationBlocks
+    description: >
+      Linear unlock span of a Validator grant (from block 0 for the genesis grant) and of each bonded
+      reward tranche (from its bonding): five halving intervals, 5 x halving_interval_blocks (D-0539).
+      Unlocking never unbonds. Spec-only; not yet implemented in the runtime. yellowpaper §8.2 R8.7.
+    implementations: []
 
   # ---- Metering tripwire ----
   - name: throughput_tripwire_gflops_per_sec
@@ -1335,7 +1646,7 @@ parameters:
     implementations:
       - { file: pallets/runtime/zkverify/src/lib.rs, expect: "pub const ChannelMaxSettlementTurns: u32 = 1024;" }
       - { file: pallets/pallets/compute-channel/src/lib.rs, expect: "type MaxSettlementTurns: Get<u32>;" }
-      - { file: formal-specs/channel/dispute-retention-model.qnt, expect: "DEPLOYED_MAX_SETTLEMENT_TURNS: int = 1_024" }
+      - { file: studio-specs/reference-dispute-retention/reference_dispute_retention.qnt, expect: "DEPLOYED_MAX_SETTLEMENT_TURNS: int = 1_024" }
 
   - name: channel_max_session_activation_bytes
     mutability: runtime-upgrade-only
@@ -1352,7 +1663,7 @@ parameters:
       - { file: pallets/pallets/compute-channel/src/lib.rs, expect: "pub const SESSION_TRANSCRIPT_TURN_MAX_BYTES: u32 = 351;" }
       - { file: sdk/typescript/src/compute-channel/da.ts, expect: "export const MAX_SESSION_ACTIVATION_BYTES = 65_536;" }
       - { file: sdk/rust-compute-channel/tests/session_da_limits.rs, expect: "const MAX_SESSION_ACTIVATION_BYTES: u32 = 65_536;" }
-      - { file: formal-specs/channel/session-evidence-da.qnt, expect: "MAX_SESSION_ACTIVATION_BYTES: int = 65_536" }
+      - { file: studio-specs/reference-session-evidence-da/reference_session_evidence_da.qnt, expect: "MAX_SESSION_ACTIVATION_BYTES: int = 65_536" }
 
   - name: channel_max_merkle_path_len
     mutability: runtime-upgrade-only
@@ -1409,7 +1720,7 @@ parameters:
     description: "Session dispute/challenge window (7 d); integrity_test enforces <= DaEphemeralRetention (14 d). yellowpaper §12.1."
     implementations:
       - { file: pallets/runtime/zkverify/src/lib.rs, expect: "ChannelDisputeWindow: BlockNumber = 604_800" }
-      - { file: formal-specs/channel/dispute-retention-model.qnt, expect: "DEPLOYED_DISPUTE_WINDOW: int = 604_800" }
+      - { file: studio-specs/reference-dispute-retention/reference_dispute_retention.qnt, expect: "DEPLOYED_DISPUTE_WINDOW: int = 604_800" }
 
   - name: channel_dispute_response_window_blocks
     mutability: runtime-upgrade-only
@@ -1421,7 +1732,7 @@ parameters:
     description: "Time to respond to an open dispute (2 h); non-response defaults to a fraud verdict. yellowpaper §12.1."
     implementations:
       - { file: pallets/runtime/zkverify/src/lib.rs, expect: "ChannelDisputeResponseWindow: BlockNumber = 7_200" }
-      - { file: formal-specs/channel/dispute-retention-model.qnt, expect: "DEPLOYED_RESPONSE_WINDOW: int = 7_200" }
+      - { file: studio-specs/reference-dispute-retention/reference_dispute_retention.qnt, expect: "DEPLOYED_RESPONSE_WINDOW: int = 7_200" }
 
   - name: channel_toploc_escalation_window_blocks
     mutability: runtime-upgrade-only
@@ -1479,32 +1790,57 @@ parameters:
 
   - name: inference_fee_miner_share_ppt
     mutability: runtime-upgrade-only
-    on_chain: {source_only: Not exported as a FRAME constant; verified against source only.}
+    on_chain:
+      constants: [ComputeChannel.InferenceFeeMinerSharePpt]
+      pending_upgrade: {runtime: 1014022, reason: D-0545 prospective funded fee credits require runtime deployment and completed initialization.}
     value: 850
     unit: parts-per-thousand
     decision: D-0525
-    rust: INFERENCE_FEE_MINER_SHARE_PPT
+    rust: InferenceFeeMinerSharePpt
     description: >
       #2702 (D-0525): Executive ruling (Shu, 2026-10-14). Ratified 85% (850 ppt) miner share
       of each settled compute-channel session payment. Aligns institutional counterparty agreements,
       the financial model (FLOP Tokenomics & Airdrop.xlsx, Projection Input), and the published teaser.
       Yellowpaper §12.1, Appendix D, and Appendix F.3.
-    implementations: []
+    implementations:
+      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "InferenceFeeMinerSharePpt: u32 = 850" }
+      - { file: pallets/pallets/compute-channel/src/lib.rs, expect: "type InferenceFeeMinerSharePpt: Get<u32>;" }
 
   - name: inference_fee_validator_share_ppt
     mutability: runtime-upgrade-only
-    on_chain: {source_only: Not exported as a FRAME constant; verified against source only.}
+    on_chain:
+      constants: [ComputeChannel.InferenceFeeValidatorSharePpt]
+      pending_upgrade: {runtime: 1014022, reason: D-0545 prospective funded fee credits require runtime deployment and completed initialization.}
     value: 150
     unit: parts-per-thousand
     decision: D-0525
-    rust: INFERENCE_FEE_VALIDATOR_SHARE_PPT
+    rust: InferenceFeeValidatorSharePpt
     description: >
       #2702 (D-0525): Executive ruling (Shu, 2026-10-14). Ratified 15% (150 ppt) validator share
       of each settled compute-channel session payment. The 1% audit pool earmark
       (audit_fee_split_ppm = 10_000) is funded out of this 15% leg, with the remainder distributed
-      across active validators according to the §9 R9.5 committee-premium weighting. Liquid on issue
-      per D-0518. Yellowpaper §9, §12.1, Appendix D, and Appendix F.3.
-    implementations: []
+      across active validators in equal per-seat shares (§9 R9.5, D-0539). For new D-0545 channels, fully funded immediately claimable credits replace
+      per-settlement transfers; existing channel terms remain unchanged. Yellowpaper §9, §12.1, Appendix D, and Appendix F.3.
+    implementations:
+      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "InferenceFeeValidatorSharePpt: u32 = 150" }
+      - { file: pallets/pallets/compute-channel/src/lib.rs, expect: "type InferenceFeeValidatorSharePpt: Get<u32>;" }
+      - { file: scripts/drills/paid-inference-acceptance.mjs, expect: "validator = gross * 150n / 1000n", count: 1 }
+
+  - name: inference_fee_initialization_batch
+    mutability: runtime-upgrade-only
+    on_chain:
+      constants: [Validators.InferenceFeeInitializationBatch]
+      pending_upgrade: {runtime: 1014022, reason: D-0545 bounded fee-ledger initialization requires runtime deployment.}
+    value: 1
+    unit: validators-per-block
+    decision: D-0545
+    rust: InferenceFeeInitializationBatch
+    description: >
+      Maximum validator seats initialized per block before prospective fee-credit activation.
+      Initialization does not block existing validator maintenance or legacy channel exits.
+    implementations:
+      - { file: pallets/runtime/zkverify/src/lib.rs, expect: "InferenceFeeInitializationBatch: u32 = 1" }
+      - { file: pallets/pallets/validators/src/lib.rs, expect: "type InferenceFeeInitializationBatch: Get<u32>;" }
 
   - name: audit_fee_split_ppm
     mutability: runtime-upgrade-only
@@ -1523,6 +1859,7 @@ parameters:
     implementations:
       - { file: pallets/runtime/zkverify/src/lib.rs, expect: "ChannelAuditFeeSplitPpm: u32 = 10_000" }
       - { file: pallets/pallets/compute-channel/src/lib.rs, expect: "type AuditFeeSplitPpm: Get<u32>;" }
+      - { file: scripts/drills/paid-inference-acceptance.mjs, expect: "audit = gross * 10000n / 1000000n", count: 1 }
 
   - name: audit_fee_per_turn
     mutability: runtime-upgrade-only
@@ -1665,7 +2002,7 @@ parameters:
     description: >
       Maximum decode-policy hashes pinnable in a model's optional allowed set
       (BoundedDecodePolicySet = BoundedVec<H256, ConstU32<MAX_DECODE_POLICIES_PER_MODEL>>).
-      Bounds per-model AllowedDecodePolicies storage; PoUI + compute-channel enforce
+      Bounds per-model AllowedDecodePolicies storage; PoI + compute-channel enforce
       submitted decode_policy_hash membership fail-closed when a set is pinned.
     implementations:
       - { file: pallets/pallets/model-registry/src/types.rs, expect: "MAX_DECODE_POLICIES_PER_MODEL: u32 = 32" }
@@ -1824,7 +2161,7 @@ parameters:
     description: "Retention W (14 d) for Ephemeral DA blobs (quotes/proofs/transcripts/I-O); bounds the session challenge window. yellowpaper §5.3."
     implementations:
       - { file: pallets/runtime/zkverify/src/lib.rs, expect: "DaEphemeralRetention: BlockNumber = 1_209_600" }
-      - { file: formal-specs/channel/dispute-retention-model.qnt, expect: "DEPLOYED_DA_RETENTION: int = 1_209_600" }
+      - { file: studio-specs/reference-dispute-retention/reference_dispute_retention.qnt, expect: "DEPLOYED_DA_RETENTION: int = 1_209_600" }
 
   - name: da_shard_count
     mutability: governance-settable
@@ -1865,6 +2202,25 @@ parameters:
     implementations:
       - { file: pallets/runtime/zkverify/src/lib.rs, expect: "pub const DaDepositPerByte: u128 = 200 * VFY / 1_000_000_000;" }
 
+  # ---- Voucher test fixture ----
+  - name: voucher_fixture_record_limit
+    mutability: runtime-upgrade-only
+    on_chain: {source_only: The explicitly enabled private voucher-devnet-fixture and dormant voucher-devnet runtimes; no production economic cap.}
+    value: 1_024
+    unit: records
+    rust: voucher_devnet::RECORD_LIMIT
+    description: >
+      Existing record bound for test-fixture authenticated earnings and for both
+      fixture and dormant-profile credited event/leg and escrow hold records. Default
+      builds omit these compositions. This is not voucher issuance, backing or rates.
+    implementations:
+      - { file: pallets/runtime/zkverify/src/voucher_devnet.rs, expect: "pub const RECORD_LIMIT: u32 = 1_024;", count: 1 }
+      - { file: pallets/runtime/zkverify/src/voucher_devnet.rs, expect: "Earnings::<Runtime>::count() < RECORD_LIMIT,", count: 1 }
+      - { file: pallets/runtime/zkverify/src/voucher_devnet.rs, expect: "type MaxCredits = ConstU32<RECORD_LIMIT>;", count: 1 }
+      - { file: pallets/runtime/zkverify/src/voucher_devnet.rs, expect: "type MaxHolds = ConstU32<RECORD_LIMIT>;", count: 1 }
+      - { file: pallets/runtime/zkverify/src/voucher_existing.rs, expect: "type MaxCredits = ConstU32<1_024>;", count: 1 }
+      - { file: pallets/runtime/zkverify/src/voucher_existing.rs, expect: "type MaxHolds = ConstU32<1_024>;", count: 1 }
+
   # ---- Agent wallet / session keys ----
   - name: agent_cap_window_blocks
     mutability: runtime-upgrade-only
@@ -1883,7 +2239,7 @@ parameters:
     value: 10
     unit: FLOP
     rust: AgentIdentityMinStake
-    description: "Refundable minimum stake locked to register an agent identity: capital exposure, not an irrecoverable identity cost. yellowpaper §12.3."
+    description: "Minimum stake reserved to register an agent identity; it is neither burned nor slashed. Stake above it can be withdrawn, but no path that releases the minimum itself is specified yet. yellowpaper §12.3."
     implementations:
       - { file: pallets/runtime/zkverify/src/lib.rs, expect: "AgentIdentityMinStake: u128 = 10 * VFY" }
 
@@ -1922,6 +2278,7 @@ parameters:
 # cross-language enforcement. Deployment mappings are still checked over RPC.
 # -----------------------------------------------------------------------------
 reference:
+
   # Validator onboarding — existing runtime constants, not cross-language enforced.
   - name: validator_min_self_stake_ratio_percent
     value: 20
@@ -1936,7 +2293,7 @@ reference:
     value: 86_400
     unit: blocks
     rust: ValidatorWorkRecencyWindow
-    description: "Accepted verification-duty recency window for PoUI committee eligibility (§15.2, R15.4c)."
+    description: "Accepted verification-duty recency window for PoI committee eligibility (§15.2, R15.4c)."
     site: "pallets/runtime/zkverify/src/lib.rs (ValidatorWorkRecencyWindow: u32 = 86_400)"
     enforce: false
     mutability: runtime-upgrade-only
@@ -1991,7 +2348,7 @@ reference:
   # site and they are NOT numerically equal across sites — they are independent guard magnitudes, not
   # one shared constant). Listed here for ledger visibility; ratify the magnitudes, not a propagation.
   - { name: da_deposit_max_step_factor,  value: 100, unit: ratio, note: "pallet_da_registry MAX_DEPOSIT_STEP_FACTOR: a single set_deposit_per_byte call may move the deposit ≤100× in either direction (anti-shock; the hard floor is >0). Single site: pallets/pallets/da-registry/src/lib.rs.", mutability: runtime-upgrade-only, on_chain: {source_only: 'Model, SDK, or documented value; no exported on-chain constant.'} }
-  - { name: governance_param_max_step_pct, value: 50, unit: percent, note: "governance.qnt MAX_STEP_PCT: the FORMAL-MODEL proportional per-enactment bound (100·|Δ| ≤ pct·|old|) proven invariant in Security.lean::GovernanceTransition. Model-side rail; the runtime instantiates the same proportional FORM per-param (e.g. da_deposit_max_step_factor) with its own magnitude. Single site: formal-specs/governance/governance.qnt.", mutability: source-only, on_chain: {source_only: 'Model, SDK, or documented value; no exported on-chain constant.'} }
+  - { name: governance_param_max_step_pct, value: 50, unit: percent, note: "governance.qnt MAX_STEP_PCT: the FORMAL-MODEL proportional per-enactment bound (100·|Δ| ≤ pct·|old|) proven invariant in Security.lean::GovernanceTransition. Model-side rail; the runtime instantiates the same proportional FORM per-param (e.g. da_deposit_max_step_factor) with its own magnitude. Single site: studio-specs/reference-governance/reference_governance.qnt.", mutability: source-only, on_chain: {source_only: 'Model, SDK, or documented value; no exported on-chain constant.'} }
 
   # ---- DA (documented; single-site design/const, yellowpaper §5.3) ----
   - { name: da_serve_or_slash_percent, value: 1, unit: percent, note: "Serve-or-slash Liveness bound: a validator failing a DA audit is slashed ≤1% (bounded, not fraud). yellowpaper §5.3. D-0402/D-0412.", mutability: source-only, on_chain: {source_only: 'Model, SDK, or documented value; no exported on-chain constant.'} }

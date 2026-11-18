@@ -174,7 +174,7 @@ account for base work, proof-size competition, state-dependent failure, DA/check
 serving, propagation, or finality. They are not divided by fixture size or charged weight to infer
 transactions per block.
 
-The supported runtime-benchmark build remains blocked by an internal dependency inconsistency (#550).
+The runtime-benchmark build now compiles in every runtime flavour, but no benchmark has been run.
 Therefore no benchmark output, runtime WASM hash, or benchmark hash exists, and no charged weight is
 presented as benchmarked. No network run was performed, so there are no workload-qualified throughput
 or latency results to publish. Raw failure diagnostics and the private reproducer remain gated in the
@@ -189,8 +189,8 @@ uncertainty, finalized lifecycle throughput, inclusion/finality p50/p95/p99, res
 capacity, and client-perceived latency.
 
 D-0502 proposes withdrawing the former 125,000-byte, 96/128 transaction, 48/64 lifecycle, and sub-second
-finality figures from the v0.5 profile. That proposal remains unratified. E.46 remains PENDING until #550
-and the full measurement matrix are complete.
+finality figures from the v0.5 profile. That proposal remains unratified. E.46 remains PENDING until the runtime
+benchmarks are run, dedicated weights are generated, and the full measurement matrix is complete.
 
 ## 5. Conditional audit exposure
 

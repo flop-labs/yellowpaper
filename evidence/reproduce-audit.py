@@ -22,8 +22,8 @@ OUT = REPO / "whitepaper" / "evidence" if IN_CORE_CHECKOUT else HERE.parent
 FACTORS = ("selection", "data", "challenge", "inclusion", "upheld", "collection")
 SOURCES = {
     "pallets/pallets/compute-channel/src/lib.rs": (
-        "pub fn open_channel(",
-        "pub fn top_up_escrow(",
+        "pub(crate) fn do_open_channel(",
+        "fn session_blocks(",
         ("Self::check_reservation_cap(&agent, escrow)?;",),
     ),
     "pallets/pallets/compute-channel/src/lib.rs#dispute": (
@@ -58,16 +58,16 @@ SOURCES = {
 SOURCE_LEDGER = [
     {
         "path": "pallets/pallets/compute-channel/src/lib.rs",
-        "span": ["pub fn open_channel(", "pub fn top_up_escrow("],
-        "sha256": "2d285c8637d70f8213b139d64793439895c65d11cc57a00e5586d05eafda2b0c",
-        "references": [{"fragment": "Self::check_reservation_cap(&agent, escrow)?;", "line": 1270}],
+        "span": ["pub(crate) fn do_open_channel(", "fn session_blocks("],
+        "sha256": "8c1f2f4e4f0a5454dab7221a14299f001f00eca3be022810aba8eaabfae03791",
+        "references": [{"fragment": "Self::check_reservation_cap(&agent, escrow)?;", "line": 6278}],
     },
     {
         "path": "pallets/pallets/compute-channel/src/lib.rs",
         "span": ["pub fn resolve_timeout_dispute(", "pub fn resolve_unrecoverable_transcript("],
-        "sha256": "49db76e3fa15400fc337502e17036133675a566df1e904182f8dbd311d756db2",
+        "sha256": "4810deeef445264a7675c1906ea84664ffd327928a68ab9e60731982ce8b8857",
         "references": [
-            {"fragment": "T::Slasher::slash_fraud(&ch.miner, channel_id)?;", "line": 3069}
+            {"fragment": "T::Slasher::slash_fraud(&ch.miner, channel_id)?;", "line": 3009}
         ],
     },
     {
@@ -75,9 +75,9 @@ SOURCE_LEDGER = [
         "span": ["impl pallet_compute_channel::ChannelSlasher", "pub struct ChannelDaAvailability"],
         "sha256": "924c982ac3a56ee9df7b6ec98f9f7af6ec64cdd92142ef850ef892cc8419cbcf",
         "references": [
-            {"fragment": "slash_proof_forgery_with_amount(", "line": 1802},
-            {"fragment": "Error::<Runtime>::NotSlashable", "line": 1814},
-            {"fragment": "Ok(0)", "line": 1817},
+            {"fragment": "slash_proof_forgery_with_amount(", "line": 1887},
+            {"fragment": "Error::<Runtime>::NotSlashable", "line": 1899},
+            {"fragment": "Ok(0)", "line": 1902},
         ],
     },
     {
@@ -93,7 +93,7 @@ SOURCE_LEDGER = [
         "path": "pallets/pallets/miner-staking/src/lib.rs",
         "span": ["pub fn unbond(", "pub fn claim_unbonded("],
         "sha256": "8cefbe9f302daa5ad76512b8925a78facae080539d8163f44ff2d4e75ea0f1ca",
-        "references": [{"fragment": "Self::miner_busy_count(&miner) == 0", "line": 1067}],
+        "references": [{"fragment": "Self::miner_busy_count(&miner) == 0", "line": 1065}],
     },
     {
         "path": "pallets/pallets/miner-staking/src/lib.rs",
@@ -102,7 +102,7 @@ SOURCE_LEDGER = [
         "references": [
             {
                 "fragment": "SponsorPositionStatus::Active | SponsorPositionStatus::Unbonding",
-                "line": 3132,
+                "line": 2991,
             }
         ],
     },

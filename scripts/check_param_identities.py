@@ -51,6 +51,14 @@ def load() -> dict[str, object]:
     return out
 
 
+def vfy_floor(value: object, decimals: int) -> int:
+    """Base units of a `VFY / n` value, floored as the runtime's integer division does."""
+    match = re.fullmatch(r"VFY / (\d[\d_]*)", str(value))
+    if match is None:
+        raise ValueError(f"expected a `VFY / n` value, got {value!r}")
+    return 10**decimals // int(match[1].replace("_", ""))
+
+
 def main() -> int:
     quiet = "--quiet" in sys.argv
     params = load()
@@ -135,6 +143,17 @@ def main() -> int:
             Fraction(params["floor_annual_emission"]),
             Fraction(params["floor_reward"]) * blocks_yr,
         ),
+        # --- D-0544: unsigned-open tariff at parity with the per-G_n capacity stake ---
+        (
+            "channel_unconsented_reservation_tariff == "
+            "floor(miner_capacity_stake_per_gflop x surge_ppm / 1e6)",
+            Fraction(params["channel_unconsented_reservation_tariff"]),
+            Fraction(
+                vfy_floor(params["miner_capacity_stake_per_gflop"], meta["decimals"])
+                * int(params["miner_stake_surge_multiplier_ppm"])
+                // 1_000_000
+            ),
+        ),
         # --- timing params derived from block time ---
         (
             "blocks_per_day == 86400 / block_time",
@@ -204,7 +223,7 @@ def main() -> int:
         ),
         (
             "GENESIS_MICRO",
-            "formal-specs/economics/halving-boundary.qnt",
+            "studio-specs/reference-halving-boundary/reference_halving_boundary.qnt",
             r"GENESIS_MICRO\s*:\s*int\s*=\s*([\d_]+)",
             genesis * 1_000_000,
         ),

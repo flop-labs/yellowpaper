@@ -9,7 +9,7 @@ Existence-resolved per-section citations for each top-level `##` section of `yel
 | 0. Conformance & Reading Guide | · | · | · | · | · |
 | 1. Notation, Conventions & Glossary | · | · | · | · | · |
 | 2. Consensus | ✓ | ✓ | ✓ | · | · |
-| 3. Proof of Useful Inference — Verification Architecture | ✓ | ✓ | ✓ | · | · |
+| 3. Proof of Inference — Verification Architecture | ✓ | ✓ | ✓ | · | · |
 | 4. Effective-FLOP Metering | ✓ | ✓ | · | · | · |
 | 5. On-chain / Off-chain Architecture & Sizing | ✓ | ✓ | ✓ | · | · |
 | 6. Base-Layer Primitives & Agent Autonomy | ✓ | ✓ | ✓ | · | · |
@@ -33,6 +33,6 @@ Existence-resolved per-section citations for each top-level `##` section of `yel
 | Appendix I — Runtime Composition | · | · | · | · | · |
 | **TOTAL (resolved)** | **19** | **15** | **14** | **0** | **3** |
 
-**Legend:** `✓` the cited path exists in the authoring repository and, when a symbol is named, that symbol resolves in the cited file · `~` referenced-but-dangling (path/symbol not found — a `--check` failure) · `·` absent. This is an artifact-existence and citation-integrity matrix. A `✓` does **not** establish that a theorem's assumptions hold for the protocol, that a proof covers the full implementation, that a modeled gate is wired in settlement, or that an empirical claim has been reproduced. The **Quint** column is a standalone bounded model (`formal-specs/`); the **Studio** column is a Quint Studio component model (`quint-specs/`) whose symbol is a property or observation registered in `quint-specs/quint.lock`. Studio grounds those models by replaying the component's Rust tests through its oracle, but this matrix records the model identity only: oracle results live in Studio, and a `✓` is not a claim that they are current or passing.
+**Legend:** `✓` the cited path exists in the authoring repository and, when a symbol is named, that symbol resolves in the cited file · `~` referenced-but-dangling (path/symbol not found — a `--check` failure) · `·` absent. This is an artifact-existence and citation-integrity matrix. A `✓` does **not** establish that a theorem's assumptions hold for the protocol, that a proof covers the full implementation, that a modeled gate is wired in settlement, or that an empirical claim has been reproduced. The **Quint** column is a standalone bounded model (`formal-specs/`); the **Studio** column is a Quint Studio component model (`studio-specs/`) whose symbol is a property or observation registered in `studio-specs/quint.lock`. Native exports preserve saved findings, but this matrix records citation identity only. Typechecks and the declared scenario runs are separate CI checks; a `✓` does not claim implementation correspondence, mutation strength, or a current passing checker verdict.
 
 **Public availability:** the public mirror includes this matrix, the curated prepublication evidence ledger, its data, and its reproducer. The full internal research, Lean, Quint, Julia, and implementation source trees are not exported by this matrix. A resolved cell therefore does not by itself mean its underlying artifact is public. The matrix is a *prioritization surface*, not a hard per-type assurance gate: some sections legitimately need only prose/params. `--check` gates the research↔yellowpaper direction, stale internal section/fragment links, and any dangling (`~`) reference.

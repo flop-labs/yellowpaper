@@ -9,6 +9,59 @@ After publication, use [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 
 ### Changed
 
+- Rename R12.5o's cumulative delivered work from `D` to `Y`, so `D` keeps its single meaning as the
+  primary-purchase UTC date, and print R12.5n before R12.5o (§12.5).
+
+- File the twelve remaining `fcu_*` parameters under §12.5 in Appendix A, and state R12.5j's request
+  cutoff as `fcu_acceptance_budget_ms` + `fcu_accepted_chunk_max_ms` instead of a 1,100 ms literal.
+
+- Add Appendix H.5 conformance rows for R12.5a–R12.5h, including the R12.5e serving bound (GAP).
+
+- Describe `agent_identity_min_stake` as reserved, not refundable: stake above the minimum can be
+  withdrawn, and no path that releases the minimum itself is specified yet (§12.3, Appendix A).
+
+- Rename Proof of Useful Inference (PoUI) to Proof of Inference (PoI) in prose; parameter names keep
+  `poui_*`.
+
+- Derive `channel_unconsented_reservation_tariff` as
+  `floor(miner_capacity_stake_per_gflop × miner_stake_surge_multiplier_ppm / 10⁶)`, about 4.13e-8 FLOP
+  per `G_n`, in place of 1 base unit. Describe the unsigned-open floor as a minimum capacity payment,
+  not refundable collateral (D-0544; §7.1 R7.1f, Appendix A).
+
+- Bound miner-unsigned opens to `channel_max_unconsented_session_blocks` and require their
+  escrow to cover the reserved allowance at `channel_unconsented_reservation_tariff`. Stop
+  inherited over-reservation from blocking a non-shrinking renewal. Grandfather channels at their
+  unchanged snapshot, and require a forward delivery rate to fit its channel's reservation
+  (D-0543; §7.1 R7.1e/R7.1f, Appendices A and G).
+
+- Share each miner's calibration cap across its concurrent channels through per-channel
+  capacity reservations, and cap SOFT calibration below the direct PoI proof floor (D-0542;
+  §7.1 R7.1d/R7.1e, Appendix G.1, E.22).
+
+- Anchor the miner capacity-stake rate at 400,000 `G_n/s` per H100: `miner_capacity_stake_per_gflop`
+  `VFY / 100` to `VFY / 30,240,000` per `G_n` of exposure, and §6.1 states the runtime formula (D-0541).
+
+- Raise `max_active_reservations_base` from 4 to 400 (D-0540).
+
+- Adopt validator set v2 (D-0539).
+  - **Floor and selection.** Flat validator floor with no 9 %/yr growth (§15.2). Top-N stake-ranked
+    equal seats re-selected each session with hysteresis and no forced rotation (§15.5). Each
+    registered validator account occupies at most one active seat, and seats are equal, with no stake
+    weight above the floor (R15.5).
+  - **Committee.** Finality committee drawn uniformly from live seats with a late-revealed per-block VRF
+    seed (§2.1 R2.4/R2.5, §15.4). Equal per-seat reward split with no committee premium (§9.1 R9.5).
+  - **Rewards and unlock.** `validator_reward_bond_ppt` = 500 bonds and locks 50% of each seat's
+    block-reward share and leaves 50% liquid, with every fee leg liquid (R9.13). Validator grant and
+    bonded rewards unlock linearly from genesis over `validator_unlock_duration_blocks` (R8.7).
+  - **Unbonding and slashing.** Validator unbonding, floor-guarded `unbond` and slash order (§15.7);
+    AlephBFT fork and conflicting-justification rows (§11.3); uniform DA assignment (R5.3a); objective
+    SLA evidence (R15.5c).
+  - **Open stubs:** E.58–E.61. E.38 drops the Validator release order. The deprecated growth and
+    premium parameters stay in Appendix A until they leave the runtime.
+
+- Index validator inference-fee legs through source-funded cumulative credits that never expire,
+  in place of per-award integer floors (D-0545; R9.13).
+
 - Name `FLOPFoundationAccount` as the sink of the failed/early-close penalty `φ·(E−P)` with zero burn in
   §12.1 R12.1d, §11.1 INV-M06, Appendix A (`refund_penalty_phi_percent`) and Appendix G.1 `finalize`,
   matching §9.3 R9.10 and Appendix D; record in Appendix H.5 that the runtime still burns that leg.
@@ -16,7 +69,7 @@ After publication, use [Semantic Versioning](https://semver.org/spec/v2.0.0.html
 - State in §15.5 R15.5 that proven-fault slash proceeds at the active-set floor are confiscated and transferred to the Foundation (R9.10) rather than burned.
 
 - Propagate the zero-burn, operator self-stake-only, and off-chain referral rulings to the normative
-  spec and canonical parameters (D-0529, D-0530, D-0531; #2792, #1945, #1358): set
+  spec and canonical parameters (D-0529, D-0530, D-0531): set
   `tx_fee_burn_percent_live` (`BurnFees`) to 0% with 100% of live transaction fees and tips routed to
   the block author (§9.1 R9.6, Appendix D, Appendix H); replace legacy "full-burn" slash terminology
   with 100% routing to `FLOPFoundationAccount` (§11.3, §13.2, §15.7, Appendix A); prohibit third-party
@@ -32,9 +85,9 @@ After publication, use [Semantic Versioning](https://semver.org/spec/v2.0.0.html
   validator self-stake only on runtimes built with `sponsored_self_stake_enabled`. Narrow E.32 to its
   mainnet questions; index the new calls in G.3 and their status in H.1.
 
-- Reconcile normative contradictions surfaced by the 2026-10-13 mirror sync (#2648): align §15.5,
+- Reconcile normative contradictions surfaced by the 2026-10-13 mirror sync: align §15.5,
   E.56 and H.5 with the implemented `validator_min_active_validators` = 4 removal/rotation floor and
-  10% churn cap (#1727) while keeping the D-0507/D-0508/E.42 policy questions open; reconcile §9.3
+  10% churn cap while keeping the D-0507/D-0508/E.42 policy questions open; reconcile §9.3
   R9.9, §15.5 R15.5/R15.5b and Appendix G.3 on active-set entry paths (`rotate` promotion from
   `ValidatorQueue` vs direct `un_jail`/`rejoin` restoration under `validator_active_set_cap`, and
   rotation ejection thawing self-stake before re-registration); align §9, R9.2, R9.3, Appendix A and
@@ -111,6 +164,18 @@ After publication, use [Semantic Versioning](https://semver.org/spec/v2.0.0.html
   fee distribution, metering overflow, session-key invariants, and collusion monitoring.
 
 ### Added
+
+- Make the Era-T season length the testnet configuration value `era_t_season_blocks` (default and
+  maximum 7,776,000 blocks). A ratified earlier snapshot may shorten the season; the three conversion
+  pools stay fixed, and a shorter season moves nothing between cohorts (D-0547; §8.2 R8.5a).
+
+- Specify the FLOP Compute Unit (§12.5): integer six-decimal quantities, fractional holder lots and
+  atomic FLOP resale (D-0534); fourteen UTC noon delivery starts (D-0536); a default-on primary
+  admission pause (D-0537); and the service policy with a finalized SLA reserve (D-0538). Activation
+  stays off.
+
+- Add the `content-v1` model identity, a root computed from published per-file SHA-256 tables, beside
+  the dm-verity `verity-v1` root (D-0535; §3.3 R3.2a–R3.2d).
 
 - Specify paid-storage service lanes that close at a fixed boundary with
   a funding-pinned claim deadline on the finalized prefix. Only the lane's provider redeems, with
